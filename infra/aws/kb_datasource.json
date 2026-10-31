@@ -1,0 +1,7 @@
+{
+  "type": "S3",
+  "s3Configuration": {
+    "bucketArn": "arn:aws:s3:::legumamies-rag-040416400623-2e32fb7c",
+    "inclusionPrefixes": ["sources/"]
+  }
+}

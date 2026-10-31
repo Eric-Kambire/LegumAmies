@@ -1,0 +1,9 @@
+# LegumAmies integration API (FastAPI over ClimateShield)
+fastapi
+uvicorn[standard]
+pydantic>=2
+mangum
+# backend deps reused by the API
+requests
+pandas
+numpy

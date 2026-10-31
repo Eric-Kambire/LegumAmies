@@ -1,0 +1,2 @@
+field_id,latitude,longitude,crop,growth_stage,area_ha,harvest_ready
+DEMO_001,48.70,2.20,fava_bean,flowering,5,false

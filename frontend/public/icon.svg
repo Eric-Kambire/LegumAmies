@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F2016" />
+      <stop offset="100%" stop-color="#070E0A" />
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+
+  <!-- iOS squircle rounded container -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGrad)" />
+
+  <!-- Subtle border -->
+  <rect width="512" height="512" rx="116" fill="none" stroke="#1F3D2C" stroke-width="6" />
+
+  <!-- Sun element -->
+  <circle cx="340" cy="180" r="54" fill="url(#sunGrad)" opacity="0.95" />
+
+  <!-- Legume plant / double leaf symbol -->
+  <g transform="translate(60, 40)">
+    <!-- Stem -->
+    <path d="M 196 360 C 196 260 216 190 260 140" fill="none" stroke="#22C55E" stroke-width="14" stroke-linecap="round" />
+    
+    <!-- Left Leaf (pulse / fava bean leaf) -->
+    <path d="M 216 230 C 140 220 110 280 140 330 C 190 340 220 290 216 230 Z" fill="url(#leafGrad)" />
+
+    <!-- Right Leaf -->
+    <path d="M 240 170 C 310 140 350 200 320 250 C 270 260 236 210 240 170 Z" fill="url(#leafGrad)" />
+  </g>
+
+  <!-- Cloud curve at bottom indicating weather -->
+  <path d="M 120 400 C 120 375 140 355 165 355 C 172 355 178 357 184 360 C 195 338 218 322 245 322 C 280 322 309 347 314 380 C 321 378 328 376 336 376 C 362 376 384 397 384 423 C 384 425 384 427 383 429 L 140 429 C 129 423 120 412 120 400 Z" fill="#E2E8F0" opacity="0.12" />
+</svg>

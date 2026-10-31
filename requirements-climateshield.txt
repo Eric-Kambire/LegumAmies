@@ -1,0 +1,10 @@
+# ClimateShield - Milestone 1 (lightweight, no GPU / deep-learning deps)
+# Install with:  pip install -r requirements-climateshield.txt
+requests
+pandas
+numpy
+matplotlib
+jupyter
+ipykernel
+nbconvert
+pytest
