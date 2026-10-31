@@ -1,0 +1,71 @@
+{
+  "generated_at_utc": "2026-10-31T23:01:12.351796+00:00",
+  "experiment": "PBC-inspired subseasonal calibration (weeks 3-4), Bourgogne-Franche-Comte",
+  "status": "reduced_pbc_inspired_baseline (NOT the original MIT PBC model)",
+  "observations": {
+    "dataset": "ERA5 reanalysis",
+    "source": "Open-Meteo archive (models=era5)",
+    "url": "https://archive-api.open-meteo.com/v1/archive",
+    "variables": {
+      "t2m_mean_c": "degC",
+      "precip_mm": "mm"
+    },
+    "points": {
+      "Dijon": [
+        47.32,
+        5.04
+      ],
+      "Besancon": [
+        47.24,
+        6.02
+      ],
+      "Nevers": [
+        46.99,
+        3.16
+      ],
+      "Macon": [
+        46.31,
+        4.83
+      ],
+      "Belfort": [
+        47.64,
+        6.86
+      ]
+    },
+    "date_range": [
+      "1991-01-01",
+      "2024-12-31"
+    ]
+  },
+  "forecast_inputs": "Statistical (persistence++-inspired) predictors derived from ERA5 at initialisation; NO licensed S2S dynamical hindcasts (credentials/compute unavailable).",
+  "lead": {
+    "weeks": "3-4",
+    "valid_days_after_init": [
+      15,
+      28
+    ]
+  },
+  "event_definition": "above upper tercile (per target week-of-year, TRAIN-only thresholds)",
+  "splits": {
+    "train_years": "<= 2014",
+    "val_years": "2015-2018",
+    "test_years": "> 2018"
+  },
+  "sample_sizes": {
+    "warm": {
+      "train": 240,
+      "val": 40,
+      "test": 60
+    },
+    "wet": {
+      "train": 240,
+      "val": 40,
+      "test": 60
+    }
+  },
+  "reference": {
+    "mit_pbc_repo": "https://github.com/mouatadid/pbc",
+    "license": "MIT",
+    "paper": "Guan et al., Nature 2026, doi:10.1038/s41586-026-11126-x"
+  }
+}

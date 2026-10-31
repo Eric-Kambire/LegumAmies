@@ -27,3 +27,6 @@ models/*
 # IDE
 .vscode/
 .idea/
+
+# Lambda build artifacts
+build/

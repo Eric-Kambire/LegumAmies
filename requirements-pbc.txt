@@ -1,0 +1,12 @@
+# PBC-inspired subseasonal experiment (notebooks/04 + experiments/pbc)
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+requests
+tabulate
+jupyter
+ipykernel
+nbconvert
+nbformat
