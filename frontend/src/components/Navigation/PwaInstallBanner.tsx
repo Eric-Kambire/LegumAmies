@@ -46,12 +46,12 @@ export const PwaInstallBanner: React.FC = () => {
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src="/legumeAmi.png"
-            alt="LegumAmies Logo"
-            className="w-8 h-8 rounded-full object-contain border border-white/20 bg-black/20 flex-shrink-0"
+            alt="Légume'Ami Logo"
+            className="w-8 h-8 object-contain flex-shrink-0"
           />
 
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-white truncate">LegumAmies</span>
+            <span className="text-xs font-semibold text-white truncate">Légume'Ami</span>
             <span className="text-[10px] text-white/50 truncate">
               {isIos ? "Touchez Partager ⎋ puis 'Sur l'écran d'accueil'" : 'Installer comme app native'}
             </span>

@@ -1,6 +1,6 @@
 {
-  "name": "LegumAmies - Météo Agricole France",
-  "short_name": "LegumAmies",
+  "name": "Légume'Ami - Météo Agricole France",
+  "short_name": "Légume'Ami",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0B120E",

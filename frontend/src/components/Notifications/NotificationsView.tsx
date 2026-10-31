@@ -87,7 +87,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
       localStorage.setItem('legum_notif_prefs', JSON.stringify(updated));
 
       // Dispatch real welcome push notification
-      await dispatchNativePushNotification('LegumAmies Notifications Actives', {
+      await dispatchNativePushNotification("Légume'Ami Notifications Actives", {
         body: 'Alertes canicule sur floraison, créneaux de traitement et fenêtre de moisson configurés.',
         tag: 'welcome-push',
       });
@@ -141,8 +141,8 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         <div className="flex items-center gap-3 min-w-0">
           <img
             src="/legumeAmi.png"
-            alt="LegumAmies Logo"
-            className="w-10 h-10 rounded-2xl object-contain shadow-md border border-white/20 bg-black/20 flex-shrink-0"
+            alt="Légume'Ami Logo"
+            className="w-10 h-10 object-contain drop-shadow-md flex-shrink-0"
           />
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">

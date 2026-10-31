@@ -53,8 +53,8 @@ export const DuoNotificationBanner: React.FC<DuoNotificationBannerProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <img
               src="/legumeAmi.png"
-              alt="LegumAmies"
-              className="w-5 h-5 rounded-md object-contain border border-white/20 bg-black/30 flex-shrink-0"
+              alt="Légume'Ami"
+              className="w-5 h-5 object-contain flex-shrink-0"
             />
 
             {/* Duolingo Streak Flame Capsule */}

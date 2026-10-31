@@ -72,8 +72,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="flex items-center gap-3.5 min-w-0">
           <img
             src="/legumeAmi.png"
-            alt="LegumAmies Logo"
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-contain shadow-lg border border-white/20 bg-black/20 flex-shrink-0"
+            alt="Légume'Ami Logo"
+            className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-lg flex-shrink-0"
           />
           <div className="min-w-0">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50 capitalize block truncate">

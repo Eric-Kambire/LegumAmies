@@ -14,7 +14,7 @@ export const BackendContractModal: React.FC<BackendContractModalProps> = ({
 
   if (!isOpen) return null;
 
-  const contractJson = `// Contrat réel — LegumAmies ClimateShield API (FastAPI)
+  const contractJson = `// Contrat réel — Légume'Ami ClimateShield API (FastAPI)
 // Types : frontend/src/types/backend-contract.ts  •  Schéma : src/api/schemas.py
 // Base URL : VITE_API_BASE_URL
 

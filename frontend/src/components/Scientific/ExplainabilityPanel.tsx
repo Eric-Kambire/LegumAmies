@@ -39,7 +39,7 @@ export const ExplainabilityPanel: React.FC<ExplainabilityPanelProps> = ({
           </h4>
         </div>
         <p className="text-[11px] text-white/70 leading-relaxed">
-          Toutes les recommandations de LegumAmies reposent sur des seuils agronomiques publiés (Terres Inovia), des modèles physiques (AROME / ECMWF AIFS) et des règles réglementaires officielles.
+          Toutes les recommandations de Légume'Ami reposent sur des seuils agronomiques publiés (Terres Inovia), des modèles physiques (AROME / ECMWF AIFS) et des règles réglementaires officielles.
         </p>
 
         {/* SHAP explanation disclosure */}
