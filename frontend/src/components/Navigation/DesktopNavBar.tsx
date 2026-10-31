@@ -47,9 +47,11 @@ export const DesktopNavBar: React.FC<DesktopNavBarProps> = ({
     <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/[0.08] apple-glass z-[600] w-full select-none">
       {/* Brand & Emblem */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#10b981] to-[#047857] flex items-center justify-center shadow-md border border-white/20">
-          <Sprout className="w-5 h-5 text-white" strokeWidth={2.2} />
-        </div>
+        <img
+          src="/legumeAmi.png"
+          alt="LegumAmies Logo"
+          className="w-9 h-9 rounded-xl object-contain shadow-md border border-white/20 bg-black/20"
+        />
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold tracking-tight text-white">LegumAmies</span>

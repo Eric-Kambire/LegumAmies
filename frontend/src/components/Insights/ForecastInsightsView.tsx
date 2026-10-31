@@ -128,32 +128,39 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
     <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-4 sm:gap-5">
       {/* Header & Mode Switcher */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
-              Prévisions & Analyses Scientifiques
-            </h1>
-            {/* Backend connection status pill */}
-            {backendStatus === 'ok' ? (
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>API Gateway en direct</span>
-              </span>
-            ) : backendStatus === 'loading' ? (
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-[#38bdf8] border border-sky-500/30 flex-shrink-0">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                <span>Synchronisation...</span>
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/60 border border-white/15 flex-shrink-0">
-                <CloudOff className="w-3 h-3 text-white/40" />
-                <span>Règles locales (Terres Inovia)</span>
-              </span>
-            )}
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src="/legumeAmi.png"
+            alt="LegumAmies Logo"
+            className="w-10 h-10 rounded-2xl object-contain shadow-md border border-white/20 bg-black/20 flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+                Prévisions & Analyses Scientifiques
+              </h1>
+              {/* Backend connection status pill */}
+              {backendStatus === 'ok' ? (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>API Gateway en direct</span>
+                </span>
+              ) : backendStatus === 'loading' ? (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-[#38bdf8] border border-sky-500/30 flex-shrink-0">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Synchronisation...</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/60 border border-white/15 flex-shrink-0">
+                  <CloudOff className="w-3 h-3 text-white/40" />
+                  <span>Règles locales (Terres Inovia)</span>
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-white/50 mt-0.5 truncate">
+              {field?.name || 'Parcelle'} • {field ? getCropNameFr(field.cropType) : 'Culture'} ({field ? getGrowthStageFr(field.growthStage) : 'Stade'})
+            </p>
           </div>
-          <p className="text-xs text-white/50 mt-0.5 truncate">
-            {field?.name || 'Parcelle'} • {field ? getCropNameFr(field.cropType) : 'Culture'} ({field ? getGrowthStageFr(field.growthStage) : 'Stade'})
-          </p>
         </div>
 
         {/* Apple Segmented Switcher: Summary vs Detailed Scientific */}

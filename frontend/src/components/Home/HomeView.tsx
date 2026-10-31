@@ -68,25 +68,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
       {/* 1. Welcoming Header (Apple iOS Style) */}
-      <div className="flex items-start justify-between">
-        <div>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50 capitalize">
-            {todayFormatted}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mt-0.5">
-            Tableau de Bord Agricole
-          </h1>
-          <p className="text-xs text-white/60 mt-0.5">
-            {fields.length} {fields.length > 1 ? 'parcelles enregistrées' : 'parcelle enregistrée'} • {totalHectares} ha sous surveillance
-          </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <img
+            src="/legumeAmi.png"
+            alt="LegumAmies Logo"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-contain shadow-lg border border-white/20 bg-black/20 flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50 capitalize block truncate">
+              {todayFormatted}
+            </span>
+            <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white mt-0.5 truncate">
+              Tableau de Bord Agricole
+            </h1>
+            <p className="text-xs text-white/60 mt-0.5 truncate">
+              {fields.length} {fields.length > 1 ? 'parcelles enregistrées' : 'parcelle enregistrée'} • {totalHectares} ha sous surveillance
+            </p>
+          </div>
         </div>
 
         <button
           onClick={onOpenCreateField}
-          className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform"
+          className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform flex-shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Ajouter une parcelle</span>
+          <span className="hidden sm:inline">Ajouter une parcelle</span>
         </button>
       </div>
 

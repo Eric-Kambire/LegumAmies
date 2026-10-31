@@ -121,20 +121,27 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Mes Parcelles</h1>
-          <p className="text-xs text-white/50 mt-0.5">
-            Gérez vos assolements et suivez chaque stade phénologique
-          </p>
+      <div className="flex items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src="/legumeAmi.png"
+            alt="LegumAmies Logo"
+            className="w-10 h-10 rounded-2xl object-contain shadow-md border border-white/20 bg-black/20 flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">Mes Parcelles</h1>
+            <p className="text-xs text-white/50 mt-0.5 truncate">
+              Gérez vos assolements et suivez chaque stade phénologique
+            </p>
+          </div>
         </div>
 
         <button
           onClick={openNewFieldWizard}
-          className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform"
+          className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform flex-shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Nouvelle parcelle</span>
+          <span className="hidden sm:inline">Nouvelle parcelle</span>
         </button>
       </div>
 
