@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Map as MapIcon,
@@ -8,11 +8,17 @@ import {
   Clock,
   Laptop,
   Check,
+  Download,
 } from 'lucide-react';
 import type { AppTab } from './AppleTabBar';
 import type { SelectedField } from '../../types/agricultural';
 import { CropGlyph } from '../Common/LegumeGlyphs';
 import type { SystemEnvironment } from '../../hooks/useSystemEnvironment';
+import {
+  isRunningStandalone,
+  promptPwaInstall,
+  setupInstallPromptListener,
+} from '../../services/pwaService';
 
 interface DesktopNavBarProps {
   activeTab: AppTab;
@@ -43,16 +49,34 @@ export const DesktopNavBar: React.FC<DesktopNavBarProps> = ({
     { id: 'notifications' as AppTab, label: 'Alertes', icon: Bell, badge: unreadCount },
   ];
 
+  const [canInstall, setCanInstall] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isRunningStandalone()) return;
+    setupInstallPromptListener(() => {
+      setCanInstall(true);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    const success = await promptPwaInstall();
+    if (success) {
+      setCanInstall(false);
+    }
+  };
+
   return (
     <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/[0.08] apple-glass z-[600] w-full select-none">
       {/* Brand & Emblem */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#10b981] to-[#047857] flex items-center justify-center shadow-md border border-white/20">
-          <Sprout className="w-5 h-5 text-white" strokeWidth={2.2} />
-        </div>
+        <img
+          src="/legumeAmi.png"
+          alt="Légume'Ami Logo"
+          className="w-9 h-9 object-contain drop-shadow-md flex-shrink-0"
+        />
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-tight text-white">LegumAmies</span>
+            <span className="text-sm font-semibold tracking-tight text-white">Légume'Ami</span>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-full bg-white/[0.08] text-white/60 border border-white/[0.1]">
               Pro
             </span>
@@ -140,6 +164,18 @@ export const DesktopNavBar: React.FC<DesktopNavBarProps> = ({
               })}
             </div>
           </div>
+        )}
+
+        {/* Desktop PWA Install Action */}
+        {canInstall && (
+          <button
+            onClick={handleInstallClick}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-xs text-white transition-all active:scale-95 shadow-sm"
+            title="Installer l'application Légume'Ami sur PC"
+          >
+            <Download className="w-3.5 h-3.5 text-[#38bdf8]" />
+            <span className="hidden xl:inline text-[11px] font-medium">Installer l'app</span>
+          </button>
         )}
 
         {/* API / Backend Contract Badge */}
