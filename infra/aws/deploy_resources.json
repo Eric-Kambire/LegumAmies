@@ -1,0 +1,25 @@
+{
+  "region": "us-east-1",
+  "account_id": "040416400623",
+  "frontend": {
+    "host": "AWS Amplify Hosting",
+    "amplify_app_id": "doxhuwpoc3ctn-app (see /tmp or amplify list-apps: name legumamies-pwa)",
+    "branch": "team-testing",
+    "url": "https://team-testing.doxhuwpoc3ctn.amplifyapp.com",
+    "deploy_method": "manual zip of frontend/dist (no GitHub OAuth required)"
+  },
+  "backend": {
+    "compute": "AWS Lambda (python3.12, handler src.api.main.handler, 1024MB, 30s)",
+    "function_name": "legumamies-climateshield-api",
+    "execution_role": "arn:aws:iam::040416400623:role/legumamies-api-lambda-role",
+    "http": "API Gateway HTTP API (quick-create AWS_PROXY, payload 2.0)",
+    "api_id": "ba8yoci7d8",
+    "url": "https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com",
+    "note": "Lambda Function URL with auth NONE is blocked by an account guardrail (403); API Gateway used instead."
+  },
+  "wiring": {
+    "frontend_env": "VITE_API_BASE_URL=https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com",
+    "cors": "API Gateway CORS allows the Amplify origin + http://localhost:5173"
+  },
+  "expected_cost": "Within AWS Free Tier (Amplify hosting + Lambda 1M req/400k GB-s + API GW 1M req). Effectively ~$0 for hackathon testing."
+}

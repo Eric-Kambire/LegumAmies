@@ -30,6 +30,7 @@ import {
   FRANCE_CENTER,
 } from './services/geoService';
 import { evaluateAgronomicRisks } from './services/agriRiskService';
+import { useBackendAssess } from './hooks/useBackendAssess';
 import { generateDuolingoNotificationsForFields } from './services/duoNotificationService';
 import { registerServiceWorker } from './services/pwaService';
 
@@ -355,11 +356,17 @@ export const App: React.FC = () => {
     setActiveDuoBannerNotification(notif);
   };
 
-  // Evaluate Agronomic Risks for active field
-  const agriAlerts: AgriculturalRiskAlert[] =
+  // Evaluate Agronomic Risks for active field.
+  // Prefer the live backend /assess (sourced rules + provenance) when
+  // VITE_API_BASE_URL is configured and reachable; otherwise fall back to the
+  // sourced client-side screening. Both paths avoid fabricated values.
+  const clientAlerts: AgriculturalRiskAlert[] =
     weatherData && activeField
       ? evaluateAgronomicRisks(activeField.cropType, activeField.growthStage, weatherData)
       : [];
+  const { status: backendStatus, alerts: backendAlerts } = useBackendAssess(activeField);
+  const agriAlerts: AgriculturalRiskAlert[] =
+    backendStatus === 'ok' ? backendAlerts : clientAlerts;
 
   const env = useSystemEnvironment();
   const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
