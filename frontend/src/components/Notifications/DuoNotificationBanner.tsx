@@ -45,7 +45,7 @@ export const DuoNotificationBanner: React.FC<DuoNotificationBannerProps> = ({
   return (
     <aside
       aria-label="Notification d'alerte Duolingo"
-      className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-[999] w-[calc(100%-1.5rem)] max-w-md pt-[env(safe-area-inset-top,0px)] animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
+      className="fixed top-3 sm:top-4 md:top-20 left-1/2 -translate-x-1/2 z-[700] w-[calc(100%-1.5rem)] max-w-md pt-[env(safe-area-inset-top,0px)] animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
     >
       <div className="apple-glass rounded-3xl p-4 shadow-2xl border border-white/20 text-white flex flex-col gap-2.5 bg-gradient-to-br from-[#121826]/95 to-[#0b0f19]/95 backdrop-blur-2xl">
         {/* Dynamic Island Header with Streak Badge */}
@@ -57,7 +57,7 @@ export const DuoNotificationBanner: React.FC<DuoNotificationBannerProps> = ({
               className="w-5 h-5 object-contain flex-shrink-0"
             />
 
-            {/* Duolingo Streak Flame Capsule */}
+            {/* Streak Flame Capsule */}
             <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-bold shadow-xs flex-shrink-0">
               <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
               <span>{notification.streakDays || 8}j de série</span>
@@ -97,11 +97,11 @@ export const DuoNotificationBanner: React.FC<DuoNotificationBannerProps> = ({
           </p>
         </div>
 
-        {/* Footer with Economic Impact & Direct Action Button */}
+        {/* Footer with Direct Action Button */}
         <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
           <span className="text-[10px] text-white/50 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-[#34d399]" />
-            <span>{notification.economicImpact || 'Vigilance active'}</span>
+            <span>Vigilance parcelle active</span>
           </span>
 
           <button

@@ -6,11 +6,19 @@
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body, input, button, select, textarea {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+    letter-spacing: -0.014em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+  }
+
+  h1, h2, h3, h4, .apple-heading {
+    letter-spacing: -0.025em !important;
   }
 
   /* Authentic Apple tabular numerals for metrics and weather readings */
