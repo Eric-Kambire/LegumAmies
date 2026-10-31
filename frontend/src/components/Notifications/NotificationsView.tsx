@@ -9,14 +9,28 @@ import {
   Calendar,
   Sprout,
   Moon,
+  Flame,
+  Zap,
+  Play,
+  ShieldCheck,
 } from 'lucide-react';
-import type { AgriculturalNotification, NotificationPreferences } from '../../types/agricultural';
+import type {
+  AgriculturalNotification,
+  NotificationPreferences,
+} from '../../types/agricultural';
+import {
+  DEFAULT_STREAK,
+  DUO_SIMULATION_PRESETS,
+} from '../../services/duoNotificationService';
+import { LEGUME_CROPS_CATALOG } from '../../data/legumeCatalog';
+import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface NotificationsViewProps {
   notifications: AgriculturalNotification[];
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
   onNavigateToTab: (tab: 'weather' | 'fields' | 'insights') => void;
+  onTriggerSimulation?: (notif: AgriculturalNotification) => void;
 }
 
 export const NotificationsView: React.FC<NotificationsViewProps> = ({
@@ -24,6 +38,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   onMarkAsRead,
   onMarkAllAsRead,
   onNavigateToTab,
+  onTriggerSimulation,
 }) => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'risk' | 'reminder'>('all');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -81,6 +96,23 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
     localStorage.setItem('legum_notif_prefs', JSON.stringify(updated));
   };
 
+  const handleTriggerPreset = React.useCallback(
+    (preset: (typeof DUO_SIMULATION_PRESETS)[number]) => {
+      const timestampId = Date.now();
+      const newNotif: AgriculturalNotification = {
+        ...preset.notification,
+        id: `sim_${timestampId}`,
+        timestamp: "À l'instant",
+        isRead: false,
+      };
+
+      if (onTriggerSimulation) {
+        onTriggerSimulation(newNotif);
+      }
+    },
+    [onTriggerSimulation]
+  );
+
   const filteredNotifications = notifications.filter((n) => {
     if (filter === 'unread') return !n.isRead;
     if (filter === 'risk') return n.category === 'weather_risk';
@@ -120,6 +152,128 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
           >
             <Sliders className="w-4 h-4" />
           </button>
+        </div>
+      </div>
+
+      {/* Duolingo Daily Streak Dashboard Card */}
+      <div className="apple-card p-4 sm:p-5 bg-gradient-to-br from-amber-500/[0.12] via-white/[0.04] to-transparent border-amber-500/25 relative overflow-hidden flex flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/30 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10 flex-shrink-0">
+              <Flame className="w-6 h-6 fill-amber-400 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Série de {DEFAULT_STREAK.currentStreakDays} jours consécutifs
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  Active
+                </span>
+              </div>
+              <p className="text-xs text-white/60 mt-0.5">
+                Surveillance quotidienne de vos légumineuses • Record : {DEFAULT_STREAK.bestStreakDays} jours
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass border-white/15 text-xs text-white/80">
+            <ShieldCheck className="w-4 h-4 text-sky-400" />
+            <span>1 Gel de série disponible</span>
+          </div>
+        </div>
+
+        {/* Weekly Calendar Pills (Duolingo Style) */}
+        <div className="grid grid-cols-8 gap-1.5 sm:gap-2 pt-1">
+          {DEFAULT_STREAK.weeklyHistory.map((day, idx) => (
+            <div
+              key={idx}
+              className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all ${
+                day.isToday
+                  ? 'bg-gradient-to-b from-amber-500/30 to-orange-500/20 border border-amber-400/50 shadow-md ring-1 ring-amber-400/30'
+                  : day.active
+                  ? 'bg-white/[0.06] border border-amber-500/20 text-white'
+                  : 'bg-white/[0.02] border border-white/[0.06] text-white/40'
+              }`}
+            >
+              <span className="text-[10px] font-medium text-white/60 mb-1">{day.day}</span>
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  day.active
+                    ? 'bg-gradient-to-tr from-amber-500 to-orange-400 text-white shadow-xs'
+                    : 'bg-white/10 text-white/30'
+                }`}
+              >
+                <Flame className={`w-3.5 h-3.5 ${day.active ? 'fill-white text-white' : 'text-white/30'}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between text-[11px] text-white/60 pt-1 border-t border-white/[0.08]">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Consultez vos alertes chaque jour pour ne pas briser votre flamme.</span>
+          </span>
+          <span className="font-mono text-amber-300 font-semibold sm:hidden">
+            🛡️ 1 Gel actif
+          </span>
+        </div>
+      </div>
+
+      {/* Duolingo Interactive Test Simulator Bar */}
+      <div className="apple-card p-4 bg-gradient-to-br from-[#121826]/90 to-[#0b0f19]/90 border-white/15 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">
+              Simulateur Comportemental Duolingo (Cultures en Place)
+            </span>
+          </div>
+          <span className="text-[10px] text-white/50 hidden sm:inline">
+            Cliquez pour déclencher une alerte instantanée
+          </span>
+        </div>
+
+        <p className="text-xs text-white/70 leading-relaxed">
+          Testez les 4 mécaniques comportementales (aversion à la perte, urgence chronométrée, appel ludique, rappel mascotte) branchées en direct sur les parcelles de votre exploitation.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+          {DUO_SIMULATION_PRESETS.map((preset) => {
+            const crop = LEGUME_CROPS_CATALOG[preset.cropType];
+            return (
+              <button
+                key={preset.id}
+                onClick={() => handleTriggerPreset(preset)}
+                className="apple-glass p-2.5 rounded-2xl flex flex-col gap-1.5 text-left transition-all hover:bg-white/[0.12] active:scale-98 border border-white/10 hover:border-white/20 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1"
+                    style={{
+                      backgroundColor: crop?.accent.bg,
+                      color: crop?.accent.text,
+                      borderColor: crop?.accent.border,
+                    }}
+                  >
+                    <CropGlyph crop={preset.cropType} size={11} />
+                    <span>{crop?.labelFr || preset.name}</span>
+                  </span>
+
+                  <Play className="w-3 h-3 text-white/40 group-hover:text-amber-300 transition-colors" />
+                </div>
+
+                <span className="text-xs font-semibold text-white group-hover:text-amber-200 transition-colors line-clamp-1">
+                  {preset.name}
+                </span>
+
+                <span className="text-[10px] text-white/50 line-clamp-1">
+                  {preset.notification.duoTag || preset.tone}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -261,63 +415,111 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
       {/* Notifications Feed */}
       <div className="flex flex-col gap-2.5">
         {filteredNotifications.length > 0 ? (
-          filteredNotifications.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => {
-                if (!n.isRead) onMarkAsRead(n.id);
-                if (n.actionDestination) onNavigateToTab(n.actionDestination);
-              }}
-              className={`apple-card p-4 flex flex-col gap-2 cursor-pointer transition-all active:scale-[0.99] ${
-                !n.isRead ? 'border-white/25 bg-white/[0.12] shadow-md' : 'opacity-85'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                      n.severity === 'critical'
-                        ? 'bg-rose-500/20 text-rose-300'
-                        : n.severity === 'warning'
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-[#007aff]/20 text-[#38bdf8]'
-                    }`}
-                  >
-                    {n.category === 'weather_risk' && <ShieldAlert className="w-3.5 h-3.5" />}
-                    {n.category === 'stage_update' && <Sprout className="w-3.5 h-3.5" />}
-                    {n.category === 'harvest_window' && <Calendar className="w-3.5 h-3.5" />}
-                    {n.category === 'briefing' && <Sparkles className="w-3.5 h-3.5" />}
+          filteredNotifications.map((n) => {
+            const crop = n.cropType ? LEGUME_CROPS_CATALOG[n.cropType] : null;
+
+            return (
+              <div
+                key={n.id}
+                onClick={() => {
+                  if (!n.isRead) onMarkAsRead(n.id);
+                  if (n.actionDestination) onNavigateToTab(n.actionDestination);
+                }}
+                className={`apple-card p-4 flex flex-col gap-2.5 cursor-pointer transition-all active:scale-[0.99] hover:bg-white/[0.09] ${
+                  !n.isRead ? 'border-white/25 bg-white/[0.12] shadow-md' : 'opacity-85'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {/* Severity category icon */}
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        n.severity === 'critical'
+                          ? 'bg-rose-500/20 text-rose-300'
+                          : n.severity === 'warning'
+                          ? 'bg-amber-500/20 text-amber-300'
+                          : 'bg-[#007aff]/20 text-[#38bdf8]'
+                      }`}
+                    >
+                      {n.category === 'weather_risk' && <ShieldAlert className="w-3.5 h-3.5" />}
+                      {n.category === 'stage_update' && <Sprout className="w-3.5 h-3.5" />}
+                      {n.category === 'harvest_window' && <Calendar className="w-3.5 h-3.5" />}
+                      {n.category === 'briefing' && <Sparkles className="w-3.5 h-3.5" />}
+                    </div>
+
+                    {/* Streak Flame Badge */}
+                    {n.streakDays && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                        <Flame className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{n.streakDays}j</span>
+                      </span>
+                    )}
+
+                    {/* Crop Tag with bespoke vector SVG */}
+                    {crop && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+                        style={{
+                          backgroundColor: crop.accent.bg,
+                          color: crop.accent.text,
+                          borderColor: crop.accent.border,
+                        }}
+                      >
+                        <CropGlyph crop={crop.id} size={11} />
+                        <span>{crop.labelFr}</span>
+                      </span>
+                    )}
+
+                    {/* Duolingo Behavioral Tag */}
+                    {n.duoTag && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/80 border border-white/15">
+                        {n.duoTag}
+                      </span>
+                    )}
                   </div>
 
-                  <div>
-                    <h3 className="text-xs font-semibold text-white">{n.title}</h3>
-                    {n.fieldName && (
-                      <span className="text-[10px] text-white/50">{n.fieldName}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className="text-[10px] text-white/40 font-mono">{n.timestamp}</span>
+                    {!n.isRead && (
+                      <span className="w-2 h-2 rounded-full bg-[#007aff]" title="Non lu" />
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-white/40 font-mono">{n.timestamp}</span>
-                  {!n.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-[#007aff]" title="Non lu" />
+                {/* Title & Field Name */}
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight">{n.title}</h3>
+                  {n.fieldName && (
+                    <span className="text-[10px] text-white/50">{n.fieldName}</span>
+                  )}
+                </div>
+
+                {/* Message Body */}
+                <p className="text-xs text-white/80 leading-relaxed font-normal">
+                  {n.message}
+                </p>
+
+                {/* Footer with Economic Impact & Action */}
+                <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                  {n.economicImpact ? (
+                    <span className="text-[10px] text-[#34d399] font-medium flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>{n.economicImpact}</span>
+                    </span>
+                  ) : (
+                    <div />
+                  )}
+
+                  {n.actionLabel && (
+                    <div className="flex items-center gap-1 text-[11px] text-[#38bdf8] font-semibold hover:underline">
+                      <span>{n.actionLabel}</span>
+                      <span>→</span>
+                    </div>
                   )}
                 </div>
               </div>
-
-              <p className="text-xs text-white/75 leading-relaxed pl-9">
-                {n.message}
-              </p>
-
-              {n.actionLabel && (
-                <div className="pt-2 border-t border-white/[0.06] flex items-center justify-end pl-9">
-                  <span className="text-[11px] text-[#38bdf8] font-medium hover:underline">
-                    {n.actionLabel} →
-                  </span>
-                </div>
-              )}
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="apple-card p-6 flex flex-col items-center justify-center text-center gap-2 text-xs text-white/50">
             <Check className="w-6 h-6 text-white/30" />

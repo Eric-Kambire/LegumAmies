@@ -8,6 +8,7 @@ import { WeatherSheet } from './components/WeatherSheet/WeatherSheet';
 import { MyFieldsView } from './components/Fields/MyFieldsView';
 import { ForecastInsightsView } from './components/Insights/ForecastInsightsView';
 import { NotificationsView } from './components/Notifications/NotificationsView';
+import { DuoNotificationBanner } from './components/Notifications/DuoNotificationBanner';
 import { AppleTabBar } from './components/Navigation/AppleTabBar';
 import type { AppTab } from './components/Navigation/AppleTabBar';
 import { DesktopNavBar } from './components/Navigation/DesktopNavBar';
@@ -29,6 +30,7 @@ import {
   FRANCE_CENTER,
 } from './services/geoService';
 import { evaluateAgronomicRisks } from './services/agriRiskService';
+import { generateDuolingoNotificationsForFields } from './services/duoNotificationService';
 import { registerServiceWorker } from './services/pwaService';
 
 // Default initial farm parcels (representative French legume terroirs)
@@ -80,57 +82,10 @@ const INITIAL_FIELDS: SelectedField[] = [
   },
 ];
 
-// Initial realistic agricultural notifications
-const INITIAL_NOTIFICATIONS: AgriculturalNotification[] = [
-  {
-    id: 'notif_1',
-    title: 'Alerte Thermique sur Floraison',
-    message: 'Température prévue à 29°C cet après-midi sur votre parcelle de pois chiches à Castelnaudary. Risque d\'avortement floral. Évitez toute intervention foliaire.',
-    category: 'weather_risk',
-    severity: 'warning',
-    fieldName: 'Parcelle du Moulin (Lauragais)',
-    timestamp: 'Il y a 2h',
-    isRead: false,
-    actionLabel: 'Analyser le risque',
-    actionDestination: 'insights',
-  },
-  {
-    id: 'notif_2',
-    title: 'Créneau de Pulvérisation Favorable',
-    message: 'Vent inférieur à 12 km/h et hygrométrie optimale (65%) jusqu\'à 11h30. Fenêtre idéale pour tout traitement autorisé.',
-    category: 'weather_risk',
-    severity: 'info',
-    fieldName: 'Champ des Vignes (Beauce)',
-    timestamp: 'Il y a 4h',
-    isRead: false,
-    actionLabel: 'Voir la météo',
-    actionDestination: 'weather',
-  },
-  {
-    id: 'notif_3',
-    title: 'Suivi Phénologique Recommandé',
-    message: 'Vos féveroles en Beauce approchent-elles du stade remplissage du grain ? Mettez à jour le stade pour affiner les alertes d\'échaudage.',
-    category: 'stage_update',
-    severity: 'info',
-    fieldName: 'Champ des Vignes (Beauce)',
-    timestamp: 'Hier',
-    isRead: true,
-    actionLabel: 'Mettre à jour le stade',
-    actionDestination: 'fields',
-  },
-  {
-    id: 'notif_4',
-    title: 'Fenêtre de Moisson en Vue',
-    message: 'Dessiccation favorable prévue jeudi et vendredi (humidité grain projetée à 14.1%). Préparez votre chantier de battage.',
-    category: 'harvest_window',
-    severity: 'info',
-    fieldName: 'Les Terres Rouges (Berry)',
-    timestamp: 'Il y a 2 jours',
-    isRead: true,
-    actionLabel: 'Consulter l\'échéancier',
-    actionDestination: 'insights',
-  },
-];
+// Initial realistic agricultural notifications generated with Duolingo engagement mechanics
+// directly tailored to the crops currently present on the farm
+const INITIAL_NOTIFICATIONS: AgriculturalNotification[] =
+  generateDuolingoNotificationsForFields(INITIAL_FIELDS);
 
 export const App: React.FC = () => {
   // 1. Navigation Tab State
@@ -198,6 +153,7 @@ export const App: React.FC = () => {
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeDuoBannerNotification, setActiveDuoBannerNotification] = useState<AgriculturalNotification | null>(null);
 
   // Save fields when updated
   const persistFields = (updatedFields: SelectedField[]) => {
@@ -389,6 +345,16 @@ export const App: React.FC = () => {
     showToast('Toutes les alertes sont marquées comme lues');
   };
 
+  // Handle Duolingo simulation trigger
+  const handleTriggerSimulation = (notif: AgriculturalNotification) => {
+    setNotifications((prev) => {
+      const updated = [notif, ...prev];
+      localStorage.setItem('legum_notifications', JSON.stringify(updated));
+      return updated;
+    });
+    setActiveDuoBannerNotification(notif);
+  };
+
   // Evaluate Agronomic Risks for active field
   const agriAlerts: AgriculturalRiskAlert[] =
     weatherData && activeField
@@ -415,6 +381,17 @@ export const App: React.FC = () => {
         onSelectActiveField={handleSelectActiveField}
         env={env}
         onOpenContractModal={() => setIsBackendContractOpen(true)}
+      />
+
+      {/* Duolingo-style iOS Dynamic Island Push Banner */}
+      <DuoNotificationBanner
+        key={activeDuoBannerNotification?.id}
+        notification={activeDuoBannerNotification}
+        onDismiss={() => setActiveDuoBannerNotification(null)}
+        onActionClick={(dest) => {
+          setActiveTab(dest);
+          setActiveDuoBannerNotification(null);
+        }}
       />
 
       <main className="flex-1 min-h-0 w-full relative overflow-hidden flex flex-col">
@@ -523,6 +500,7 @@ export const App: React.FC = () => {
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
           onNavigateToTab={setActiveTab}
+          onTriggerSimulation={handleTriggerSimulation}
         />
       )}
       </main>

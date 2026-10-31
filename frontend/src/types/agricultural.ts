@@ -89,10 +89,17 @@ export interface AgriculturalNotification {
   severity: 'critical' | 'warning' | 'info';
   fieldId?: string;
   fieldName?: string;
+  cropType?: LegumeCropType;
+  growthStage?: CropGrowthStage;
   timestamp: string;
   isRead: boolean;
   actionLabel?: string;
   actionDestination?: 'weather' | 'fields' | 'insights';
+  /** Duolingo style behavioral engagement metadata */
+  streakDays?: number;
+  duoTone?: 'urgent' | 'loss_aversion' | 'playful' | 'streak_shield';
+  duoTag?: string;
+  economicImpact?: string;
 }
 
 export interface NotificationPreferences {
