@@ -18,7 +18,7 @@ function mapRiskAlert(a: RiskAlert): AgriculturalRiskAlert {
   return {
     id: `be_${a.hazard_type}_${a.forecast_start_local}`,
     type: HAZARD_TO_TYPE[a.hazard_type] ?? 'floraison_chaleur',
-    title: `${a.hazard_type.replace('_', ' ')} (seuil ${a.validation_status})`,
+    title: `${a.hazard_type.replace(/_/g, ' ')} (seuil ${a.validation_status})`,
     severity,
     description:
       `Observé ${a.observed_value} ${a.comparison_operator} seuil ${a.threshold_value} ` +
@@ -61,7 +61,7 @@ export function useBackendAssess(field: SelectedField | null): {
   alerts: AgriculturalRiskAlert[];
   response: AssessResponse | null;
 } {
-  const [status, setStatus] = useState<BackendStatus>(
+  const [status, setStatus] = useState<BackendStatus>(() =>
     isBackendConfigured() ? 'loading' : 'disabled'
   );
   const [alerts, setAlerts] = useState<AgriculturalRiskAlert[]>([]);
@@ -69,11 +69,9 @@ export function useBackendAssess(field: SelectedField | null): {
 
   useEffect(() => {
     if (!isBackendConfigured() || !field) {
-      setStatus(isBackendConfigured() ? 'loading' : 'disabled');
       return;
     }
     const controller = new AbortController();
-    setStatus('loading');
     assess(
       {
         latitude: field.latitude,
@@ -96,7 +94,7 @@ export function useBackendAssess(field: SelectedField | null): {
         setStatus('error');
       });
     return () => controller.abort();
-  }, [field?.id, field?.latitude, field?.longitude, field?.cropType, field?.growthStage]);
+  }, [field]);
 
   return { status, alerts, response };
 }
