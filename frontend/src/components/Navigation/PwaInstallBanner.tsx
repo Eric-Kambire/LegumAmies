@@ -41,8 +41,8 @@ export const PwaInstallBanner: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[550] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-top-4 duration-300">
-      <div className="apple-glass px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3 text-white select-none">
+    <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[490] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-bottom-4 duration-300">
+      <div className="apple-glass px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3 text-white select-none border border-white/20">
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src="/legumeAmi.png"

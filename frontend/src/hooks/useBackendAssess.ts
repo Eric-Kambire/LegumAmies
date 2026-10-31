@@ -39,22 +39,21 @@ function regulatoryAlerts(resp: AssessResponse): AgriculturalRiskAlert[] {
       id: `be_spray_${firstBlocked.date_local}`,
       type: 'pulverisation_vent',
       severity: 'alerte',
-      title: `Pulvérisation interdite (vent ≥ ${firstBlocked.threshold_kmh} km/h)`,
+      title: `Vent > ${firstBlocked.threshold_kmh} km/h (pulvérisation non conforme)`,
       description:
         `Vent max prévu ${firstBlocked.max_wind_speed_kmh} km/h le ${firstBlocked.date_local}. ` +
         `${firstBlocked.source}.`,
-      recommendation: 'Reporter tout traitement phytosanitaire vers une fenêtre moins ventée.',
+      recommendation:
+        'Arrêté du 4 mai 2017 : tout traitement est interdit si le vent dépasse 19 km/h (3 Beaufort). Vérifier également hygrométrie, rosée, ZNT et DSR.',
       metricValue: `${firstBlocked.max_wind_speed_kmh} km/h`,
-      triggerThreshold: `≥ ${firstBlocked.threshold_kmh} km/h`,
+      triggerThreshold: `> ${firstBlocked.threshold_kmh} km/h`,
     },
   ];
 }
 
 /**
- * Fetches the live backend assessment for a field. Returns backend-derived
- * alerts + status. On any failure or when the backend is not configured,
- * status is 'disabled'/'error' and callers should fall back to the sourced
- * client-side screening.
+ * Fetches the live backend assessment for a field.
+ * Handles field switching and prevents stale data by resetting state on change.
  */
 export function useBackendAssess(field: SelectedField | null): {
   status: BackendStatus;
@@ -67,11 +66,30 @@ export function useBackendAssess(field: SelectedField | null): {
   const [alerts, setAlerts] = useState<AgriculturalRiskAlert[]>([]);
   const [response, setResponse] = useState<AssessResponse | null>(null);
 
+  // Synchronously reset state during render when field changes to prevent stale data display
+  const [prevFieldKey, setPrevFieldKey] = useState<string | null>(null);
+  const currentFieldKey = field
+    ? `${field.id}_${field.latitude}_${field.longitude}_${field.cropType}_${field.growthStage}`
+    : null;
+
+  if (prevFieldKey !== currentFieldKey) {
+    setPrevFieldKey(currentFieldKey);
+    setAlerts([]);
+    setResponse(null);
+    if (!isBackendConfigured() || !field) {
+      setStatus(isBackendConfigured() ? 'loading' : 'disabled');
+    } else {
+      setStatus('loading');
+    }
+  }
+
   useEffect(() => {
     if (!isBackendConfigured() || !field) {
       return;
     }
+
     const controller = new AbortController();
+
     assess(
       {
         latitude: field.latitude,
@@ -88,11 +106,12 @@ export function useBackendAssess(field: SelectedField | null): {
         setAlerts([...resp.risk.alerts.map(mapRiskAlert), ...regulatoryAlerts(resp)]);
         setStatus('ok');
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         console.warn('Backend /assess unavailable, using client-side fallback:', err);
         setStatus('error');
       });
+
     return () => controller.abort();
   }, [field]);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ExternalLink, Wind, ShieldCheck } from 'lucide-react';
+import { BookOpen, ExternalLink, Wind, ShieldCheck, AlertCircle } from 'lucide-react';
 import type { RegulatoryWindow } from '../../types/backend-contract';
 
 interface SourceCitedAdviceCardProps {
@@ -43,18 +43,22 @@ export const SourceCitedAdviceCard: React.FC<SourceCitedAdviceCardProps> = ({
       </div>
 
       {/* Regulatory Spraying Window (Arrêté du 4 mai 2017) */}
-      <div className={`p-3 rounded-2xl border flex items-start gap-3 transition-colors ${
-        isSprayBlocked
-          ? 'bg-rose-500/10 border-rose-500/25 text-rose-200'
-          : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
-      }`}>
+      <div
+        className={`p-3 rounded-2xl border flex items-start gap-3 transition-colors ${
+          isSprayBlocked
+            ? 'bg-rose-500/10 border-rose-500/25 text-rose-200'
+            : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
+        }`}
+      >
         <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-white/10">
           {isSprayBlocked ? <Wind className="w-4 h-4 text-rose-300" /> : <ShieldCheck className="w-4 h-4 text-emerald-300" />}
         </div>
         <div className="text-xs min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <span className="font-bold text-white">
-              {isSprayBlocked ? 'Pulvérisation interdite (vent excessif)' : 'Conditions de pulvérisation autorisées'}
+              {isSprayBlocked
+                ? 'Pulvérisation non recommandée (vent > 19 km/h)'
+                : 'Critère de vent conforme (≤ 19 km/h) — autres conditions à vérifier'}
             </span>
             <span className="text-[10px] font-mono opacity-75 flex-shrink-0">
               Seuil légal : 19 km/h (3 Beaufort)
@@ -63,8 +67,14 @@ export const SourceCitedAdviceCard: React.FC<SourceCitedAdviceCardProps> = ({
           <p className="text-[11px] opacity-80 mt-1 leading-relaxed">
             {isSprayBlocked
               ? 'Le vent prévu dépasse le seuil légal de 19 km/h sur certaines fenêtres. Tout traitement foliaire ou phytosanitaire doit être reporté pour éviter toute dérive.'
-              : 'Vent moyen inférieur au seuil réglementaire de 19 km/h. Veillez à respecter les conditions d\'hygrométrie (> 60%) et les zones non traitées (ZNT).'}
+              : 'Vent moyen inférieur au seuil réglementaire de 19 km/h. Veillez à vérifier impérativement l\'hygrométrie (> 60%), l\'absence de rosée ou de pluie, les zones non traitées (ZNT) et les délais de rentrée (DSR).'}
           </p>
+          <div className="flex items-center gap-1.5 mt-2 text-[10px] opacity-75">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-300" />
+            <span>
+              Le respect du critère de vent est une condition nécessaire mais non suffisante pour autoriser un traitement.
+            </span>
+          </div>
           <span className="text-[10px] opacity-60 block mt-1 font-mono">
             Source : Arrêté du 4 mai 2017 relatif à la mise sur le marché et à l'utilisation des produits phytopharmaceutiques.
           </span>
@@ -90,7 +100,7 @@ export const SourceCitedAdviceCard: React.FC<SourceCitedAdviceCardProps> = ({
                 {w.max_wind_speed_kmh} km/h
               </span>
               <span className="text-[9px] font-semibold opacity-75">
-                {w.spraying_allowed ? 'Autorisé' : 'Interdit'}
+                {w.spraying_allowed ? 'Vent ≤ 19 km/h' : 'Vent > 19 km/h'}
               </span>
             </div>
           ))}

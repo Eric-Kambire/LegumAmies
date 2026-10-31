@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import type { LocationWeatherData } from '../../types/weather';
 import type { SelectedField, AgriculturalRiskAlert } from '../../types/agricultural';
+import type { AssessResponse } from '../../types/backend-contract';
+import type { BackendStatus } from '../../hooks/useBackendAssess';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
 import {
@@ -13,7 +15,6 @@ import {
   SPRAYING_SOURCE,
 } from '../../data/sourcedAgronomy';
 import { CropGlyph } from '../Common/LegumeGlyphs';
-import { useBackendAssess } from '../../hooks/useBackendAssess';
 import { RiskPredictionCard } from '../Scientific/RiskPredictionCard';
 import { HarvestRecommendationsCard } from '../Scientific/HarvestRecommendationsCard';
 import { UncertaintyRainChart } from '../Scientific/UncertaintyRainChart';
@@ -24,46 +25,54 @@ interface ForecastInsightsViewProps {
   weather: LocationWeatherData | null;
   field: SelectedField | null;
   alerts: AgriculturalRiskAlert[];
+  backendStatus?: BackendStatus;
+  backendResponse?: AssessResponse | null;
   onOpenFieldConfig: () => void;
 }
 
 export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   weather,
   field,
-  alerts: clientAlerts,
+  alerts,
+  backendStatus = 'disabled',
+  backendResponse = null,
   onOpenFieldConfig,
 }) => {
   const [viewMode, setViewMode] = useState<'summary' | 'scientific'>('summary');
   const [selectedAlertForWhy, setSelectedAlertForWhy] = useState<string | null>(null);
 
-  // Connect to live backend /assess via hook
-  const { status: backendStatus, alerts: backendAlerts, response: backendResponse } = useBackendAssess(field);
-
-  const activeAlerts = backendStatus === 'ok' ? backendAlerts : clientAlerts;
   const crop = field ? LEGUME_CROPS_CATALOG[field.cropType] : null;
 
-  const currentTemp = weather?.current.temperature ?? 20;
-  const currentWind = weather?.current.windSpeed ?? 12;
-  const currentRain = weather?.current.precipitation ?? 0;
+  // Strict data honesty: do not use factual fake defaults (e.g. 20°C, 12 km/h, 0 mm)
+  const currentTemp = weather?.current?.temperature ?? null;
+  const currentWind = weather?.current?.windSpeed ?? null;
   const maxTemp = weather?.daily?.[0]?.temperatureMax ?? currentTemp;
   const sourcedHeat = field ? getSourcedFloweringHeat(field.cropType) : undefined;
 
-  // Build decision traces
+  // Build decision traces without fabricated values or invented formulas
   const heatTrace: DecisionTrace = sourcedHeat
     ? {
         id: 'trace_heat',
         title: 'Seuil de chaleur en floraison (publié)',
-        status: maxTemp >= sourcedHeat.tmaxC ? 'Seuil dépassé' : 'Sous le seuil',
-        isTriggered: maxTemp >= sourcedHeat.tmaxC,
+        status:
+          maxTemp !== null
+            ? maxTemp >= sourcedHeat.tmaxC
+              ? 'Seuil dépassé'
+              : 'Sous le seuil'
+            : 'Donnée météo indisponible',
+        isTriggered: maxTemp !== null ? maxTemp >= sourcedHeat.tmaxC : false,
         ruleType: `Seuil agronomique publié — ${sourcedHeat.institution}`,
-        formula: `Tmax prévue (${Math.round(maxTemp)}°C) vs seuil publié (${sourcedHeat.tmaxC}°C)`,
+        formula:
+          maxTemp !== null
+            ? `Tmax prévue (${Math.round(maxTemp)}°C) vs seuil publié (${sourcedHeat.tmaxC}°C)`
+            : `Donnée de température indisponible`,
         scientificExplanation: `${sourcedHeat.noteFr} Source : ${sourcedHeat.institution}. Un dépassement est une alerte de risque, pas une prédiction de dégât.`,
         parameters: [
           {
             name: 'Température max prévue',
-            value: `${Math.round(maxTemp)}°C`,
+            value: maxTemp !== null ? `${Math.round(maxTemp)}°C` : 'Non disponible',
             threshold: `${sourcedHeat.tmaxC}°C`,
-            status: maxTemp >= sourcedHeat.tmaxC ? 'critical' : 'ok',
+            status: maxTemp !== null ? (maxTemp >= sourcedHeat.tmaxC ? 'critical' : 'ok') : 'warning',
           },
         ],
       }
@@ -80,47 +89,78 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
 
   const sprayTrace: DecisionTrace = {
     id: 'trace_spray',
-    title: 'Fenêtre de pulvérisation (réglementation)',
-    status: currentWind >= SPRAYING_WIND_LIMIT_KMH ? 'Interdit (réglementaire)' : 'Conforme',
-    isTriggered: currentWind >= SPRAYING_WIND_LIMIT_KMH,
+    title: 'Fenêtre de pulvérisation (réglementation vent)',
+    status:
+      currentWind !== null
+        ? currentWind >= SPRAYING_WIND_LIMIT_KMH
+          ? 'Vent > 19 km/h (interdit)'
+          : 'Vent ≤ 19 km/h (critère respecté)'
+        : 'Donnée de vent indisponible',
+    isTriggered: currentWind !== null ? currentWind >= SPRAYING_WIND_LIMIT_KMH : false,
     ruleType: `Réglementation française — ${SPRAYING_SOURCE.label}`,
-    formula: `Vent (${Math.round(currentWind)} km/h) vs ${SPRAYING_WIND_LIMIT_KMH} km/h (3 Beaufort)`,
-    scientificExplanation: `Au-delà de ${SPRAYING_WIND_LIMIT_KMH} km/h, la pulvérisation phytosanitaire est interdite pour limiter la dérive. Vérifier aussi l'hygrométrie et les ZNT. Source : ${SPRAYING_SOURCE.institution}.`,
+    formula:
+      currentWind !== null
+        ? `Vent moyen (${Math.round(currentWind)} km/h) vs limite légale ${SPRAYING_WIND_LIMIT_KMH} km/h (3 Beaufort)`
+        : `Donnée de vent non disponible`,
+    scientificExplanation: `Au-delà de ${SPRAYING_WIND_LIMIT_KMH} km/h, la pulvérisation phytosanitaire est interdite pour limiter la dérive. Source : ${SPRAYING_SOURCE.institution}. Attention : ce critère ne constitue pas une autorisation globale (vérifier hygrométrie, rosée, ZNT et délais de rentrée).`,
     parameters: [
       {
         name: 'Vent moyen prévu',
-        value: `${Math.round(currentWind)} km/h`,
+        value: currentWind !== null ? `${Math.round(currentWind)} km/h` : 'Non disponible',
         threshold: `< ${SPRAYING_WIND_LIMIT_KMH} km/h`,
-        status: currentWind < SPRAYING_WIND_LIMIT_KMH ? 'ok' : 'critical',
+        status: currentWind !== null ? (currentWind < SPRAYING_WIND_LIMIT_KMH ? 'ok' : 'critical') : 'warning',
       },
     ],
   };
 
-  const harvestTrace: DecisionTrace = {
-    id: 'trace_harvest',
-    title: 'Fenêtre de récolte (météo-dépendante)',
-    status: backendResponse?.harvest?.available
-      ? `${backendResponse.harvest.n_feasible_days} jours favorables`
-      : 'Culture en maturation',
-    isTriggered: currentRain > 0,
-    ruleType: 'Aide à la décision météo-dépendante',
-    formula: `Risque pluie < 20% et précipitations prévues faibles`,
-    scientificExplanation: `Évalué sur la base des probabilités d'ensemble AIFS et du modèle AROME. Aucune mesure d'humidité de grain n'étant réalisée, les résultats restent indicatifs.`,
-    parameters: [
-      {
-        name: 'Précipitations en cours',
-        value: currentRain > 0 ? `${currentRain} mm` : '0 mm',
-        threshold: '0 mm',
-        status: currentRain > 0 ? 'critical' : 'ok',
-      },
-      {
-        name: 'Humidité du grain',
-        value: 'Non mesurée',
-        threshold: 'Observation au champ',
-        status: 'warning',
-      },
-    ],
-  };
+  const harvestTrace: DecisionTrace = backendResponse?.harvest?.available
+    ? {
+        id: 'trace_harvest',
+        title: 'Fenêtre de récolte (classement météo)',
+        status: `${backendResponse.harvest.n_feasible_days} créneaux favorables`,
+        isTriggered: true,
+        ruleType: 'Classement météo déterministe (sans portance sol)',
+        formula: `Pondérations algorithme : ${Object.entries(backendResponse.harvest.weights || {})
+          .map(([k, v]) => `${k}=${v}`)
+          .join(', ')}`,
+        scientificExplanation:
+          backendResponse.harvest.days[0]?.explanation ||
+          backendResponse.harvest.note ||
+          'Classement basé sur les probabilités de pluie AIFS.',
+        parameters: [
+          {
+            name: 'Créneau optimal recommandé',
+            value: backendResponse.harvest.recommended_date_local || 'Aucun',
+            threshold: 'Date la plus proche sans pluie',
+            status: 'ok',
+          },
+          {
+            name: 'Jours favorables identifiés',
+            value: `${backendResponse.harvest.n_feasible_days}`,
+            threshold: '≥ 1 jour',
+            status: backendResponse.harvest.n_feasible_days > 0 ? 'ok' : 'warning',
+          },
+        ],
+      }
+    : {
+        id: 'trace_harvest',
+        title: 'Fenêtre de récolte',
+        status: 'Non engagée',
+        isTriggered: false,
+        ruleType: 'Aide à la décision inactive avant maturité',
+        formula: 'Condition : stade phénologique == prêt à récolter',
+        scientificExplanation:
+          backendResponse?.harvest?.note ||
+          'La parcelle n\'a pas atteint le stade prêt à récolter. L\'algorithme de battage ne s\'active qu\'à maturité pour éviter les récoltes prématurées.',
+        parameters: [
+          {
+            name: 'Stade phénologique actuel',
+            value: field ? getGrowthStageFr(field.growthStage) : 'Non défini',
+            threshold: 'Prêt à récolter',
+            status: 'warning',
+          },
+        ],
+      };
 
   const decisionTraces: DecisionTrace[] = [heatTrace, sprayTrace, harvestTrace];
 
@@ -230,7 +270,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                 Risques Météo-Agronomiques Ciblés
               </span>
               <span className="text-[10px] text-white/40 font-mono">
-                {activeAlerts.length} alerte{activeAlerts.length > 1 ? 's' : ''} active{activeAlerts.length > 1 ? 's' : ''}
+                {alerts.length} alerte{alerts.length > 1 ? 's' : ''} active{alerts.length > 1 ? 's' : ''}
               </span>
             </div>
 
@@ -247,9 +287,9 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                   />
                 ))}
               </div>
-            ) : activeAlerts.length > 0 ? (
+            ) : alerts.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {activeAlerts.map((alert) => (
+                {alerts.map((alert) => (
                   <div key={alert.id} className="apple-card p-4 flex flex-col gap-2.5 border-white/15">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-white">{alert.title}</span>
@@ -342,8 +382,10 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             />
           ) : (
             <div className="apple-card p-4 flex items-center justify-between text-xs text-white/70">
-              <span>Réglementation pulvérisation : Arrêté du 4 mai 2017 (seuil 19 km/h).</span>
-              <span className="font-mono text-white/50">Vent actuel : {Math.round(currentWind)} km/h</span>
+              <span>Réglementation pulvérisation : Arrêté du 4 mai 2017 (seuil légal 19 km/h).</span>
+              <span className="font-mono text-white/50">
+                {currentWind !== null ? `Vent prévu : ${Math.round(currentWind)} km/h` : 'Vent non mesuré'}
+              </span>
             </div>
           )}
         </div>

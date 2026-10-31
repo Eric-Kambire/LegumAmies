@@ -8,6 +8,23 @@ interface RiskPredictionCardProps {
   onWhyClick?: () => void;
 }
 
+function formatMetricValue(value: number, variable: string): string {
+  const v = (variable || '').toLowerCase();
+  if (v.includes('temp') || v.includes('frost') || v.includes('gel') || v.includes('heat') || v.includes('chaleur')) {
+    return `${value}°C`;
+  }
+  if (v.includes('rain') || v.includes('precip') || v.includes('eau') || v.includes('pluie')) {
+    return `${value} mm`;
+  }
+  if (v.includes('wind') || v.includes('vent') || v.includes('speed') || v.includes('rafale')) {
+    return `${value} km/h`;
+  }
+  if (v.includes('humid') || v.includes('rh') || v.includes('pct') || v.includes('%')) {
+    return `${value}%`;
+  }
+  return `${value}`;
+}
+
 export const RiskPredictionCard: React.FC<RiskPredictionCardProps> = ({ alert, onWhyClick }) => {
   const statusInfo = formatValidationStatus(alert.validation_status);
 
@@ -59,16 +76,16 @@ export const RiskPredictionCard: React.FC<RiskPredictionCardProps> = ({ alert, o
       {/* Observation vs Sourced Threshold */}
       <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-black/40 border border-white/[0.06] text-xs">
         <div>
-          <span className="text-[10px] text-white/50 uppercase tracking-wide block">Prévision modèle :</span>
+          <span className="text-[10px] text-white/50 uppercase tracking-wide block">Valeur prévue (modèle) :</span>
           <span className="font-mono text-sm font-bold text-rose-300">
-            {alert.observed_value}°C
+            {formatMetricValue(alert.observed_value, alert.weather_variable)}
           </span>
         </div>
         <div>
-          <span className="text-[10px] text-white/50 uppercase tracking-wide block">Seuil d'alerte :</span>
+          <span className="text-[10px] text-white/50 uppercase tracking-wide block">Seuil d'alerte agronomique :</span>
           <span className="font-mono text-sm font-semibold text-white/90">
             {alert.comparison_operator === 'gt' ? '> ' : '< '}
-            {alert.threshold_value}°C
+            {formatMetricValue(alert.threshold_value, alert.weather_variable)}
           </span>
         </div>
       </div>
@@ -85,7 +102,7 @@ export const RiskPredictionCard: React.FC<RiskPredictionCardProps> = ({ alert, o
       <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-2 text-[10px]">
         <div className="flex items-center gap-1 text-white/50 truncate">
           <AlertTriangle className="w-3 h-3 text-amber-400 flex-shrink-0" />
-          <span className="truncate">Alerte de risque, pas une prédiction de dégât.</span>
+          <span className="truncate">Alerte de risque météo, pas une prédiction de dégât avéré.</span>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
