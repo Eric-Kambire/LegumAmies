@@ -69,7 +69,16 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
 
     mapInstanceRef.current = map;
 
+    // Invalidate map size on container resize / unhide
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };

@@ -24,8 +24,20 @@ export interface CropInfo {
   scientificName: string;
   typicalSowingMonths: string;
   typicalHarvestMonths: string;
-  optimalHarvestMoisture: { min: number; max: number }; // Percentage, e.g. 14-16%
-  heatThresholdC: number; // Flowering abortion threshold
+  optimalHarvestMoisture: { min: number; max: number };
+  heatThresholdC: number;
+  emoji: string;
+  color: string;
+  description: string;
+}
+
+export interface GrowthStageInfo {
+  id: CropGrowthStage;
+  labelFr: string;
+  shortDescFr: string;
+  fullDescFr: string;
+  criticalRisks: string[];
+  emoji: string;
 }
 
 export interface SelectedField {
@@ -39,6 +51,7 @@ export interface SelectedField {
   growthStage: CropGrowthStage;
   areaHectares?: number;
   sowingDate?: string;
+  soilType?: 'calcaire' | 'argilo_calcaire' | 'limon' | 'sableux';
   createdAt: string;
   updatedAt: string;
 }
@@ -54,4 +67,31 @@ export interface AgriculturalRiskAlert {
   recommendation: string;
   metricValue: string;
   triggerThreshold: string;
+  whyExplanation?: string;
+  featureWeights?: Array<{ name: string; impactPct: number; direction: 'increases_risk' | 'decreases_risk' }>;
+}
+
+export interface AgriculturalNotification {
+  id: string;
+  title: string;
+  message: string;
+  category: 'weather_risk' | 'stage_update' | 'harvest_window' | 'briefing';
+  severity: 'critical' | 'warning' | 'info';
+  fieldId?: string;
+  fieldName?: string;
+  timestamp: string;
+  isRead: boolean;
+  actionLabel?: string;
+  actionDestination?: 'weather' | 'fields' | 'insights';
+}
+
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string; // "21:00"
+  quietHoursEnd: string;   // "06:30"
+  criticalRisksImmediate: boolean;
+  dailyBriefingMorning: boolean;
+  dailyBriefingTime: string; // "07:00"
+  stageUpdateReminders: boolean;
 }
