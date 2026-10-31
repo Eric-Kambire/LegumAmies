@@ -182,3 +182,34 @@ class AssessResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str
     detail: Optional[str] = None
+
+
+# --------------------------------------------------------------------------
+# Advisor agent (POST /advisor/ask)
+# --------------------------------------------------------------------------
+class AdvisorField(BaseModel):
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+    crop: Optional[str] = Field(default=None, description="FR or EN crop id (optional)")
+    growth_stage: Optional[str] = Field(default=None, description="FR or EN stage id (optional)")
+    harvest_ready: Optional[bool] = None
+    field_name: Optional[str] = None
+
+
+class AdvisorRequest(BaseModel):
+    field: AdvisorField = Field(default_factory=AdvisorField)
+    question: str = Field(..., min_length=1, max_length=1000)
+
+
+class AdvisorResponse(BaseModel):
+    answer: str
+    actions: list[dict]
+    citations: list[dict]
+    forecast_provenance: dict
+    uncertainty: dict
+    limitations: list[str]
+    grounded: bool
+    tools_used: list[str]
+    model_id: Optional[str]
+    knowledge_base_id: str
+    generated_at_utc: str

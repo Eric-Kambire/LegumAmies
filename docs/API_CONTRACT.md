@@ -226,3 +226,81 @@ Stages: `vegetatif↔vegetative`, `floraison↔flowering`,
 
 CORS allow-list is configurable via `LEGUMAMIES_CORS_ORIGINS` (comma-separated;
 default `*` for the test deployment).
+
+---
+
+## 9. Agricultural advisor agent — `POST /advisor/ask`
+
+Retrieval-first conversational advisor (Amazon Bedrock **Converse**, model
+`amazon.nova-lite-v1:0`; Nova Micro fallback) grounded on the existing
+Knowledge Base **`C5WRYFYF1O`** plus the real ClimateShield tools. The agent
+gathers facts deterministically (bounded tool calls, timeouts), then makes ONE
+grounded synthesis call. Citations, provenance, uncertainty, actions and
+limitations are assembled from the tools — never invented by the model.
+
+Four capabilities: `search_documents` (KB evidence + citations),
+`get_forecast` (real AROME + AIFS), `explain_risk` (sourced rules),
+`explain_harvest` (weather-only ranking).
+
+### Request
+```json
+{
+  "field": {
+    "latitude": 47.32, "longitude": 5.04,
+    "crop": "pois", "growth_stage": "floraison",   // FR or EN, both optional
+    "harvest_ready": false, "field_name": "Parcelle Dijon"
+  },
+  "question": "Mes pois sont en floraison près de Dijon. La chaleur est-elle dangereuse ?"
+}
+```
+`question` is required (1–1000 chars). Any `field` member may be omitted; the
+agent degrades honestly (no coords → no forecast; no crop/stage → no
+risk/harvest; unsupported crop → stated explicitly).
+
+### Response
+```json
+{
+  "answer": "… réponse en français, fondée sur les faits fournis …",
+  "actions": [ { "title": "…", "basis": "seuil 25°C (published)", "verified": false } ],
+  "citations": [
+    { "type": "agronomic_evidence", "institution": "Terres Inovia",
+      "document": "sources/pois_proteagineux.md",
+      "source_url": "https://www.terresinovia.fr/…", "score": 0.82, "snippet": "…" },
+    { "type": "agronomic_rule", "hazard": "heat_stress",
+      "source_url": "https://www.terresinovia.fr/…", "validation_status": "published" }
+  ],
+  "forecast_provenance": {
+    "retrieved_at_utc": "…",
+    "arome": { "available": true, "model_id": "meteofrance_arome_france_hd", "window_local": [..] },
+    "aifs":  { "available": true, "model_id": "ecmwf_aifs025_ensemble", "ensemble_members_valid": 51 },
+    "data_kind": "real_weather_forecast"
+  },
+  "uncertainty": { "ensemble_members": 51, "rain_probability_pct_range": [0.0, 9.8], "note": "…" },
+  "limitations": [ "…", "Aucune estimation de rendement, d'économie phytosanitaire ou de bénéfice économique n'est fournie." ],
+  "grounded": true,
+  "tools_used": ["search_documents","get_forecast","explain_risk","explain_harvest"],
+  "model_id": "amazon.nova-lite-v1:0",
+  "knowledge_base_id": "C5WRYFYF1O",
+  "generated_at_utc": "…"
+}
+```
+
+### Guarantees (anti-hallucination)
+- Forecast facts (AROME/AIFS) and agronomic evidence (Terres Inovia KB + rules)
+  are kept in separate blocks; each threshold is attributed to its source.
+- The model is instructed to use only the provided facts and to state when data
+  is missing. `actions` are conservative, `verified:false` suggestions — never
+  treatment authorizations.
+- No fabricated yield reductions, pesticide savings, economic (€) benefits or
+  environmental-impact figures. `limitations` always carries this disclaimer.
+
+### Errors
+- `422` — empty/oversized question, or out-of-range coordinates.
+- Upstream failures (forecast provider, KB, model) never 500 the request: they
+  surface as honest `available:false` / limitation entries, and the model
+  synthesis has a safe fallback (`model_id:null`).
+
+### Config (env)
+`LEGUMAMIES_ADVISOR_MODEL` (default `amazon.nova-lite-v1:0`),
+`LEGUMAMIES_KB_ID` (default `C5WRYFYF1O`), `AWS_REGION` (default `us-east-1`).
+Requires server-side AWS credentials with Bedrock `converse` + `bedrock-agent-runtime:Retrieve`.

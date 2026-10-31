@@ -96,6 +96,25 @@ def _spraying_windows(weather_df: pd.DataFrame) -> list[schemas.RegulatoryWindow
     return out
 
 
+@app.post("/advisor/ask", response_model=schemas.AdvisorResponse)
+def advisor_ask(req: schemas.AdvisorRequest) -> schemas.AdvisorResponse:
+    """Agricultural AI advisor: retrieval-first grounded answer for a field.
+
+    Combines the existing Knowledge Base (agronomic evidence), real AROME/AIFS
+    forecasts, sourced risk rules and the weather-only harvest ranking. Returns
+    a grounded French answer plus deterministic citations, provenance,
+    uncertainty, actions and limitations.
+    """
+    from ..advisor import agent as advisor_agent
+
+    field = req.field.model_dump()
+    try:
+        result = advisor_agent.run_advisor(field, req.question)
+    except advisor_agent.AdvisorInputError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return schemas.AdvisorResponse(**result)
+
+
 @app.post("/assess", response_model=schemas.AssessResponse)
 def assess(req: schemas.AssessRequest) -> schemas.AssessResponse:
     crop = mapping.normalise_crop(req.crop)
