@@ -1,9 +1,13 @@
-const CACHE_NAME = 'legumamies-v1';
+const CACHE_NAME = 'legumamies-v2';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon.svg',
+  '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/favicon-64.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -20,7 +24,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
+          if (name !== CACHE_NAME && name !== 'legumamies-weather-v2') {
             return caches.delete(name);
           }
         })
@@ -40,7 +44,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.status === 200) {
             const responseClone = response.clone();
-            caches.open('legumamies-weather-v1').then((cache) => {
+            caches.open('legumamies-weather-v2').then((cache) => {
               cache.put(event.request, responseClone);
             });
           }
@@ -53,9 +57,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for map tiles and static assets
+  // Cache-first for map tiles and static assets (OpenStreetMap & ESRI)
   if (
-    url.hostname.includes('cartocdn.com') ||
+    url.hostname.includes('openstreetmap.org') ||
+    url.hostname.includes('arcgisonline.com') ||
+    url.hostname.includes('rainviewer.com') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.css') ||
@@ -69,7 +75,7 @@ self.addEventListener('fetch', (event) => {
         return fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open('legumamies-assets-v1').then((cache) => {
+            caches.open('legumamies-assets-v2').then((cache) => {
               cache.put(event.request, clone);
             });
           }
