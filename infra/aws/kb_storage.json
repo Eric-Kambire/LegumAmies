@@ -1,0 +1,7 @@
+{
+  "type": "S3_VECTORS",
+  "s3VectorsConfiguration": {
+    "vectorBucketArn": "arn:aws:s3vectors:us-east-1:040416400623:bucket/legumamies-rag-vectors-040416400623",
+    "indexArn": "arn:aws:s3vectors:us-east-1:040416400623:bucket/legumamies-rag-vectors-040416400623/index/legumes-kb-index"
+  }
+}
