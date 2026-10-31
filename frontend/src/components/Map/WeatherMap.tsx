@@ -62,16 +62,17 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       attributionControl: true,
     });
 
-    // Base Tile Layer (Apple Maps CartoDB styled tiles)
+    // Base Tile Layer (100% Free & Open - Zero API Key & Zero Watermark)
     const tileUrl = isDarkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+      : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     const baseLayer = L.tileLayer(tileUrl, {
-      subdomains: 'abcd',
       maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxNativeZoom: isDarkMode ? 16 : 19,
+      attribution: isDarkMode
+        ? '&copy; <a href="https://www.esri.com/">Esri</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs',
     }).addTo(map);
 
     baseTileLayerRef.current = baseLayer;
@@ -121,12 +122,12 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     }
   }, [isActive]);
 
-  // 2. Base Tile Layer Theme Change
+  // 2. Base Tile Layer Theme Change (Switch between OpenStreetMap & ESRI Dark)
   useEffect(() => {
     if (!baseTileLayerRef.current) return;
     const tileUrl = isDarkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+      : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
     baseTileLayerRef.current.setUrl(tileUrl);
   }, [isDarkMode]);
 
