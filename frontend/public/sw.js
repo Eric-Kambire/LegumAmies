@@ -1,13 +1,15 @@
-const CACHE_NAME = 'legumamies-v2';
+const CACHE_NAME = 'legumamies-v3';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon.svg',
+  '/legumeAmi.png',
+  '/logo.png',
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
   '/favicon-64.png',
+  '/favicon.ico',
 ];
 
 self.addEventListener('install', (event) => {
