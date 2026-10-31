@@ -7,6 +7,11 @@ import type { LocationWeatherData } from '../../types/weather';
 import type { SelectedField, AgriculturalRiskAlert } from '../../types/agricultural';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
+import {
+  getSourcedFloweringHeat,
+  SPRAYING_WIND_LIMIT_KMH,
+  SPRAYING_SOURCE,
+} from '../../data/sourcedAgronomy';
 import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface ForecastInsightsViewProps {
@@ -26,52 +31,65 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   const [selectedAlertForWhy, setSelectedAlertForWhy] = useState<string | null>(null);
 
   const currentTemp = weather?.current.temperature ?? 20;
-  const currentHumidity = weather?.current.relativeHumidity ?? 55;
   const currentWind = weather?.current.windSpeed ?? 12;
   const currentRain = weather?.current.precipitation ?? 0;
 
   const crop = field ? LEGUME_CROPS_CATALOG[field.cropType] : null;
-  const heatThreshold = crop?.heatThresholdC ?? 28;
+  const maxTemp = weather?.daily?.[0]?.temperatureMax ?? currentTemp;
+  const sourcedHeat = field ? getSourcedFloweringHeat(field.cropType) : undefined;
 
-  // Transparent Rule & Model Decision Traces (Honest scientific explanations)
+  // Transparent decision traces. Each trace is either backed by a published
+  // source / real regulation, or explicitly marked "non disponible". No
+  // invented thresholds, grain-moisture values or sorption formulas.
+  const heatTrace = sourcedHeat
+    ? {
+        id: 'trace_heat',
+        title: 'Seuil de chaleur en floraison (publié)',
+        status: maxTemp >= sourcedHeat.tmaxC ? 'Seuil dépassé' : 'Sous le seuil',
+        isTriggered: maxTemp >= sourcedHeat.tmaxC,
+        ruleType: `Seuil agronomique publié — ${sourcedHeat.institution}`,
+        formula: `Tmax prévue (${Math.round(maxTemp)}°C) vs seuil publié (${sourcedHeat.tmaxC}°C)`,
+        scientificExplanation: `${sourcedHeat.noteFr} Source : ${sourcedHeat.institution}. Un dépassement est une alerte de risque, pas une prédiction de dégât.`,
+        parameters: [
+          { name: 'Température max prévue', value: `${Math.round(maxTemp)}°C`, threshold: `${sourcedHeat.tmaxC}°C`, status: maxTemp >= sourcedHeat.tmaxC ? 'critical' : 'ok' },
+        ],
+      }
+    : {
+        id: 'trace_heat',
+        title: 'Seuil de chaleur en floraison',
+        status: 'Non disponible',
+        isTriggered: false,
+        ruleType: 'Aucun seuil publié pour cette culture',
+        formula: '—',
+        scientificExplanation: `Aucun seuil de chaleur publié n'est disponible pour ${field ? getCropNameFr(field.cropType) : 'cette culture'}. Valeur non affichée pour éviter toute donnée inventée.`,
+        parameters: [] as Array<{ name: string; value: string; threshold: string; status: string }>,
+      };
+
   const decisionTraces = [
-    {
-      id: 'trace_heat',
-      title: 'Modèle de Vulnérabilité Thermique (Floraison)',
-      status: currentTemp >= heatThreshold ? 'Seuil dépassé' : 'Normal',
-      isTriggered: currentTemp >= heatThreshold,
-      ruleType: 'Règle agronomique déterministe (INRAE / Terres Inovia)',
-      formula: `T_max_observée (${Math.round(currentTemp)}°C) vs Seuil_Espèce (${heatThreshold}°C)`,
-      scientificExplanation: `Pendant la floraison de la féverole et de la lentille, un dépassement prolongé de ${heatThreshold}°C bloque la division cellulaire dans le tube pollinique, causant l'avortement irréversible des fleurs nouées.`,
-      parameters: [
-        { name: 'Température max prévue', value: `${Math.round(currentTemp)}°C`, threshold: `${heatThreshold}°C`, status: currentTemp >= heatThreshold ? 'critical' : 'ok' },
-        { name: 'Durée exposition > 28°C', value: '4 heures', threshold: '2 heures max', status: 'warning' },
-      ],
-    },
+    heatTrace,
     {
       id: 'trace_spray',
-      title: 'Modèle de Dérive de Pulvérisation & Hygrométrie',
-      status: currentWind >= 19 ? 'Interdit légal' : 'Conforme',
-      isTriggered: currentWind >= 19,
-      ruleType: 'Réglementation française (Arrêté ministériel du 4 mai 2017)',
-      formula: `Vitesse_Vent (${currentWind} km/h) < 19 km/h (Beaufort 3)`,
-      scientificExplanation: `Le vent supérieur à 19 km/h provoque l'évaporation et la dérive aéroportée des gouttelettes hors de la cible végétale. Une hygrométrie minimale de 60% est requise pour éviter l'évaporation prématurée de la bouillie foliaire.`,
+      title: 'Fenêtre de pulvérisation (réglementation)',
+      status: currentWind >= SPRAYING_WIND_LIMIT_KMH ? 'Interdit (réglementaire)' : 'Conforme',
+      isTriggered: currentWind >= SPRAYING_WIND_LIMIT_KMH,
+      ruleType: `Réglementation française — ${SPRAYING_SOURCE.label}`,
+      formula: `Vent (${Math.round(currentWind)} km/h) vs ${SPRAYING_WIND_LIMIT_KMH} km/h (3 Beaufort)`,
+      scientificExplanation: `Au-delà de ${SPRAYING_WIND_LIMIT_KMH} km/h, la pulvérisation phytosanitaire est interdite pour limiter la dérive. Vérifier aussi l'hygrométrie et les ZNT. Source : ${SPRAYING_SOURCE.institution}.`,
       parameters: [
-        { name: 'Vitesse vent moyen', value: `${currentWind} km/h`, threshold: '< 19 km/h', status: currentWind < 19 ? 'ok' : 'critical' },
-        { name: 'Humidité relative', value: `${currentHumidity}%`, threshold: '60% - 90%', status: currentHumidity >= 60 ? 'ok' : 'warning' },
+        { name: 'Vent moyen prévu', value: `${Math.round(currentWind)} km/h`, threshold: `< ${SPRAYING_WIND_LIMIT_KMH} km/h`, status: currentWind < SPRAYING_WIND_LIMIT_KMH ? 'ok' : 'critical' },
       ],
     },
     {
       id: 'trace_harvest',
-      title: 'Optimiseur de Dessiccation & Humidité du Grain',
-      status: 'Indice calculé',
-      isTriggered: true,
-      ruleType: 'Modèle dynamique d\'équilibre hygroscopique grain/air',
-      formula: `Humidité_Grain = f(DJC, Précipitations_cumulées_7j, Hygrométrie_air)`,
-      scientificExplanation: `Le grain de légumineuse échange de l'eau avec l'air ambiant selon la courbe d'équilibre de sorption de Henderson-Perry. Un cumul de pluie de 5 mm réhumidifie la gousse de +2.8% en moyenne.`,
+      title: 'Fenêtre de récolte (pluie prévue)',
+      status: 'Indicateur météo',
+      isTriggered: currentRain > 0,
+      ruleType: 'Indicateur météo (pluie prévue) — provisoire',
+      formula: `Pluie en cours/prévue : ${currentRain > 0 ? '> 0' : '0'} mm`,
+      scientificExplanation: `Évalué uniquement sur la pluie prévue par le modèle. L'application ne mesure pas l'humidité du grain ni la portance du sol : indicateur provisoire, non agronomiquement validé.`,
       parameters: [
-        { name: 'Humidité grain estimée', value: '14.2%', threshold: '14% - 15%', status: 'ok' },
-        { name: 'Risque pluie 72h', value: `${currentRain > 0 ? 'Élevé' : 'Faible'}`, threshold: '< 1 mm', status: currentRain > 0 ? 'critical' : 'ok' },
+        { name: 'Pluie en cours/prévue', value: currentRain > 0 ? 'Oui' : 'Non', threshold: '0 mm', status: currentRain > 0 ? 'critical' : 'ok' },
+        { name: 'Humidité du grain', value: 'Non mesurée', threshold: '—', status: 'warning' },
       ],
     },
   ];
@@ -86,7 +104,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             {field?.name || 'Parcelle'} • {field ? getCropNameFr(field.cropType) : 'Culture'}
           </p>
         </div>
-
         {/* Apple Segmented Switcher: Summary vs Detailed Scientific */}
         <div className="apple-glass p-0.5 rounded-full flex items-center gap-1 shadow-lg">
           <button
@@ -138,7 +155,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                   </p>
                 </div>
               </div>
-
               <button
                 onClick={onOpenFieldConfig}
                 className="apple-glass px-3.5 py-1.5 rounded-full text-xs text-white/80 hover:text-white active:scale-95 transition-transform"
@@ -150,13 +166,17 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
 
           {/* Responsive 2-column Grid for Risks and Probabilities */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-
           {/* Active Risks List with "Pourquoi cette prédiction ?" button */}
           <div className="flex flex-col gap-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-white/50 px-1">
               Évaluation des Risques Météo Ciblés
             </span>
-
+            {alerts.length === 0 && (
+              <div className="apple-card p-4 text-xs text-white/60">
+                Aucun risque sourcé déclenché pour ce stade et cette prévision. Les seuils sans
+                source publiée ne sont pas affichés.
+              </div>
+            )}
             {alerts.map((alert) => (
               <div
                 key={alert.id}
@@ -176,14 +196,11 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                     {alert.severity.toUpperCase()}
                   </span>
                 </div>
-
                 <p className="text-xs text-white/70 leading-relaxed">{alert.description}</p>
-
                 <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white/85">
                   <strong className="text-white">Conseil : </strong>
                   {alert.recommendation}
                 </div>
-
                 {/* "Why this prediction?" Button */}
                 <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
                   <span className="font-mono text-[11px] text-white/50">Valeur : {alert.metricValue}</span>
@@ -210,14 +227,12 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
               </span>
               <span className="text-[10px] text-white/40 font-mono">Modèle AROME / AIFS</span>
             </div>
-
             <div className="flex flex-col divide-y divide-white/[0.06]">
               {(weather?.daily || []).slice(0, 5).map((d) => (
                 <div key={d.date} className="py-2 flex items-center justify-between text-xs">
                   <span className="w-24 font-medium text-white/80 capitalize">
                     {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
                   </span>
-
                   <div className="flex-1 mx-3 flex items-center gap-2">
                     <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
                       <div
@@ -229,7 +244,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                       {d.precipitationProbabilityMax}%
                     </span>
                   </div>
-
                   <span className="w-16 text-right font-mono text-white/60">
                     {d.precipitationSum > 0 ? `${d.precipitationSum} mm` : 'Sec'}
                   </span>
@@ -248,9 +262,12 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           <div className="apple-card p-4 bg-sky-950/20 border-sky-800/30 text-xs text-white/80 flex items-start gap-2.5">
             <Info className="w-4 h-4 text-[#38bdf8] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-white">Transparence Scientifique Totale</p>
+              <p className="font-semibold text-white">Transparence scientifique</p>
               <p className="text-[11px] text-white/60 mt-0.5 leading-relaxed">
-                LegumAmies explicite rigoureusement l'origine de chaque recommandation agronomique : règles déterministes validées par l'INRAE, seuils légaux ou modélisations biophysiques. Aucune fausse prédiction « boîte noire ».
+                Chaque recommandation repose sur un seuil agronomique publié (Terres Inovia), une
+                règle déterministe ou un seuil réglementaire. Les valeurs non sourcées (humidité du
+                grain, seuils non publiés) ne sont pas affichées : elles sont indiquées « non
+                disponible » plutôt qu'inventées.
               </p>
             </div>
           </div>
@@ -260,12 +277,11 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             <span className="text-xs font-semibold uppercase tracking-wider text-white/50 px-1">
               Traçabilité des Décisions & Seuils
             </span>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {decisionTraces.map((trace) => {
               const isSelected = selectedAlertForWhy !== null && (
                 (selectedAlertForWhy.includes('heat') && trace.id.includes('heat')) ||
-                (selectedAlertForWhy.includes('wind') && trace.id.includes('spray')) ||
+                (selectedAlertForWhy.includes('spray') && trace.id.includes('spray')) ||
                 (selectedAlertForWhy.includes('harvest') && trace.id.includes('harvest'))
               );
               return (
@@ -288,30 +304,29 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                     {trace.status}
                   </span>
                 </div>
-
-                {/* Mathematical / Agronomic Formula */}
+                {/* Condition / threshold */}
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.06] font-mono text-[11px] text-white/80">
-                  <span className="text-white/40 block text-[9px] uppercase tracking-wide">Formule & Condition :</span>
+                  <span className="text-white/40 block text-[9px] uppercase tracking-wide">Condition :</span>
                   {trace.formula}
                 </div>
-
-                {/* Scientific Justification */}
+                {/* Justification */}
                 <p className="text-xs text-white/75 leading-relaxed">
                   {trace.scientificExplanation}
                 </p>
-
                 {/* Parameters & Thresholds Table */}
-                <div className="pt-2 border-t border-white/[0.06] flex flex-col gap-1.5 text-xs">
-                  {trace.parameters.map((p, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-[11px]">
-                      <span className="text-white/60">{p.name} :</span>
-                      <div className="flex items-center gap-2 font-mono">
-                        <span className="text-white font-medium">{p.value}</span>
-                        <span className="text-white/40 text-[10px]">(Seuil : {p.threshold})</span>
+                {trace.parameters.length > 0 && (
+                  <div className="pt-2 border-t border-white/[0.06] flex flex-col gap-1.5 text-xs">
+                    {trace.parameters.map((p, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-[11px]">
+                        <span className="text-white/60">{p.name} :</span>
+                        <div className="flex items-center gap-2 font-mono">
+                          <span className="text-white font-medium">{p.value}</span>
+                          <span className="text-white/40 text-[10px]">(Seuil : {p.threshold})</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
               );
             })}
@@ -321,22 +336,25 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           {/* Data Sources Attribution & Uncertainty */}
           <div className="apple-card p-4 flex flex-col gap-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-white/50 pb-2 border-b border-white/[0.08]">
-              Modèles Météorologiques & Incertitude
+              Modèles Météorologiques & Sources
             </span>
-
             <div className="flex flex-col gap-2 text-xs text-white/70 leading-relaxed">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-white">Court terme (0 - 48h) :</span>
-                <span className="text-white/50 font-mono">Météo-France AROME (1.3 km)</span>
+                <span className="text-white/50 font-mono">Météo-France AROME France HD (via Open-Meteo)</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="font-medium text-white">Moyen terme (3 - 10j) :</span>
-                <span className="text-white/50 font-mono">ECMWF AIFS IA Ensemble</span>
+                <span className="font-medium text-white">Moyen terme (jusqu'à 10j) :</span>
+                <span className="text-white/50 font-mono">ECMWF AIFS ensemble (via Open-Meteo)</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="font-medium text-white">Données Agronomiques :</span>
-                <span className="text-white/50 font-mono">Arvalis & Terres Inovia (2024)</span>
+                <span className="font-medium text-white">Seuils agronomiques :</span>
+                <span className="text-white/50 font-mono">Terres Inovia (publiés)</span>
               </div>
+              <p className="text-[11px] text-white/45 mt-1">
+                Les probabilités de pluie proviennent de la dispersion des membres de l'ensemble AIFS
+                (incertitude explicite). Indicateurs météo, non des mesures de parcelle.
+              </p>
             </div>
           </div>
         </div>

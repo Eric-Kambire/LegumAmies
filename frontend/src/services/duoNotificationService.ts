@@ -66,7 +66,7 @@ export function generateDuolingoNotificationsForFields(
           streakDays: 8,
           duoTone: 'loss_aversion',
           duoTag: 'Aversion à la perte',
-          economicImpact: `${area} ha • ~3 800 € d'enjeu`,
+          economicImpact: `${area} ha`,
         });
         break;
 
@@ -96,7 +96,7 @@ export function generateDuolingoNotificationsForFields(
         notifs.push({
           id: `duo_lentille_${field.id}`,
           title: `Votre batteuse dort encore ?`,
-          message: `L'humidité du grain est à 14.2% sur vos lentilles à ${field.commune || 'Châteauroux'}. Conditions optimales pour battre aujourd'hui avant les pluies du week-end.`,
+          message: `Fenêtre sèche annoncée sur vos lentilles à ${field.commune || 'Châteauroux'} avant les pluies du week-end. Vérifiez la maturité et l'humidité réelle du grain au champ.`,
           category: 'harvest_window',
           severity: 'info',
           fieldId: field.id,
@@ -110,7 +110,7 @@ export function generateDuolingoNotificationsForFields(
           streakDays: 8,
           duoTone: 'playful',
           duoTag: 'Moisson imminente',
-          economicImpact: `${area} ha • Qualité AOP`,
+          economicImpact: `${area} ha`,
         });
         break;
 
@@ -177,15 +177,15 @@ export const DUO_SIMULATION_PRESETS: Array<{
     cropType: 'pois_chiche',
     notification: {
       title: 'Série de 8j : Ne laissez pas vos pois chiches brûler !',
-      message: '29.4°C prévus à Castelnaudary cet après-midi. Le pollen avorte au-delà de 28°C. Ouvrez l\'analyse pour vérifier si vos 18 ha nécessitent un ombrage ou report d\'intervention.',
+      message: 'Forte chaleur annoncée à Castelnaudary cet après-midi. Ouvrez l\'analyse pour vérifier le pic de température sur vos parcelles et adapter vos interventions. (Notification de démonstration)',
       category: 'weather_risk',
       severity: 'critical',
       actionLabel: 'Sauver les fleurs',
       actionDestination: 'insights',
       streakDays: 8,
       duoTone: 'loss_aversion',
-      duoTag: 'Perte de récolte évitée',
-      economicImpact: '3 800 € d\'enjeu',
+      duoTag: 'Vigilance chaleur',
+      economicImpact: 'Démonstration',
     },
   },
   {
@@ -213,7 +213,7 @@ export const DUO_SIMULATION_PRESETS: Array<{
     cropType: 'lentille',
     notification: {
       title: 'Sortez les batteuses, la lentille est prête !',
-      message: 'Humidité à 14.1% dans le Berry : la fenêtre optimale est ouverte aujourd\'hui. Ne laissez pas les orages du week-end égrener les gousses au sol.',
+      message: 'Fenêtre sèche annoncée dans le Berry aujourd\'hui, avant les orages du week-end. Vérifiez la maturité et l\'humidité réelle du grain au champ. (Notification de démonstration)',
       category: 'harvest_window',
       severity: 'info',
       actionLabel: 'Planifier le battage',
@@ -221,7 +221,7 @@ export const DUO_SIMULATION_PRESETS: Array<{
       streakDays: 8,
       duoTone: 'playful',
       duoTag: 'Moisson optimale',
-      economicImpact: '12 ha AOP Berry',
+      economicImpact: 'Démonstration',
     },
   },
   {

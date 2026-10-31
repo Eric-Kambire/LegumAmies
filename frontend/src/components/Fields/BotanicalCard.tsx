@@ -1,6 +1,7 @@
 import React from 'react';
 import type { LegumeCropType, CropGrowthStage } from '../../types/agricultural';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
+import { getSourcedFloweringHeat } from '../../data/sourcedAgronomy';
 import { CropGlyph, StageGlyph } from '../Common/LegumeGlyphs';
 
 interface BotanicalCardProps {
@@ -54,7 +55,13 @@ export const BotanicalCard: React.FC<BotanicalCardProps> = ({
 
         <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-white/60">
           <span>Semis : {crop.typicalSowingMonths.split(' ')[0]}</span>
-          <span className="text-white/40 font-mono">Tmax {crop.heatThresholdC}°C</span>
+          {cropType && getSourcedFloweringHeat(cropType) ? (
+            <span className="text-white/40 font-mono">
+              Floraison {getSourcedFloweringHeat(cropType)!.tmaxC}°C
+            </span>
+          ) : (
+            <span className="text-white/30 font-mono">Seuil non publié</span>
+          )}
         </div>
       </div>
     );

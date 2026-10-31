@@ -14,61 +14,40 @@ export const BackendContractModal: React.FC<BackendContractModalProps> = ({
 
   if (!isOpen) return null;
 
-  const contractJson = `// Contrat d'interface FastAPI (Python Agent Kiro) <-> LegumAmies PWA
-// Emplacement : frontend/src/types/backend-contract.ts
+  const contractJson = `// Contrat réel — LegumAmies ClimateShield API (FastAPI)
+// Types : frontend/src/types/backend-contract.ts  •  Schéma : src/api/schemas.py
+// Base URL : VITE_API_BASE_URL
 
-// 1. Récupération Météo-France AROME (1.3km)
-POST /api/v1/weather/arome
-Request: {
-  "latitude": 43.3183,
-  "longitude": 1.9538,
-  "horizon_hours": 48,
-  "variables": ["t2m", "rh2m", "precip_1h", "wind10m", "gust10m", "cloud_low"]
-}
-Response: {
-  "model": "meteofrance_arome_1p3km",
-  "run_time_utc": "2026-10-31T12:00:00Z",
-  "hourly": [ ... ]
-}
+GET /health   -> { "status": "ok", ... }
+GET /meta     -> vocabulaire cultures/stades, mappings FR<->EN,
+                 catalogue de règles sourcées (Terres Inovia)
 
-// 2. Modèle ML & Bedrock - Fenêtre de Récolte Optimale
-POST /api/v1/harvest/window
+// Évaluation complète d'une parcelle (prévision réelle + risques sourcés)
+POST /assess
 Request: {
-  "crop_type": "pois_chiche",
-  "latitude": 43.3183,
-  "longitude": 1.9538
+  "latitude": 48.70,
+  "longitude": 2.20,
+  "crop": "feverole",            // FR ou EN accepté
+  "growth_stage": "floraison",
+  "harvest_ready": false,
+  "rain_threshold_mm": 5.0
 }
-Response: {
-  "opportunity_score_0_100": 88,
-  "recommendation_status": "GO_HARVEST",
-  "optimal_start_date": "2026-08-04",
-  "optimal_end_date": "2026-08-07",
-  "predicted_grain_moisture_pct": 14.2,
-  "drying_cost_estimate_eur_per_t": 0.0,
-  "pod_shattering_risk_pct": 12.0,
-  "advisor_summary_fr": "Conditions idéales : humidité sous 15% et vent modéré."
+Response (extrait) : {
+  "weather":  { "model_id": "meteofrance_arome_france_hd", "hourly": [ ... ] },
+  "ensemble": { "model_id": "ecmwf_aifs025_ensemble",
+                "ensemble_members_valid": 51, "daily": [ ... ] },
+  "risk":     { "alerts": [ { "hazard_type": "...", "threshold_value": 25,
+                "observed_value": 0, "source_url": "https://www.terresinovia.fr/...",
+                "validation_status": "published" } ] },
+  "harvest":  { "available": false, "days": [ ... ], "note": "weather-only..." },
+  "regulatory_windows": [ { "spraying_allowed": true, "threshold_kmh": 19,
+                "source": "Arrêté du 4 mai 2017" } ],
+  "provenance": { "arome_model_id": "...", "aifs_model_id": "...",
+                "agronomic_sources": [ ... ] }
 }
 
-// 3. Revalorisation des Écarts de Tri (Upcycling Circulaire)
-POST /api/v1/circular/match
-Request: {
-  "crop_type": "lentille",
-  "defect_type": "brisure",
-  "quantity_tonnes": 6.5,
-  "department_code": "36"
-}
-Response: {
-  "batch_id": "batch_9812",
-  "upcycling_destinations": [
-    {
-      "sector": "meunerie_farine_pulse",
-      "title_fr": "Farine de lentille verte pour biscuiterie",
-      "estimated_price_eur_per_t": 620.0,
-      "standard_animal_price_eur_per_t": 180.0,
-      "value_recovery_pct": 244.4
-    }
-  ]
-}`;
+// Pas de valeurs inventées : ni humidité de grain prédite, ni coût de séchage,
+// ni % d'égrenage, ni résumé IA, ni prix de revalorisation.`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(contractJson);
@@ -88,7 +67,7 @@ Response: {
             <div>
               <h3 className="font-semibold text-sm text-white">Contrat d'Interface Backend (Python)</h3>
               <p className="text-[11px] text-white/50 font-mono">
-                Météo-France AROME • ECMWF AIFS • Bedrock ML
+                AROME France HD • ECMWF AIFS • règles Terres Inovia
               </p>
             </div>
           </div>
@@ -114,8 +93,8 @@ Response: {
           <div className="p-3 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full bg-[#38bdf8]" />
             <div>
-              <p className="font-semibold text-white">Prêt pour Backend Python</p>
-              <p className="text-[10px] text-white/50">FastAPI, Bedrock GenAI & XGBoost</p>
+              <p className="font-semibold text-white">Backend FastAPI</p>
+              <p className="text-[10px] text-white/50">AROME/AIFS + règles sourcées (POST /assess)</p>
             </div>
           </div>
         </div>

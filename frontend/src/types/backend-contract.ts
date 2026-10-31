@@ -1,158 +1,151 @@
 /**
- * Backend Contract Interfaces
- * Target: Python FastAPI backend (Météo-France AROME, ECMWF AIFS, Bedrock ML)
- * Developed by: Kiro (Python Backend Agent) & Antigravity (PWA Frontend)
+ * Backend Contract — LegumAmies ClimateShield API (FastAPI).
+ *
+ * Mirrors src/api/schemas.py and docs/API_CONTRACT.md. These are the REAL
+ * fields returned by the backend: live AROME/AIFS forecasts, ensemble rainfall
+ * probabilities, SOURCED agronomic risk flags (with provenance and validation
+ * status), weather-only harvest ranking, and a regulatory spraying check.
+ *
+ * No fabricated fields: there is no predicted grain moisture, drying cost,
+ * pod-shattering probability, generated advisor summary, or upcycling price.
+ * Those were removed because the backend does not measure or model them.
  */
+import type { LegumeCropType, CropGrowthStage } from './agricultural';
 
-import type { CropGrowthStage, LegumeCropType, RiskSeverity } from './agricultural';
-
-/**
- * 1. Field Registration & Profile Contract
- */
-export interface BackendFieldPayload {
-  field_id?: string;
-  user_id?: string;
-  name: string;
+/** Accepts French (frontend) or English (backend) crop/stage ids. */
+export interface AssessRequest {
   latitude: number;
   longitude: number;
-  commune?: string;
-  crop_type: LegumeCropType;
-  growth_stage: CropGrowthStage;
-  sowing_date?: string; // ISO 8601 YYYY-MM-DD
-  soil_type?: 'calcaire' | 'argilo_calcaire' | 'limon' | 'sableux';
-  area_ha?: number;
+  crop: LegumeCropType | string;
+  growth_stage: CropGrowthStage | string;
+  harvest_ready?: boolean;
+  rain_threshold_mm?: number;
+  arome_forecast_days?: number;
+  aifs_forecast_days?: number;
+  machinery?: Array<{ date_local: string; available: boolean }>;
+  field_name?: string;
 }
 
-export interface BackendFieldResponse {
+export interface HourlyPoint {
+  valid_time_utc: string;
+  valid_time_local: string;
+  temperature_c: number | null;
+  precipitation_mm: number | null;
+  relative_humidity_pct: number | null;
+  wind_speed_kmh: number | null;
+}
+
+export interface WeatherBlock {
+  data_kind: 'real_weather_forecast';
+  model_id: string;
+  url: string;
+  available_variables: string[];
+  missing_variables: string[];
+  units: Record<string, string | null>;
+  valid_time_local_start: string | null;
+  valid_time_local_end: string | null;
+  n_hours: number;
+  hourly: HourlyPoint[];
+}
+
+export interface RainProbabilityDay {
+  date_local: string;
+  rain_threshold_mm: number;
+  probability_pct: number;
+  ensemble_members_used: number;
+  mean_precipitation_mm: number;
+  median_precipitation_mm: number;
+}
+
+export interface EnsembleBlock {
+  data_kind: 'derived_from_real_forecast';
+  model_id: string;
+  url: string;
+  ensemble_members_valid: number;
+  ensemble_members_expected_max: number;
+  rain_threshold_mm: number;
+  threshold_note: string;
+  daily: RainProbabilityDay[];
+}
+
+export interface RiskAlert {
+  hazard_type: string;
+  weather_variable: string;
+  threshold_value: number;
+  comparison_operator: string;
+  observed_value: number;
+  forecast_start_local: string;
+  forecast_end_local: string;
+  exposure_hours: number;
+  minimum_exposure_hours: number;
+  source_url: string;
+  validation_status: 'published' | 'requires_expert_validation' | 'demo_hypothetical' | string;
+}
+
+export interface RiskBlock {
+  data_kind: 'risk_detection_from_real_forecast_and_agronomic_evidence';
+  active_published_rules_for_stage: number;
+  alerts: RiskAlert[];
+  note: string;
+}
+
+export interface HarvestDay {
+  date_local: string;
+  feasible: boolean;
+  rain_probability_pct: number;
+  expected_rain_mm: number;
+  weather_risk_score: number;
+  rank: number | null;
+  explanation: string;
+  limitations: string;
+}
+
+export interface HarvestBlock {
+  data_kind: 'weather_only_decision_aid';
+  available: boolean;
+  harvest_ready: boolean;
+  weights: Record<string, number>;
+  recommended_date_local: string | null;
+  n_feasible_days: number;
+  days: HarvestDay[];
+  note: string;
+}
+
+export interface RegulatoryWindow {
+  date_local: string;
+  max_wind_speed_kmh: number;
+  spraying_allowed: boolean;
+  threshold_kmh: number;
+  source: string;
+}
+
+export interface FieldEcho {
   field_id: string;
-  status: 'created' | 'updated';
-  sync_timestamp: string;
-  geo_valid_france: boolean;
-  elevation_m: number;
-}
-
-/**
- * 2. Météo-France AROME High-Resolution Forecast Contract (1.3km grid)
- */
-export interface AromeForecastRequest {
+  field_name: string | null;
   latitude: number;
   longitude: number;
-  horizon_hours: 48; // AROME standard run horizon
-  variables: Array<'t2m' | 'rh2m' | 'precip_1h' | 'wind10m' | 'gust10m' | 'cloud_low'>;
+  crop_py: string;
+  crop_fr: string;
+  crop_label_fr: string;
+  growth_stage_py: string;
+  growth_stage_fr: string;
+  growth_stage_label_fr: string;
 }
 
-export interface AromeHourlyItem {
-  timestamp_utc: string;
-  temperature_c: number;
-  relative_humidity_pct: number;
-  precipitation_mm: number;
-  wind_speed_kmh: number;
-  wind_gust_kmh: number;
-  wind_direction_deg: number;
-  direct_normal_irradiance_wm2?: number;
+export interface Provenance {
+  retrieved_at_utc: string;
+  arome_model_id: string;
+  aifs_model_id: string;
+  agronomic_sources: Array<{ crop: string; hazard: string; institution: string; url: string }>;
+  data_kinds: Record<string, string>;
 }
 
-export interface AromeForecastResponse {
-  model: 'meteofrance_arome_1p3km';
-  run_time_utc: string;
-  latitude: number;
-  longitude: number;
-  hourly: AromeHourlyItem[];
-  meta: {
-    resolution_km: 1.3;
-    source: 'Météo-France Open Data API';
-  };
-}
-
-/**
- * 3. ECMWF AIFS Medium-Range AI Forecast Contract (Ensemble)
- */
-export interface EcmwfAifsForecastResponse {
-  model: 'ecmwf_aifs_ensemble';
-  run_time_utc: string;
-  latitude: number;
-  longitude: number;
-  daily_forecast: Array<{
-    date: string;
-    ensemble_temp_mean_c: number;
-    ensemble_temp_p10_c: number;
-    ensemble_temp_p90_c: number;
-    prob_rain_gt_5mm_pct: number;
-    growing_degree_days_base5: number;
-  }>;
-}
-
-/**
- * 4. Agricultural Risk Assessment Engine (Flowering & Lodging)
- */
-export interface AgriRiskAssessmentRequest {
-  crop_type: LegumeCropType;
-  growth_stage: CropGrowthStage;
-  latitude: number;
-  longitude: number;
-}
-
-export interface AgriRiskAssessmentResponse {
-  field_id?: string;
-  computed_at: string;
-  overall_risk_level: RiskSeverity;
-  risks: Array<{
-    risk_code: 'FLOWERING_HEAT' | 'SPRAYING_WIND' | 'HARVEST_MOISTURE' | 'POD_SHATTERING' | 'LODGING_RISK';
-    title_fr: string;
-    severity: RiskSeverity;
-    scientific_rationale: string;
-    recommended_action: string;
-    metric_observed: string;
-    threshold: string;
-  }>;
-}
-
-/**
- * 5. Harvest Window Optimizer (Bedrock / ML tabulaire)
- */
-export interface HarvestWindowRequest {
-  crop_type: LegumeCropType;
-  latitude: number;
-  longitude: number;
-  estimated_maturity_date?: string;
-}
-
-export interface HarvestWindowResponse {
-  crop_type: LegumeCropType;
-  evaluation_date: string;
-  opportunity_score_0_100: number; // 0 (catastrophic) to 100 (perfect window)
-  recommendation_status: 'GO_HARVEST' | 'WAIT_WEATHER_WINDOW' | 'URGENT_BEFORE_RAIN' | 'DRYING_REQUIRED';
-  optimal_start_date: string;
-  optimal_end_date: string;
-  predicted_grain_moisture_pct: number;
-  drying_cost_estimate_eur_per_t: number;
-  pod_shattering_risk_pct: number;
-  advisor_summary_fr: string; // Bedrock generated agronomist summary
-}
-
-/**
- * 6. Circular Upcycling Matcher (Écarts de tri)
- */
-export interface CircularMatchRequest {
-  crop_type: LegumeCropType;
-  defect_type: 'brisure' | 'hors_calibre' | 'sur_humidite' | 'decoloration' | 'piqure_bruche';
-  quantity_tonnes: number;
-  department_code: string;
-}
-
-export interface CircularMatchResponse {
-  batch_id: string;
-  upcycling_destinations: Array<{
-    sector: 'extrusion_simili_carne' | 'meunerie_farine_pulse' | 'puree_surgelation' | 'fermentation_tempeh' | 'alimentation_animale';
-    title_fr: string;
-    estimated_price_eur_per_t: number;
-    standard_animal_price_eur_per_t: number;
-    value_recovery_pct: number; // e.g. +140%
-    technical_feasibility_note: string;
-    sample_buyers: Array<{
-      name: string;
-      region: string;
-      distance_km: number;
-    }>;
-  }>;
+export interface AssessResponse {
+  field: FieldEcho;
+  weather: WeatherBlock;
+  ensemble: EnsembleBlock;
+  risk: RiskBlock;
+  harvest: HarvestBlock;
+  regulatory_windows: RegulatoryWindow[];
+  provenance: Provenance;
 }

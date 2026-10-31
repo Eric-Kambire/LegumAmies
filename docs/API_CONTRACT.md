@@ -167,3 +167,62 @@ data" panel should read from these.
 1. Propose field changes in a PR editing this file.
 2. Keep additive changes backward-compatible; bump `v0 -> v1` for breaking ones.
 3. Frontend and pipeline agents both approve before merge to `main`.
+
+---
+
+## 8. Live HTTP API (integration layer) — `src/api`
+
+The pipeline is now exposed over HTTP by a FastAPI layer (`src/api/main.py`,
+schemas in `src/api/schemas.py`). The PWA reaches it via `VITE_API_BASE_URL`.
+It is **stateless per request** (no shared CSV between users) and accepts
+French **or** English crop/stage ids (mapping in `src/api/mapping.py`).
+
+### Endpoints
+- `GET /health` — liveness.
+- `GET /meta` — supported crops/stages, FR↔EN mappings, the sourced rule
+  catalogue (with `source_url` + `validation_status`), model ids.
+- `POST /assess` — full per-field assessment.
+
+### `POST /assess` request
+```json
+{
+  "latitude": 48.70, "longitude": 2.20,
+  "crop": "feverole",            // FR or EN (feverole|fava_bean ...)
+  "growth_stage": "floraison",   // FR or EN (floraison|flowering ...)
+  "harvest_ready": false,
+  "rain_threshold_mm": 5.0,
+  "arome_forecast_days": 2,
+  "aifs_forecast_days": 10,
+  "machinery": [{ "date_local": "2026-11-02", "available": true }],
+  "field_name": "Parcelle A"
+}
+```
+
+### `POST /assess` response (shape)
+Top-level keys: `field`, `weather`, `ensemble`, `risk`, `harvest`,
+`regulatory_windows`, `provenance`. Each block carries a `data_kind` label
+(see the legend in §0). Key honesty rules the UI must honour:
+- `risk.alerts[]` come only from **sourced** rules and each carries
+  `threshold_value`, `observed_value`, `source_url`, `validation_status`.
+  An empty list means "no sourced hazard" — not an error.
+- `harvest` is weather-only; `available=false` when the crop is not
+  harvest-ready (no date recommended). No grain-moisture / pod-shattering /
+  drying-cost / economic fields exist.
+- `regulatory_windows[]` is the spraying wind check (Arrêté du 4 mai 2017),
+  computed from the real forecast.
+- `provenance` carries model ids, retrieval time, and agronomic source URLs.
+
+### FR ↔ EN identifiers
+Crops: `soja↔soybean`, `feverole↔fava_bean`, `pois_chiche↔chickpea`,
+`pois↔pea`, `lentille↔lentil`, `lupin↔lupin`, `haricot_sec↔dry_bean`.
+Stages: `vegetatif↔vegetative`, `floraison↔flowering`,
+`formation_gousses↔pod_formation`, `remplissage_grain↔grain_filling`,
+`pret_recolter↔harvest_ready`.
+
+### Errors
+- `422` — invalid body (unknown crop/stage, out-of-range coordinates).
+- `502` — upstream forecast provider (AROME/AIFS) unavailable; the message
+  names which one. The PWA should show an honest forecast-unavailable state.
+
+CORS allow-list is configurable via `LEGUMAMIES_CORS_ORIGINS` (comma-separated;
+default `*` for the test deployment).
