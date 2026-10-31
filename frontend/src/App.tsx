@@ -8,6 +8,11 @@ import { FieldConfigModal } from './components/WeatherSheet/FieldConfigModal';
 import { BackendContractModal } from './components/Navigation/BackendContractModal';
 import { PwaInstallBanner } from './components/Navigation/PwaInstallBanner';
 import { QuickBasins } from './components/Navigation/QuickBasins';
+import { AppleTabBar } from './components/Navigation/AppleTabBar';
+import type { AppTab } from './components/Navigation/AppleTabBar';
+import { HarvestIntelligenceView } from './components/Harvest/HarvestIntelligenceView';
+import { CircularValorizationView } from './components/Circular/CircularValorizationView';
+import { BedrockCopilotView } from './components/Copilot/BedrockCopilotView';
 
 import type { WeatherLayerType, LocationWeatherData, RadarData, RadarFrame } from './types/weather';
 import type { SelectedField, AgriculturalRiskAlert } from './types/agricultural';
@@ -25,7 +30,10 @@ import { evaluateAgronomicRisks } from './services/agriRiskService';
 import { registerServiceWorker } from './services/pwaService';
 
 export const App: React.FC = () => {
-  // 1. Core State
+  // 1. Navigation Tab State
+  const [activeTab, setActiveTab] = useState<AppTab>('weather');
+
+  // 2. Core Coordinates & Weather State
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number }>({
     lat: FRENCH_AGRI_BASINS[0].latitude,
     lng: FRENCH_AGRI_BASINS[0].longitude,
@@ -36,7 +44,7 @@ export const App: React.FC = () => {
   const [isWeatherLoading, setIsWeatherLoading] = useState<boolean>(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
-  // 2. Field & Crop State
+  // 3. Field & Crop State
   const [selectedField, setSelectedField] = useState<SelectedField | null>(() => {
     const saved = localStorage.getItem('legum_active_field');
     if (saved) {
@@ -64,13 +72,13 @@ export const App: React.FC = () => {
   const [isFieldConfigOpen, setIsFieldConfigOpen] = useState(false);
   const [isBackendContractOpen, setIsBackendContractOpen] = useState(false);
 
-  // 3. Radar State
+  // 4. Radar State
   const [radarData, setRadarData] = useState<RadarData | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
   const [radarFrameIndex, setRadarFrameIndex] = useState<number>(0);
   const [isRadarPlaying, setIsRadarPlaying] = useState<boolean>(false);
 
-  // 4. GPS & UI State
+  // 5. GPS & UI State
   const [gpsPosition, setGpsPosition] = useState<{
     latitude: number;
     longitude: number;
@@ -152,23 +160,20 @@ export const App: React.FC = () => {
   }, [selectedCoords.lat, selectedCoords.lng]);
 
   // Handle map click
-  const handleSelectCoordinates = useCallback(
-    (lat: number, lng: number) => {
-      setSelectedCoords({ lat, lng });
+  const handleSelectCoordinates = useCallback((lat: number, lng: number) => {
+    setSelectedCoords({ lat, lng });
 
-      setSelectedField((prev) => {
-        if (!prev) return null;
-        const updated = {
-          ...prev,
-          latitude: lat,
-          longitude: lng,
-        };
-        localStorage.setItem('legum_active_field', JSON.stringify(updated));
-        return updated;
-      });
-    },
-    []
-  );
+    setSelectedField((prev) => {
+      if (!prev) return null;
+      const updated = {
+        ...prev,
+        latitude: lat,
+        longitude: lng,
+      };
+      localStorage.setItem('legum_active_field', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   // Handle Basin selection
   const handleSelectBasin = useCallback(
@@ -237,71 +242,94 @@ export const App: React.FC = () => {
   const currentRadarFrame = radarFrames[radarFrameIndex] || null;
 
   return (
-    <div className={`relative w-screen h-screen overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
-      {/* 1. Interactive France Weather Map */}
-      <WeatherMap
-        selectedField={selectedField}
-        onSelectCoordinates={handleSelectCoordinates}
-        activeLayer={activeLayer}
-        radarHost={radarData?.host || 'https://tilecache.rainviewer.com'}
-        currentRadarFrame={currentRadarFrame}
-        gpsPosition={gpsPosition}
-        isDarkMode={isDarkMode}
-        onSelectBasin={handleSelectBasin}
-      />
-
-      {/* 2. Top Controls & Layer Switcher */}
-      <MapControls
-        activeLayer={activeLayer}
-        onLayerChange={setActiveLayer}
-        onLocateMe={handleLocateMe}
-        isLocating={isLocating}
-        onResetFranceView={handleResetFranceView}
-        isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-        onRefreshWeather={() => {
-          // Re-trigger load by re-setting coords
-          setSelectedCoords((prev) => ({ ...prev }));
-        }}
-        isRefreshing={isWeatherLoading}
-        isCached={weatherData?.isCached || false}
-        dataSource={weatherData?.dataSource || 'Météo-France'}
-      />
-
-      {/* 3. Pulse Basins Horizontal Bar (Desktop / Tablet) */}
-      <div className="absolute top-16 left-4 z-[390] hidden lg:block max-w-xl">
-        <QuickBasins
+    <div className={`relative w-screen h-screen overflow-hidden bg-[#0b0f19] ${isDarkMode ? 'dark' : ''}`}>
+      {/* Tab 1: Interactive France Weather Map */}
+      <div className={`w-full h-full relative ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
+        <WeatherMap
+          selectedField={selectedField}
+          onSelectCoordinates={handleSelectCoordinates}
+          activeLayer={activeLayer}
+          radarHost={radarData?.host || 'https://tilecache.rainviewer.com'}
+          currentRadarFrame={currentRadarFrame}
+          gpsPosition={gpsPosition}
+          isDarkMode={isDarkMode}
           onSelectBasin={handleSelectBasin}
-          selectedBasinId={selectedField?.id.replace('basin_', '')}
+        />
+
+        <MapControls
+          activeLayer={activeLayer}
+          onLayerChange={setActiveLayer}
+          onLocateMe={handleLocateMe}
+          isLocating={isLocating}
+          onResetFranceView={handleResetFranceView}
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          onRefreshWeather={() => setSelectedCoords((prev) => ({ ...prev }))}
+          isRefreshing={isWeatherLoading}
+          isCached={weatherData?.isCached || false}
+          dataSource={weatherData?.dataSource || 'Météo-France'}
+        />
+
+        {/* Pulse Basins Horizontal Bar (Desktop) */}
+        <div className="absolute top-16 left-4 z-[390] hidden lg:block max-w-xl">
+          <QuickBasins
+            onSelectBasin={handleSelectBasin}
+            selectedBasinId={selectedField?.id.replace('basin_', '')}
+          />
+        </div>
+
+        {/* Radar Animation Scrubber (When radar is active) */}
+        {activeLayer === 'radar' && radarFrames.length > 0 && (
+          <div className="absolute bottom-36 sm:bottom-6 left-1/2 -translate-x-1/2 z-[420] flex flex-col items-center gap-2 w-[calc(100%-2rem)] max-w-sm pointer-events-auto">
+            <IntensityLegend />
+            <RadarTimeline
+              frames={radarFrames}
+              currentIndex={radarFrameIndex}
+              isPlaying={isRadarPlaying}
+              onIndexChange={setRadarFrameIndex}
+              onTogglePlay={() => setIsRadarPlaying(!isRadarPlaying)}
+            />
+          </div>
+        )}
+
+        {/* Apple Weather Bottom Sheet / Floating Panel */}
+        <WeatherSheet
+          weather={weatherData}
+          isLoading={isWeatherLoading}
+          error={weatherError}
+          selectedField={selectedField}
+          agriAlerts={agriAlerts}
+          onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
+          onOpenBackendContract={() => setIsBackendContractOpen(true)}
         />
       </div>
 
-      {/* 4. Radar Animation Scrubber & Intensity Legend (When radar is active) */}
-      {activeLayer === 'radar' && radarFrames.length > 0 && (
-        <div className="absolute bottom-32 sm:bottom-6 left-1/2 -translate-x-1/2 z-[420] flex flex-col items-center gap-2 w-[calc(100%-2rem)] max-w-sm sm:max-w-md pointer-events-auto">
-          <IntensityLegend />
-          <RadarTimeline
-            frames={radarFrames}
-            currentIndex={radarFrameIndex}
-            isPlaying={isRadarPlaying}
-            onIndexChange={setRadarFrameIndex}
-            onTogglePlay={() => setIsRadarPlaying(!isRadarPlaying)}
-          />
-        </div>
+      {/* Tab 2: Harvest Window ML Intelligence */}
+      {activeTab === 'harvest' && (
+        <HarvestIntelligenceView
+          weather={weatherData}
+          field={selectedField}
+          onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
+        />
       )}
 
-      {/* 5. Responsive Weather Sheet (iOS Bottom Sheet on Mobile / Floating Panel on Desktop) */}
-      <WeatherSheet
-        weather={weatherData}
-        isLoading={isWeatherLoading}
-        error={weatherError}
-        selectedField={selectedField}
-        agriAlerts={agriAlerts}
-        onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
-        onOpenBackendContract={() => setIsBackendContractOpen(true)}
+      {/* Tab 3: Circular Economy & Downgraded Crops */}
+      {activeTab === 'circular' && (
+        <CircularValorizationView />
+      )}
+
+      {/* Tab 4: Bedrock Agronomic Copilot */}
+      {activeTab === 'copilot' && (
+        <BedrockCopilotView field={selectedField} />
+      )}
+
+      {/* Persistent Native Apple iOS Tab Bar */}
+      <AppleTabBar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
 
-      {/* 6. Field Configuration Modal */}
+      {/* Field Configuration Modal */}
       <FieldConfigModal
         isOpen={isFieldConfigOpen}
         onClose={() => setIsFieldConfigOpen(false)}
@@ -312,18 +340,18 @@ export const App: React.FC = () => {
         onSaveField={handleSaveField}
       />
 
-      {/* 7. Backend Contract Modal for Python / Kiro Integration */}
+      {/* Backend Contract Modal */}
       <BackendContractModal
         isOpen={isBackendContractOpen}
         onClose={() => setIsBackendContractOpen(false)}
       />
 
-      {/* 8. PWA Install Prompt Banner */}
+      {/* PWA Install Banner */}
       <PwaInstallBanner />
 
-      {/* 9. Floating Feedback Toast */}
+      {/* Feedback Toast */}
       {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[800] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 px-4 py-2 rounded-2xl shadow-2xl text-xs text-white font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[800] apple-glass px-4 py-2 rounded-full shadow-2xl text-xs text-white font-medium animate-in fade-in duration-200">
           {toastMessage}
         </div>
       )}
