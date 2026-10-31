@@ -1,0 +1,7 @@
+crop,growth_stage,hazard_type,weather_variable,threshold_value,comparison_operator,minimum_exposure_hours,source_url,validation_status
+fava_bean,flowering,heat_stress,temperature_2m,25,gt,1,https://www.terresinovia.fr/fr/informations-techniques/feverole-de-printemps/accidents-climatiques-de-la-feverole-secheresse-et,published
+fava_bean,grain_filling,heat_stress,temperature_2m,25,gt,1,https://www.terresinovia.fr/fr/informations-techniques/feverole-de-printemps/accidents-climatiques-de-la-feverole-secheresse-et,published
+fava_bean,vegetative,frost,temperature_2m,-12,lt,1,https://www.terresinovia.fr/fr/informations-techniques/feverole-dhiver/accidents-climatiques-de-la-feverole-gel-et-basses,published
+pea,flowering,heat_stress,temperature_2m,25,gt,1,https://www.terresinovia.fr/fr/informations-techniques/pois-dhiver/accidents-climatiques-du-pois-secheresse-et-temperatures,published
+fava_bean,flowering,excess_rain,precipitation,20,gt,24,,requires_expert_validation
+fava_bean,harvest_ready,wet_harvest,precipitation,5,gt,24,,demo_hypothetical

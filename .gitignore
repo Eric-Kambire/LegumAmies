@@ -8,6 +8,10 @@ __pycache__/
 # Data & Models (ignore large artifacts from git)
 data/raw/*
 !data/raw/.gitkeep
+# ClimateShield config/evidence inputs are small and version-worthy:
+!data/raw/fields.csv
+!data/raw/crop_rules.csv
+!data/raw/machinery_availability.csv
 data/processed/*
 !data/processed/.gitkeep
 models/*

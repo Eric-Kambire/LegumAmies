@@ -1,0 +1,11 @@
+field_id,date_local,available
+DEMO_001,2026-10-31,true
+DEMO_001,2026-11-01,false
+DEMO_001,2026-11-02,true
+DEMO_001,2026-11-03,true
+DEMO_001,2026-11-04,false
+DEMO_001,2026-11-05,true
+DEMO_001,2026-11-06,true
+DEMO_001,2026-11-07,true
+DEMO_001,2026-11-08,false
+DEMO_001,2026-11-09,true
