@@ -87,7 +87,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
       localStorage.setItem('legum_notif_prefs', JSON.stringify(updated));
 
       // Dispatch real welcome push notification
-      await dispatchNativePushNotification('LegumAmies Notifications Actives', {
+      await dispatchNativePushNotification("Légume'Ami Notifications Actives", {
         body: 'Alertes canicule sur floraison, créneaux de traitement et fenêtre de moisson configurés.',
         tag: 'welcome-push',
       });
@@ -137,16 +137,23 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   return (
     <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-28 max-w-3xl mx-auto w-full select-none flex flex-col gap-4 sm:gap-5">
       {/* 1. Header (iOS style) */}
-      <header className="flex items-center justify-between min-w-0">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
-            Alertes & Vigilance
-          </h1>
-          <p className="text-xs text-white/50 mt-0.5">
-            {unreadCount > 0
-              ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}`
-              : 'Toutes les alertes sont à jour'}
-          </p>
+      <header className="flex items-center justify-between min-w-0 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src="/legumeAmi.png"
+            alt="Légume'Ami Logo"
+            className="w-10 h-10 object-contain drop-shadow-md flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+              Alertes & Vigilance
+            </h1>
+            <p className="text-xs text-white/50 mt-0.5">
+              {unreadCount > 0
+                ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}`
+                : 'Toutes les alertes sont à jour'}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">

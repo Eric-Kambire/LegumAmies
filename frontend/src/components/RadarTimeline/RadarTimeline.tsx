@@ -52,7 +52,7 @@ export const RadarTimeline: React.FC<RadarTimelineProps> = ({
                 : 'bg-amber-500/25 text-amber-200'
             }`}
           >
-            {isPast ? 'Observé' : 'Prévision'}
+            {isPast ? 'Radar historique (observé)' : 'Nowcast advection (extrapolation radar)'}
           </span>
         </div>
 
@@ -112,6 +112,11 @@ export const RadarTimeline: React.FC<RadarTimelineProps> = ({
         >
           <SkipForward className="w-4 h-4 fill-current" />
         </button>
+      </div>
+
+      {/* Honest Provenance Disclaimer */}
+      <div className="text-[9px] text-white/40 text-center font-mono pt-0.5 border-t border-white/[0.06]">
+        Radar RainViewer d'observation — Ne constitue pas une prévision météo numérique AROME / AIFS.
       </div>
     </div>
   );

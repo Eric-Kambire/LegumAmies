@@ -364,7 +364,7 @@ export const App: React.FC = () => {
     weatherData && activeField
       ? evaluateAgronomicRisks(activeField.cropType, activeField.growthStage, weatherData)
       : [];
-  const { status: backendStatus, alerts: backendAlerts } = useBackendAssess(activeField);
+  const { status: backendStatus, alerts: backendAlerts, response: backendResponse } = useBackendAssess(activeField);
   const agriAlerts: AgriculturalRiskAlert[] =
     backendStatus === 'ok' ? backendAlerts : clientAlerts;
 
@@ -496,6 +496,8 @@ export const App: React.FC = () => {
           weather={weatherData}
           field={activeField}
           alerts={agriAlerts}
+          backendStatus={backendStatus}
+          backendResponse={backendResponse}
           onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
         />
       )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Share, Sprout } from 'lucide-react';
+import { Download, X, Share } from 'lucide-react';
 import { isIosDevice, isRunningStandalone, promptPwaInstall, setupInstallPromptListener } from '../../services/pwaService';
 
 export const PwaInstallBanner: React.FC = () => {
@@ -41,15 +41,17 @@ export const PwaInstallBanner: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[550] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-top-4 duration-300">
-      <div className="apple-glass px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3 text-white select-none">
+    <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[490] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-bottom-4 duration-300">
+      <div className="apple-glass px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3 text-white select-none border border-white/20">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
-            <Sprout className="w-4 h-4 text-[#34d399]" />
-          </div>
+          <img
+            src="/legumeAmi.png"
+            alt="Légume'Ami Logo"
+            className="w-8 h-8 object-contain flex-shrink-0"
+          />
 
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-white truncate">LegumAmies</span>
+            <span className="text-xs font-semibold text-white truncate">Légume'Ami</span>
             <span className="text-[10px] text-white/50 truncate">
               {isIos ? "Touchez Partager ⎋ puis 'Sur l'écran d'accueil'" : 'Installer comme app native'}
             </span>

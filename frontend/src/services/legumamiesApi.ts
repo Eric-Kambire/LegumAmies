@@ -6,7 +6,12 @@
  * mode and falls back to the sourced client-side screening — it never shows
  * fabricated values.
  */
-import type { AssessRequest, AssessResponse } from '../types/backend-contract';
+import type {
+  AssessRequest,
+  AssessResponse,
+  AdvisorRequest,
+  AdvisorResponse,
+} from '../types/backend-contract';
 
 export const API_BASE_URL: string | undefined = import.meta.env?.VITE_API_BASE_URL;
 
@@ -47,4 +52,27 @@ export async function health(signal?: AbortSignal): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function askAdvisor(req: AdvisorRequest, signal?: AbortSignal): Promise<AdvisorResponse> {
+  if (!isBackendConfigured()) {
+    throw new BackendUnavailableError('VITE_API_BASE_URL is not configured');
+  }
+  const res = await fetch(`${API_BASE_URL!.replace(/\/$/, '')}/advisor/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    signal,
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      detail = body?.detail || body?.error || detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`Conseiller Bedrock indisponible: ${detail}`);
+  }
+  return (await res.json()) as AdvisorResponse;
 }

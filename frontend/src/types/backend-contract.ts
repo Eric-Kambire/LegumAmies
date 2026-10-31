@@ -149,3 +149,58 @@ export interface AssessResponse {
   regulatory_windows: RegulatoryWindow[];
   provenance: Provenance;
 }
+
+
+// --------------------------------------------------------------------------
+// Advisor Agent Contract (POST /advisor/ask)
+// --------------------------------------------------------------------------
+export interface AdvisorField {
+  latitude?: number;
+  longitude?: number;
+  crop?: string;
+  growth_stage?: string;
+  harvest_ready?: boolean;
+  field_name?: string;
+}
+
+export interface AdvisorRequest {
+  field?: AdvisorField;
+  question: string;
+}
+
+export interface AdvisorAction {
+  title: string;
+  basis: string;
+  verified: boolean;
+}
+
+export interface AdvisorCitation {
+  type: string;
+  institution?: string;
+  document?: string;
+  source_url?: string;
+  score?: number;
+  snippet?: string;
+  hazard?: string;
+  validation_status?: string;
+}
+
+export interface AdvisorUncertainty {
+  ensemble_members?: number;
+  rain_probability_pct_range?: [number, number];
+  note?: string;
+}
+
+export interface AdvisorResponse {
+  answer: string;
+  actions: AdvisorAction[];
+  citations: AdvisorCitation[];
+  forecast_provenance: Record<string, unknown>;
+  uncertainty: AdvisorUncertainty;
+  limitations: string[];
+  grounded: boolean;
+  tools_used: string[];
+  model_id: string | null;
+  knowledge_base_id: string;
+  generated_at_utc: string;
+}
