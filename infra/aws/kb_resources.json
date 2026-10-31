@@ -1,0 +1,15 @@
+{
+  "region": "us-east-1",
+  "data_bucket": "legumamies-rag-040416400623-2e32fb7c",
+  "vector_bucket": "legumamies-rag-vectors-040416400623",
+  "vector_bucket_arn": "arn:aws:s3vectors:us-east-1:040416400623:bucket/legumamies-rag-vectors-040416400623",
+  "index_name": "legumes-kb-index",
+  "index_arn": "arn:aws:s3vectors:us-east-1:040416400623:bucket/legumamies-rag-vectors-040416400623/index/legumes-kb-index",
+  "embedding_model": "amazon.titan-embed-text-v2:0",
+  "embedding_dimensions": 1024,
+  "kb_service_role": "arn:aws:iam::040416400623:role/legumamies-bedrock-kb-role",
+  "knowledge_base_id": "C5WRYFYF1O",
+  "knowledge_base_arn": "arn:aws:bedrock:us-east-1:040416400623:knowledge-base/C5WRYFYF1O",
+  "data_source_id": "1UMUN2BDBV",
+  "vector_store": "S3_VECTORS"
+}
