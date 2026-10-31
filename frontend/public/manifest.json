@@ -1,0 +1,19 @@
+{
+  "name": "LegumAmies - Météo Agricole France",
+  "short_name": "LegumAmies",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B120E",
+  "theme_color": "#0B120E",
+  "description": "Plateforme d'intelligence météo et de récolte pour les producteurs français de légumineuses.",
+  "orientation": "portrait-primary",
+  "categories": ["weather", "agriculture", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
