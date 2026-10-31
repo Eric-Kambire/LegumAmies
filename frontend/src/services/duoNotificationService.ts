@@ -8,6 +8,7 @@ import { getCropNameFr, getGrowthStageFr } from './agriRiskService';
 /**
  * Duolingo-style behavioral notification generator for French legume farmers.
  * Converts cold weather numbers into high-engagement, empathetic, streak-driven nudges.
+ * Strictly 0 emoji - uses professional iOS typography and SVG vector glyphs.
  */
 
 export interface DuoStreakInfo {
@@ -50,8 +51,8 @@ export function generateDuolingoNotificationsForFields(
       case 'pois_chiche':
         notifs.push({
           id: `duo_pois_chiche_${field.id}`,
-          title: `🔥 Série 8j : Vos pois chiches comptent sur vous !`,
-          message: `Attention à ${field.commune || 'votre parcelle'} : 29°C prévus cet après-midi en plein ${stageName}. Ne laissez pas le stress thermique gâcher ${area} ha ! 30 secondes pour vérifier le pic de chaleur.`,
+          title: `Série 8j : Vos pois chiches comptent sur vous !`,
+          message: `Attention à ${field.commune || 'votre parcelle'} : 29°C prévus cet après-midi en plein ${stageName}. Ne laissez pas le stress thermique impacter ${area} ha. 30 secondes pour vérifier le pic de chaleur.`,
           category: 'weather_risk',
           severity: 'critical',
           fieldId: field.id,
@@ -64,7 +65,7 @@ export function generateDuolingoNotificationsForFields(
           actionDestination: 'insights',
           streakDays: 8,
           duoTone: 'loss_aversion',
-          duoTag: 'Perte de série & Risque',
+          duoTag: 'Aversion à la perte',
           economicImpact: `${area} ha • ~3 800 € d'enjeu`,
         });
         break;
@@ -72,8 +73,8 @@ export function generateDuolingoNotificationsForFields(
       case 'feverole':
         notifs.push({
           id: `duo_feverole_${field.id}`,
-          title: `⏱️ Fenêtre de tir express sur vos féveroles !`,
-          message: `Le vent tombe sous 12 km/h à ${field.commune || 'Chartres'} jusqu'à 11h30. Vos féveroles en ${stageName} ont besoin de vous : c'est le moment idéal pour traiter sans aucune dérive !`,
+          title: `Fenêtre de tir express sur vos féveroles !`,
+          message: `Le vent tombe sous 12 km/h à ${field.commune || 'Chartres'} jusqu'à 11h30. Vos féveroles en ${stageName} nécessitent votre intervention : créneau idéal pour traiter sans dérive.`,
           category: 'weather_risk',
           severity: 'warning',
           fieldId: field.id,
@@ -87,15 +88,15 @@ export function generateDuolingoNotificationsForFields(
           streakDays: 8,
           duoTone: 'urgent',
           duoTag: 'Fenêtre météo 2h',
-          economicImpact: `${area} ha sous protection`,
+          economicImpact: `${area} ha protégés`,
         });
         break;
 
       case 'lentille':
         notifs.push({
           id: `duo_lentille_${field.id}`,
-          title: `🌾 Votre batteuse dort encore ?`,
-          message: `L'humidité du grain est à 14.2% sur vos lentilles à ${field.commune || 'Châteauroux'}. Conditions royales pour battre aujourd'hui avant les pluies du week-end. Prêt pour le départ ?`,
+          title: `Votre batteuse dort encore ?`,
+          message: `L'humidité du grain est à 14.2% sur vos lentilles à ${field.commune || 'Châteauroux'}. Conditions optimales pour battre aujourd'hui avant les pluies du week-end.`,
           category: 'harvest_window',
           severity: 'info',
           fieldId: field.id,
@@ -117,8 +118,8 @@ export function generateDuolingoNotificationsForFields(
         // Generic fallback for any other crop (soja, pois, lupin, haricot)
         notifs.push({
           id: `duo_crop_${field.id}_${idx}`,
-          title: `🌱 Un coup d'œil pour garder votre série active !`,
-          message: `Vos ${area} ha de ${cropName} (${stageName}) à ${field.commune || 'France'} se portent bien. 15 secondes pour valider les conditions du jour et maintenir votre série de 8 jours !`,
+          title: `Point de vigilance : maintenez votre série active !`,
+          message: `Vos ${area} ha de ${cropName} (${stageName}) à ${field.commune || 'France'} se portent bien. 15 secondes pour valider les conditions du jour et maintenir votre série de 8 jours.`,
           category: 'stage_update',
           severity: 'info',
           fieldId: field.id,
@@ -138,11 +139,11 @@ export function generateDuolingoNotificationsForFields(
     }
   });
 
-  // Add the signature Duolingo evening streak guilt-trip
+  // Signature Duolingo evening streak accountability check-in
   notifs.push({
     id: 'duo_streak_evening_checkin',
-    title: `🦉 Psst... Votre série de 8 jours expire ce soir`,
-    message: `Prenez 20 secondes pour consulter le bulletin agronomique de vos ${fields.length} parcelles. Les meilleurs producteurs de légumineuses ne lâchent jamais leur routine quotidienne !`,
+    title: `Duo Agri : Votre série de 8 jours expire ce soir`,
+    message: `Prenez 20 secondes pour consulter le bulletin agronomique de vos ${fields.length} parcelles. La régularité de surveillance est la clé des meilleurs rendements.`,
     category: 'briefing',
     severity: 'info',
     timestamp: 'À l\'instant',
@@ -160,6 +161,7 @@ export function generateDuolingoNotificationsForFields(
 
 /**
  * Preset simulations for testing Duolingo notification styles on demand.
+ * 100% vector SVG icons, zero stickers, zero emojis.
  */
 export const DUO_SIMULATION_PRESETS: Array<{
   id: string;
@@ -174,8 +176,8 @@ export const DUO_SIMULATION_PRESETS: Array<{
     tone: 'loss_aversion',
     cropType: 'pois_chiche',
     notification: {
-      title: '🔥 Série de 8j : Ne laissez pas vos pois chiches brûler !',
-      message: '29.4°C prévus à Castelnaudary cet après-midi. Le pollen avorte au-delà de 28°C ! Ouvrez l\'analyse pour vérifier si vos 18 ha ont besoin d\'ombrage naturel.',
+      title: 'Série de 8j : Ne laissez pas vos pois chiches brûler !',
+      message: '29.4°C prévus à Castelnaudary cet après-midi. Le pollen avorte au-delà de 28°C. Ouvrez l\'analyse pour vérifier si vos 18 ha nécessitent un ombrage ou report d\'intervention.',
       category: 'weather_risk',
       severity: 'critical',
       actionLabel: 'Sauver les fleurs',
@@ -192,8 +194,8 @@ export const DUO_SIMULATION_PRESETS: Array<{
     tone: 'urgent',
     cropType: 'feverole',
     notification: {
-      title: '💨 Créneau express : Le vent s\'endort en Beauce !',
-      message: 'Vent mesuré à 10 km/h jusqu\'à 11h15, puis rafales à 26 km/h. Vos 24 ha de féveroles n\'attendent que votre passage !',
+      title: 'Créneau express : Le vent tombe en Beauce !',
+      message: 'Vent mesuré à 10 km/h jusqu\'à 11h15, avant rafales à 26 km/h. Vos 24 ha de féveroles n\'attendent que votre passage.',
       category: 'weather_risk',
       severity: 'warning',
       actionLabel: 'Profiter du créneau',
@@ -210,8 +212,8 @@ export const DUO_SIMULATION_PRESETS: Array<{
     tone: 'playful',
     cropType: 'lentille',
     notification: {
-      title: '🚜 Sortez les batteuses, la lentille est prête !',
-      message: 'Humidité à 14.1% dans le Berry : la fenêtre d\'or est ouverte aujourd\'hui. Ne laissez pas les orages du week-end faire exploser les gousses au sol !',
+      title: 'Sortez les batteuses, la lentille est prête !',
+      message: 'Humidité à 14.1% dans le Berry : la fenêtre optimale est ouverte aujourd\'hui. Ne laissez pas les orages du week-end égrener les gousses au sol.',
       category: 'harvest_window',
       severity: 'info',
       actionLabel: 'Planifier le battage',
@@ -228,15 +230,15 @@ export const DUO_SIMULATION_PRESETS: Array<{
     tone: 'streak_shield',
     cropType: 'pois_chiche',
     notification: {
-      title: '🦉 Duo Agri : Votre série de 8 jours va s\'éteindre !',
-      message: 'Il ne vous reste que 2 heures avant minuit. Un petit coup d\'œil de 15 secondes pour valider votre vigilance quotidienne et garder votre flamme allumée.',
+      title: 'Duo Agri : Votre série de 8 jours va s\'éteindre !',
+      message: 'Il ne vous reste que 2 heures avant minuit. Un coup d\'œil rapide de 15 secondes pour valider votre vigilance quotidienne et maintenir votre progression.',
       category: 'briefing',
       severity: 'info',
       actionLabel: 'Sauver ma série',
       actionDestination: 'weather',
       streakDays: 8,
       duoTone: 'streak_shield',
-      duoTag: 'Flamme active',
+      duoTag: 'Série active',
       economicImpact: 'Série continue',
     },
   },
