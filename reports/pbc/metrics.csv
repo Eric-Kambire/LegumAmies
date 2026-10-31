@@ -1,0 +1,7 @@
+outcome,model,n_train,n_val,n_test,test_base_rate,brier_score,brier_skill_score_vs_clim,expected_calibration_error
+warm,climatology,240,40,60,0.4833,0.2725,0.0,0.14987
+warm,raw_forecast,240,40,60,0.4833,0.26761,0.01797,0.16963
+warm,pbc_inspired,240,40,60,0.4833,0.26378,0.03201,0.11126
+wet,climatology,240,40,60,0.3167,0.21659,0.0,0.01805
+wet,raw_forecast,240,40,60,0.3167,0.23546,-0.08713,0.16039
+wet,pbc_inspired,240,40,60,0.3167,0.28626,-0.32165,0.19503

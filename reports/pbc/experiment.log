@@ -1,0 +1,11 @@
+2026-10-31 23:01:12,140 INFO Loading cached ERA5 from /home/ubuntu/Downloads/LegumAmies/reports/pbc/era5_bfc_daily.csv
+2026-10-31 23:01:12,143 INFO ERA5 daily rows=12419 range=1991-01-01..2024-12-31 nan=0
+2026-10-31 23:01:12,247 INFO samples=340 init_months=[3, 4, 5, 6, 7, 8]
+2026-10-31 23:01:12,251 INFO [warm] n={'train': 240, 'val': 40, 'test': 60} base_rate={'train': 0.321, 'val': 0.575, 'test': 0.483}
+2026-10-31 23:01:12,296 INFO [warm] PBC vs clim diff=-0.00909 CI[-0.07812,0.05827] improves=False
+2026-10-31 23:01:12,296 INFO [warm] PBC vs raw  diff=-0.00431 CI[-0.07479,0.06497] improves=False
+2026-10-31 23:01:12,304 INFO [wet] n={'train': 240, 'val': 40, 'test': 60} base_rate={'train': 0.346, 'val': 0.25, 'test': 0.317}
+2026-10-31 23:01:12,344 INFO [wet] PBC vs clim diff=0.07220 CI[0.01210,0.14526] improves=False
+2026-10-31 23:01:12,344 INFO [wet] PBC vs raw  diff=0.05285 CI[0.00090,0.11270] improves=False
+2026-10-31 23:01:12,351 INFO Saved metrics.csv (6 rows) and predictions.csv (120 rows)
+2026-10-31 23:01:12,352 INFO Saved run_metadata.json
