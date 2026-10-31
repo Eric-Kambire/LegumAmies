@@ -1,0 +1,25 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Data & Models (ignore large artifacts from git)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+models/*
+!models/.gitkeep
+
+# Jupyter & Notebooks
+.ipynb_checkpoints/
+
+# Environment secrets
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/

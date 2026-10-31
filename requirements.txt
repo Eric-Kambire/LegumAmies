@@ -1,0 +1,25 @@
+# Core Data Science & ML
+numpy
+pandas
+scipy
+scikit-learn
+xgboost
+lightgbm
+
+# Visualization & Notebooks
+matplotlib
+seaborn
+jupyter
+ipykernel
+
+# NLP / Deep Learning / LLM (Optional / common for hackathons)
+torch
+transformers
+
+# Web / Demo / API
+streamlit
+fastapi
+uvicorn
+python-dotenv
+requests
+tqdm
