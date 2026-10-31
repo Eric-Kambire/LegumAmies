@@ -22,6 +22,12 @@ FIELDS_CSV = RAW_DIR / "fields.csv"
 CROP_RULES_CSV = RAW_DIR / "crop_rules.csv"
 MACHINERY_CSV = RAW_DIR / "machinery_availability.csv"
 
+# HESTIA sustainability integration
+HESTIA_RAW_DIR = RAW_DIR / "hestia"
+HESTIA_SUSTAINABILITY_CSV = PROCESSED_DIR / "hestia_legume_sustainability.csv"
+HESTIA_COVERAGE_CSV = PROCESSED_DIR / "hestia_coverage.csv"
+HESTIA_METADATA_JSON = PROCESSED_DIR / "hestia_metadata.json"
+
 # Processed outputs
 WEATHER_HOURLY_CSV = PROCESSED_DIR / "weather_hourly.csv"
 ENSEMBLE_HOURLY_CSV = PROCESSED_DIR / "ensemble_hourly.csv"

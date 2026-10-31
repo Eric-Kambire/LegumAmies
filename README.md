@@ -107,3 +107,69 @@ pytest -q
 Outputs are written to `data/processed/`:
 `weather_hourly.csv`, `ensemble_hourly.csv`, `rain_probabilities.csv`,
 `flowering_alerts.csv`, `harvest_ranking.csv`, `run_metadata.json`.
+
+---
+
+## 🌍 Module: HESTIA sustainability enrichment (Milestone 2)
+
+Enriches LegumAmies with **real, published** environmental impact data for
+legumes from the official [HESTIA](https://www.hestia.earth) (University of
+Oxford) Data API. This **complements** the AROME/ECMWF climate MVP; it does not
+replace it.
+
+### What it retrieves
+Validated, **aggregated** Impact Assessments for France, summarised per crop and
+indicator (per functional unit = 1 kg of product):
+
+| category | HESTIA indicator | unit | method |
+|---|---|---|---|
+| `ghg_emissions` | GWP100 | kg CO2 eq | IPCC (2021) |
+| `land_use` | Land occupation, during cycle | m²·year | HESTIA |
+| `water_use` | Freshwater withdrawals, during cycle | L | Poore & Nemecek (2018) |
+| `water_scarcity` | Scarcity-weighted water use | L eq | Environmental Footprint v3.1 |
+| `land_quality` | Soil quality index, total land-use effects | points | Environmental Footprint v3.1 |
+
+### API rules honoured
+- Every request sends the required `X-Data-Version` header as a release **date**
+  (`YYYY-MM-DD`), never a version label.
+- Releases are embargoed for 182 days; the client auto-selects the newest
+  `enabled` release older than that window (pinnable for reproducibility).
+- Aggregated values are stored as bootstrap `distribution` arrays → reported as
+  **mean + sd + min + max + n**.
+- 401 (not published to you) and 404 (id scoped to another release) are raised
+  with clear messages.
+
+### Honest coverage (France, release v1.2 / `2026-04-30`)
+Only **pea** has a validated French aggregate in this release. `soybean`,
+`fava_bean` (HESTIA *Broad bean*), `chickpea`, `lentil`, `lupin` and `dry_bean`
+(HESTIA *Common bean*) are **not covered** and are reported as missing in
+`data/processed/hestia_coverage.csv` — never fabricated.
+
+### Important: not a field measurement
+HESTIA aggregated nodes are **national/regional estimates over 2010–2026**, not
+measurements of an individual field. Every output row is labelled
+`data_kind = hestia_aggregated_national_estimate` and carries its source
+citation and licence (here `CC-BY`). Do not attach a national aggregate to a
+specific field as if measured there.
+
+### Run it
+```bash
+source .venv/bin/activate
+python -c "from src.sustainability.hestia import build_country_legume_sustainability as b; b(country='France')"
+jupyter nbconvert --to notebook --execute --inplace notebooks/02_hestia_sustainability.ipynb
+pytest -q tests/test_hestia.py
+```
+Outputs: `data/processed/hestia_legume_sustainability.csv`,
+`hestia_coverage.csv`, `hestia_metadata.json`.
+
+---
+
+## 👥 Team docs (shared standards)
+
+- [`docs/DESIGN_GUIDELINES.md`](docs/DESIGN_GUIDELINES.md) — mandatory iOS-inspired
+  PWA design standard (tokens, motion with `motion/react`, accessibility,
+  states, explainability). **The Gemini agent owns the frontend**; coordinate
+  via this doc rather than rewriting components.
+- [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md) — shared data/API contract
+  between the pipeline and the frontend (climate + HESTIA payloads, provenance,
+  decision traces).
