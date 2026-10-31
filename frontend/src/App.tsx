@@ -134,7 +134,7 @@ const INITIAL_NOTIFICATIONS: AgriculturalNotification[] = [
 
 export const App: React.FC = () => {
   // 1. Navigation Tab State
-  const [activeTab, setActiveTab] = useState<AppTab>('home');
+  const [activeTab, setActiveTab] = useState<AppTab>('weather');
 
   // 2. Farm Parcels State
   const [fields, setFields] = useState<SelectedField[]>(() => {
@@ -417,7 +417,7 @@ export const App: React.FC = () => {
         onOpenContractModal={() => setIsBackendContractOpen(true)}
       />
 
-      <main className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
+      <main className="flex-1 min-h-0 w-full relative overflow-hidden flex flex-col">
         {/* 1. DESTINATION: HOME DASHBOARD */}
         {activeTab === 'home' && (
           <HomeView
@@ -434,8 +434,9 @@ export const App: React.FC = () => {
         )}
 
       {/* 2. DESTINATION: WEATHER MAP MODULE */}
-      <div className={`w-full h-full relative ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
+      <div className={`w-full h-full absolute inset-0 ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
         <WeatherMap
+          isActive={activeTab === 'weather'}
           selectedField={activeField}
           onSelectCoordinates={handleSelectCoordinates}
           activeLayer={activeLayer}

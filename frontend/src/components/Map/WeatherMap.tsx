@@ -12,6 +12,7 @@ import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import type { FrenchAgriBasin } from '../../data/frenchAgriBasins';
 
 interface WeatherMapProps {
+  isActive?: boolean;
   selectedField: SelectedField | null;
   onSelectCoordinates: (lat: number, lng: number) => void;
   activeLayer: WeatherLayerType;
@@ -23,6 +24,7 @@ interface WeatherMapProps {
 }
 
 export const WeatherMap: React.FC<WeatherMapProps> = ({
+  isActive = true,
   selectedField,
   onSelectCoordinates,
   activeLayer,
@@ -40,7 +42,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   const gpsMarkerRef = useRef<L.LayerGroup | null>(null);
   const basinsLayerRef = useRef<L.LayerGroup | null>(null);
 
-  // 1. Initialize Map
+  // 1. Initialize Map and immediately attach base tile layer
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -60,6 +62,20 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       attributionControl: true,
     });
 
+    // Base Tile Layer (Apple Maps CartoDB styled tiles)
+    const tileUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    const baseLayer = L.tileLayer(tileUrl, {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    baseTileLayerRef.current = baseLayer;
+
     map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       if (isWithinMetropolitanFrance(lat, lng)) {
@@ -77,34 +93,41 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       resizeObserver.observe(mapContainerRef.current);
     }
 
+    // Force initial render calculation
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
     return () => {
       resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
+      baseTileLayerRef.current = null;
     };
-  }, [onSelectCoordinates]);
+  }, [onSelectCoordinates, isDarkMode]);
 
-  // 2. Base Tile Layer (Apple Maps look using CartoDB styled OpenStreetMap)
+  // Handle Tab Switch / Visibility Resize
   useEffect(() => {
+    if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
-    if (!map) return;
-
-    if (baseTileLayerRef.current) {
-      map.removeLayer(baseTileLayerRef.current);
+    if (isActive) {
+      map.invalidateSize();
+      const t1 = setTimeout(() => map.invalidateSize(), 60);
+      const t2 = setTimeout(() => map.invalidateSize(), 250);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
+  }, [isActive]);
 
+  // 2. Base Tile Layer Theme Change
+  useEffect(() => {
+    if (!baseTileLayerRef.current) return;
     const tileUrl = isDarkMode
       ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
       : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-
-    const baseLayer = L.tileLayer(tileUrl, {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    baseTileLayerRef.current = baseLayer;
+    baseTileLayerRef.current.setUrl(tileUrl);
   }, [isDarkMode]);
 
   // 3. Radar Precipitation Layer
@@ -249,8 +272,12 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   }, [onSelectBasin]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainerRef} className="w-full h-full" />
+    <div className="absolute inset-0 w-full h-full overflow-hidden">
+      <div
+        ref={mapContainerRef}
+        className="w-full h-full"
+        style={{ width: '100%', height: '100%', minHeight: '100%' }}
+      />
     </div>
   );
 };
