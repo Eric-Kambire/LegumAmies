@@ -60,8 +60,6 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       attributionControl: true,
     });
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
     map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
       if (isWithinMetropolitanFrance(lat, lng)) {
@@ -77,7 +75,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     };
   }, [onSelectCoordinates]);
 
-  // 2. Base Tile Layer (Dark Matter / Positron)
+  // 2. Base Tile Layer (Apple Maps look using CartoDB styled OpenStreetMap)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -94,7 +92,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       subdomains: 'abcd',
       maxZoom: 19,
       attribution:
-        '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
     baseTileLayerRef.current = baseLayer;
@@ -119,7 +117,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       radarTileLayerRef.current.setUrl(tileUrl);
     } else {
       const radarLayer = L.tileLayer(tileUrl, {
-        opacity: 0.75,
+        opacity: 0.72,
         zIndex: 50,
         tileSize: 256,
         attribution: '&copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
@@ -143,10 +141,10 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     const group = L.layerGroup();
 
     const circle = L.circle([gpsPosition.latitude, gpsPosition.longitude], {
-      radius: Math.max(gpsPosition.accuracy, 30),
-      color: '#0ea5e9',
-      fillColor: '#0ea5e9',
-      fillOpacity: 0.12,
+      radius: Math.max(gpsPosition.accuracy, 25),
+      color: '#007aff',
+      fillColor: '#007aff',
+      fillOpacity: 0.15,
       weight: 1,
     });
     group.addLayer(circle);
@@ -168,7 +166,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     gpsMarkerRef.current = group;
   }, [gpsPosition]);
 
-  // 5. Selected Field Marker
+  // 5. Selected Field Marker (Apple Maps Style Pin)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -181,15 +179,15 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     if (!selectedField) return;
 
     const pinIcon = L.divIcon({
-      className: 'custom-field-pin',
+      className: 'custom-apple-pin',
       html: `
-        <div class="flex flex-col items-center select-none -translate-x-1/2 -translate-y-full cursor-pointer transition-transform hover:scale-110 active:scale-95">
-          <div class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-semibold tracking-wide shadow-lg flex items-center gap-1.5 border border-emerald-400/40">
+        <div class="flex flex-col items-center select-none -translate-x-1/2 -translate-y-full cursor-pointer transition-transform hover:scale-105 active:scale-95">
+          <div class="px-3 py-1 rounded-full bg-white text-black text-xs font-semibold tracking-tight shadow-xl flex items-center gap-1.5 border border-black/10">
             <span>🌱</span>
-            <span>${selectedField.name || 'Parcelle'}</span>
+            <span class="truncate max-w-[120px]">${selectedField.name || 'Parcelle'}</span>
           </div>
-          <div class="w-3 h-3 bg-emerald-600 rotate-45 -mt-1.5 shadow-md"></div>
-          <div class="w-2 h-2 rounded-full bg-white ring-2 ring-emerald-500 mt-0.5"></div>
+          <div class="w-2.5 h-2.5 bg-white rotate-45 -mt-1 shadow-md"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-white/70 ring-2 ring-black/40 mt-0.5"></div>
         </div>
       `,
       iconSize: [0, 0],
@@ -204,7 +202,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     fieldMarkerRef.current = marker;
   }, [selectedField]);
 
-  // 6. Pulse Basins Markers
+  // 6. Pulse Basins Markers (Apple style capsules)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -220,8 +218,8 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       const basinIcon = L.divIcon({
         className: 'custom-basin-chip',
         html: `
-          <button class="bg-slate-900/80 hover:bg-emerald-900/90 text-slate-200 hover:text-white backdrop-blur-md border border-slate-700/60 hover:border-emerald-500/60 px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md transition-all active:scale-95 whitespace-nowrap flex items-center gap-1 -translate-x-1/2 -translate-y-1/2">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <button class="apple-glass text-white/90 hover:text-white px-2.5 py-1 rounded-full text-[11px] font-medium shadow-lg transition-all active:scale-95 whitespace-nowrap flex items-center gap-1.5 -translate-x-1/2 -translate-y-1/2">
+            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
             <span>${basin.name.split(' ')[0]}</span>
           </button>
         `,

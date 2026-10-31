@@ -12,20 +12,19 @@ export const QuickBasins: React.FC<QuickBasinsProps> = ({
   selectedBasinId,
 }) => {
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-1 -mx-1 select-none">
+    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 select-none">
       {FRENCH_AGRI_BASINS.map((basin) => {
         const isSelected = selectedBasinId === basin.id;
         return (
           <button
             key={basin.id}
             onClick={() => onSelectBasin(basin)}
-            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all active:scale-95 flex items-center gap-1.5 ${
               isSelected
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950 font-semibold'
-                : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800/80'
+                ? 'bg-white text-black font-semibold shadow-md'
+                : 'apple-glass text-white/80 hover:text-white'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>{basin.name.split(' ')[0]}</span>
           </button>
         );

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Clock } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import type { RadarFrame } from '../../types/weather';
 
 interface RadarTimelineProps {
@@ -24,7 +24,7 @@ export const RadarTimeline: React.FC<RadarTimelineProps> = ({
 
     const interval = setInterval(() => {
       onIndexChange((currentIndex + 1) % frames.length);
-    }, 750);
+    }, 700);
 
     return () => clearInterval(interval);
   }, [isPlaying, currentIndex, frames.length, onIndexChange]);
@@ -40,56 +40,55 @@ export const RadarTimeline: React.FC<RadarTimelineProps> = ({
   const isPast = currentFrame.type === 'past';
 
   return (
-    <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800/80 p-2.5 rounded-2xl shadow-2xl flex flex-col gap-2 max-w-md w-full mx-auto select-none transition-all">
-      {/* Top Header: Time, Status & Step */}
-      <div className="flex items-center justify-between text-xs px-1">
+    <div className="apple-glass px-4 py-3 rounded-[26px] shadow-2xl flex flex-col gap-2 max-w-sm w-full mx-auto select-none transition-all">
+      {/* Top Header: Time, Status */}
+      <div className="flex items-center justify-between text-xs px-0.5">
         <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span className="font-mono text-sm font-semibold text-slate-100">{timeFormatted}</span>
+          <span className="text-sm font-semibold text-white tracking-tight">{timeFormatted}</span>
           <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide ${
+            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-tight ${
               isPast
-                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                ? 'bg-white/15 text-white/90'
+                : 'bg-amber-500/25 text-amber-200'
             }`}
           >
-            {isPast ? 'Observé (Radar)' : 'Prévision (Nowcast)'}
+            {isPast ? 'Observé' : 'Prévision'}
           </span>
         </div>
 
-        <span className="text-[11px] text-slate-400 font-mono">
+        <span className="text-[11px] text-white/50 font-medium">
           {currentIndex + 1} / {frames.length}
         </span>
       </div>
 
-      {/* Scrubber Slider */}
-      <div className="relative flex items-center px-1">
+      {/* iOS Slider */}
+      <div className="relative flex items-center px-0.5">
         <input
           type="range"
           min={0}
           max={frames.length - 1}
           value={currentIndex}
           onChange={(e) => onIndexChange(Number(e.target.value))}
-          className="w-full h-1.5 bg-slate-700/60 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all focus:outline-none"
+          className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white focus:outline-none"
         />
       </div>
 
       {/* Controls Bar */}
-      <div className="flex items-center justify-between px-1 pt-1">
+      <div className="flex items-center justify-between px-1 pt-0.5">
         <button
           onClick={() => onIndexChange(Math.max(0, currentIndex - 1))}
           disabled={currentIndex === 0}
-          className="p-1.5 text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-          title="Image précédente"
+          className="p-1.5 text-white/60 hover:text-white disabled:opacity-25 transition-colors active:scale-90"
+          title="Précédent"
           aria-label="Image précédente"
         >
-          <SkipBack className="w-4 h-4" />
+          <SkipBack className="w-4 h-4 fill-current" />
         </button>
 
         <button
           onClick={onTogglePlay}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-950 transition-all active:scale-95"
-          aria-label={isPlaying ? 'Pause' : 'Lecture radar'}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-black font-semibold text-xs shadow-md transition-all active:scale-90"
+          aria-label={isPlaying ? 'Pause' : 'Lecture'}
         >
           {isPlaying ? (
             <>
@@ -107,11 +106,11 @@ export const RadarTimeline: React.FC<RadarTimelineProps> = ({
         <button
           onClick={() => onIndexChange(Math.min(frames.length - 1, currentIndex + 1))}
           disabled={currentIndex === frames.length - 1}
-          className="p-1.5 text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-          title="Image suivante"
+          className="p-1.5 text-white/60 hover:text-white disabled:opacity-25 transition-colors active:scale-90"
+          title="Suivant"
           aria-label="Image suivante"
         >
-          <SkipForward className="w-4 h-4" />
+          <SkipForward className="w-4 h-4 fill-current" />
         </button>
       </div>
     </div>

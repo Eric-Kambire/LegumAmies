@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Sprout, Sparkles } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import type { LegumeCropType, CropGrowthStage, SelectedField } from '../../types/agricultural';
 
 interface FieldConfigModalProps {
@@ -21,7 +21,7 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
   commune,
   onSaveField,
 }) => {
-  const [name, setName] = useState(currentField?.name || 'Ma Parcelle Légumineuse');
+  const [name, setName] = useState(currentField?.name || 'Parcelle Légumineuse');
   const [cropType, setCropType] = useState<LegumeCropType>(currentField?.cropType || 'pois_chiche');
   const [growthStage, setGrowthStage] = useState<CropGrowthStage>(
     currentField?.growthStage || 'floraison'
@@ -39,12 +39,12 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
     { id: 'pois', label: 'Pois protéagineux', icon: '🟢' },
     { id: 'soja', label: 'Soja local sans OGM', icon: '🌱' },
     { id: 'lupin', label: 'Lupin blanc', icon: '🌾' },
-    { id: 'haricot_sec', label: 'Haricot sec (lingot/coco)', icon: '⚪' },
+    { id: 'haricot_sec', label: 'Haricot sec', icon: '⚪' },
   ];
 
   const stages: Array<{ id: CropGrowthStage; label: string; desc: string }> = [
     { id: 'vegetatif', label: '1. Végétatif', desc: 'Levée et développement foliaire' },
-    { id: 'floraison', label: '2. Floraison', desc: 'Stade critique face aux chaleurs (>28°C)' },
+    { id: 'floraison', label: '2. Floraison', desc: 'Sensibilité aux fortes chaleurs (>28°C)' },
     { id: 'formation_gousses', label: '3. Formation des gousses', desc: 'Sensibilité au stress hydrique' },
     { id: 'remplissage_grain', label: '4. Remplissage du grain', desc: 'Accumulation des protéines' },
     { id: 'pret_recolter', label: '5. Prêt à récolter', desc: 'Surveillance humidité et égrenage' },
@@ -69,43 +69,41 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-4 text-slate-100 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Sprout className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm">Configurer la Parcelle</h3>
-              <p className="text-[11px] text-slate-400">
-                {commune ? `${commune} • ` : ''}
-                {latitude.toFixed(3)}°N, {longitude.toFixed(3)}°E
-              </p>
-            </div>
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="apple-glass rounded-[28px] max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 text-white max-h-[90vh] overflow-y-auto scrollbar-none">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
+          <div>
+            <h3 className="font-semibold text-base text-white">Configurer la Parcelle</h3>
+            <p className="text-xs text-white/50 mt-0.5">
+              {commune ? `${commune} • ` : ''}
+              {latitude.toFixed(2)}°N, {longitude.toFixed(2)}°E
+            </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Field Name Input */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-300">Nom de la parcelle</label>
+          <label className="text-xs font-medium text-white/70">Nom de la parcelle</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex : Parcelle du Moulin, Champ Nord"
-            className="w-full px-3.5 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+            placeholder="Ex : Parcelle du Moulin"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.12] text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
 
+        {/* Crop Selection */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-300">Légumineuse cultivée</label>
+          <label className="text-xs font-medium text-white/70">Légumineuse</label>
           <div className="grid grid-cols-2 gap-2">
             {crops.map((c) => {
               const isSelected = cropType === c.id;
@@ -114,10 +112,10 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
                   key={c.id}
                   type="button"
                   onClick={() => setCropType(c.id)}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs text-left transition-all ${
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs text-left transition-all active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-600/15 border-emerald-500 text-emerald-300 font-semibold shadow-sm'
-                      : 'bg-slate-800/40 border-slate-700/40 text-slate-300 hover:bg-slate-800/80'
+                      ? 'bg-white/20 border-white/40 text-white font-semibold'
+                      : 'bg-white/[0.05] border-white/[0.08] text-white/75 hover:bg-white/[0.1]'
                   }`}
                 >
                   <span className="text-base">{c.icon}</span>
@@ -128,8 +126,9 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
           </div>
         </div>
 
+        {/* Growth Stage Selection */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-300">Stade phénologique actuel</label>
+          <label className="text-xs font-medium text-white/70">Stade phénologique</label>
           <div className="flex flex-col gap-1.5">
             {stages.map((s) => {
               const isSelected = growthStage === s.id;
@@ -138,51 +137,52 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
                   key={s.id}
                   type="button"
                   onClick={() => setGrowthStage(s.id)}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${
+                  className={`flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all active:scale-98 ${
                     isSelected
-                      ? 'bg-emerald-600/15 border-emerald-500 text-emerald-300 font-medium'
-                      : 'bg-slate-800/40 border-slate-700/40 text-slate-300 hover:bg-slate-800/80'
+                      ? 'bg-white/20 border-white/40 text-white font-medium'
+                      : 'bg-white/[0.05] border-white/[0.08] text-white/75 hover:bg-white/[0.1]'
                   }`}
                 >
                   <div>
-                    <p className="font-semibold">{s.label}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{s.desc}</p>
+                    <p className="font-semibold text-white">{s.label}</p>
+                    <p className="text-[10px] text-white/50 mt-0.5">{s.desc}</p>
                   </div>
-                  {isSelected && <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                  {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
                 </button>
               );
             })}
           </div>
         </div>
 
+        {/* Surface Input */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-300">Surface (hectares - optionnel)</label>
+          <label className="text-xs font-medium text-white/70">Surface (hectares - optionnel)</label>
           <input
             type="number"
             min="0.5"
             step="0.5"
             value={areaHectares || ''}
             onChange={(e) => setAreaHectares(parseFloat(e.target.value) || undefined)}
-            placeholder="Ex : 15"
-            className="w-full px-3.5 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+            placeholder="Ex : 12"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.12] text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/[0.1]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+            className="px-4 py-2 rounded-full text-xs font-medium text-white/60 hover:text-white transition-colors"
           >
             Annuler
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-950 transition-all active:scale-95"
+            className="px-5 py-2.5 rounded-full bg-white text-black font-semibold text-xs transition-all active:scale-95 shadow-md"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Enregistrer la parcelle</span>
+            Enregistrer
           </button>
         </div>
       </div>

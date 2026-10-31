@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Cloud, CloudRain, CloudLightning, Calendar } from 'lucide-react';
+import { Calendar, Sun, Cloud, CloudRain, CloudLightning } from 'lucide-react';
 import type { DailyForecastPoint } from '../../types/weather';
 
 interface DailyForecastProps {
@@ -21,54 +21,60 @@ export const DailyForecast: React.FC<DailyForecastProps> = ({ daily }) => {
 
   const getDailyIcon = (code: number) => {
     if (code === 0) return <Sun className="w-4 h-4 text-amber-400" />;
-    if (code <= 2) return <Sun className="w-4 h-4 text-amber-300" />;
+    if (code <= 2) return <Sun className="w-4 h-4 text-amber-300/90" />;
     if (code >= 80 || code >= 95) return <CloudLightning className="w-4 h-4 text-amber-400" />;
     if (code >= 50) return <CloudRain className="w-4 h-4 text-sky-400" />;
-    return <Cloud className="w-4 h-4 text-slate-400" />;
+    return <Cloud className="w-4 h-4 text-white/70" />;
   };
 
   return (
-    <div className="flex flex-col gap-2 select-none">
-      <div className="flex items-center gap-1.5 text-xs text-slate-400 px-1">
-        <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="font-semibold uppercase tracking-wider text-[10px]">Prévisions à 7 Jours</span>
+    <div className="apple-card p-3.5 select-none">
+      {/* Header */}
+      <div className="flex items-center gap-1.5 text-xs text-white/50 font-semibold uppercase tracking-wider mb-1 pb-2 border-b border-white/[0.08]">
+        <Calendar className="w-3.5 h-3.5" />
+        <span>Prévisions sur 7 jours</span>
       </div>
 
-      <div className="flex flex-col divide-y divide-slate-800/60 bg-slate-800/30 border border-slate-700/40 rounded-2xl p-2.5">
+      {/* Daily rows */}
+      <div className="flex flex-col divide-y divide-white/[0.06]">
         {daily.slice(0, 7).map((day, idx) => {
           const leftPercent = ((day.temperatureMin - weekMin) / weekRange) * 100;
           const widthPercent = Math.max(
             ((day.temperatureMax - day.temperatureMin) / weekRange) * 100,
-            8
+            12
           );
 
           return (
             <div
               key={day.date}
-              className="flex items-center justify-between py-2 px-1 text-xs text-slate-300"
+              className="flex items-center justify-between py-2.5 text-xs text-white"
             >
-              <span className="w-20 font-medium capitalize text-slate-200">
+              {/* Day Name */}
+              <span className="w-20 font-medium capitalize text-white/90">
                 {getDayLabel(day.date, idx)}
               </span>
 
-              <div className="flex items-center gap-1.5 w-16">
+              {/* Weather Icon & Rain % */}
+              <div className="flex items-center gap-1.5 w-14">
                 {getDailyIcon(day.weatherCode)}
                 {day.precipitationProbabilityMax > 20 ? (
-                  <span className="text-[10px] font-mono text-sky-400">
+                  <span className="text-[11px] font-semibold text-[#38bdf8]">
                     {day.precipitationProbabilityMax}%
                   </span>
                 ) : (
-                  <span className="text-[10px] text-transparent select-none">-</span>
+                  <span className="text-[11px] text-transparent select-none">-</span>
                 )}
               </div>
 
-              <span className="w-8 text-right font-mono text-slate-400">
+              {/* Min Temp */}
+              <span className="w-7 text-right font-medium text-white/50 text-[13px]">
                 {Math.round(day.temperatureMin)}°
               </span>
 
-              <div className="flex-1 mx-3 h-1.5 bg-slate-700/40 rounded-full relative overflow-hidden">
+              {/* Apple Weather gradient range bar */}
+              <div className="flex-1 mx-3 h-1.5 bg-black/30 rounded-full relative overflow-hidden">
                 <div
-                  className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-400"
+                  className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-[#0ea5e9] via-[#22c55e] via-[#eab308] to-[#f97316]"
                   style={{
                     left: `${Math.max(0, leftPercent)}%`,
                     width: `${Math.min(100 - leftPercent, widthPercent)}%`,
@@ -76,7 +82,8 @@ export const DailyForecast: React.FC<DailyForecastProps> = ({ daily }) => {
                 />
               </div>
 
-              <span className="w-8 text-left font-mono font-semibold text-slate-100">
+              {/* Max Temp */}
+              <span className="w-7 text-left font-semibold text-white text-[13px]">
                 {Math.round(day.temperatureMax)}°
               </span>
             </div>
