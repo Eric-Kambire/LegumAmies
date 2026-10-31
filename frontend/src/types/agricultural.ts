@@ -26,8 +26,12 @@ export interface CropInfo {
   typicalHarvestMonths: string;
   optimalHarvestMoisture: { min: number; max: number };
   heatThresholdC: number;
-  emoji: string;
   color: string;
+  accent: {
+    bg: string;
+    text: string;
+    border: string;
+  };
   description: string;
 }
 
@@ -37,7 +41,11 @@ export interface GrowthStageInfo {
   shortDescFr: string;
   fullDescFr: string;
   criticalRisks: string[];
-  emoji: string;
+  accent: {
+    bg: string;
+    text: string;
+    border: string;
+  };
 }
 
 export interface SelectedField {

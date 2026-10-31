@@ -9,8 +9,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Juillet - Août',
     optimalHarvestMoisture: { min: 12.0, max: 14.5 },
     heatThresholdC: 32,
-    emoji: '🟡',
     color: '#F59E0B',
+    accent: {
+      bg: 'rgba(245, 158, 11, 0.14)',
+      text: '#fbbf24',
+      border: 'rgba(245, 158, 11, 0.28)',
+    },
     description: 'Culture rustique adaptée aux sols calcaires du Midi et du Sud-Ouest. Forte teneur en protéines (20-22%) et glucides lents.',
   },
   lentille: {
@@ -21,8 +25,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Juillet - Août',
     optimalHarvestMoisture: { min: 13.0, max: 15.0 },
     heatThresholdC: 28,
-    emoji: '🟢',
     color: '#10B981',
+    accent: {
+      bg: 'rgba(16, 185, 129, 0.14)',
+      text: '#34d399',
+      border: 'rgba(16, 185, 129, 0.28)',
+    },
     description: 'Filière d\'excellence française (Berry, Puy). Tige fragile et gousses déhiscentes nécessitant une gestion millimétrée de la moisson.',
   },
   feverole: {
@@ -33,8 +41,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Juillet - Août',
     optimalHarvestMoisture: { min: 14.0, max: 16.0 },
     heatThresholdC: 28,
-    emoji: '🟤',
     color: '#8B5CF6',
+    accent: {
+      bg: 'rgba(139, 92, 246, 0.14)',
+      text: '#a78bfa',
+      border: 'rgba(139, 92, 246, 0.28)',
+    },
     description: 'Poids lourd de la fixation symbiotique de l\'azote. Teneur exceptionnelle en protéines (28-30%). Très vulnérable au stress hydrique à floraison.',
   },
   pois: {
@@ -45,8 +57,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Fin Juin - Juillet',
     optimalHarvestMoisture: { min: 13.5, max: 15.5 },
     heatThresholdC: 28,
-    emoji: '🟢',
     color: '#06B6D4',
+    accent: {
+      bg: 'rgba(6, 182, 212, 0.14)',
+      text: '#38bdf8',
+      border: 'rgba(6, 182, 212, 0.28)',
+    },
     description: 'Majeur dans le bassin parisien (Beauce, Champagne). Clé de voûte de l\'industrie des isolats de protéines et farines pour l\'alt-protein.',
   },
   soja: {
@@ -57,8 +73,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Septembre - Octobre',
     optimalHarvestMoisture: { min: 12.5, max: 14.5 },
     heatThresholdC: 34,
-    emoji: '🌱',
     color: '#84CC16',
+    accent: {
+      bg: 'rgba(132, 204, 22, 0.14)',
+      text: '#a3e635',
+      border: 'rgba(132, 204, 22, 0.28)',
+    },
     description: 'Souveraineté protéique majeure. Cultivé sans OGM dans le Sud-Ouest et en Alsace pour l\'alimentation humaine directe (tofu, tempeh).',
   },
   lupin: {
@@ -69,8 +89,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Juillet - Août',
     optimalHarvestMoisture: { min: 13.0, max: 15.0 },
     heatThresholdC: 29,
-    emoji: '🌾',
-    color: '#EC4899',
+    color: '#3B82F6',
+    accent: {
+      bg: 'rgba(59, 130, 246, 0.14)',
+      text: '#60a5fa',
+      border: 'rgba(59, 130, 246, 0.28)',
+    },
     description: 'Teneur record en protéines (> 35%). Préfère les sols acides à neutres. Propriétés émulsifiantes très recherchées en panification.',
   },
   haricot_sec: {
@@ -81,8 +105,12 @@ export const LEGUME_CROPS_CATALOG: Record<LegumeCropType, CropInfo> = {
     typicalHarvestMonths: 'Septembre',
     optimalHarvestMoisture: { min: 14.0, max: 16.0 },
     heatThresholdC: 30,
-    emoji: '⚪',
-    color: '#F97316',
+    color: '#F43F5E',
+    accent: {
+      bg: 'rgba(244, 63, 94, 0.14)',
+      text: '#fb7185',
+      border: 'rgba(244, 63, 94, 0.28)',
+    },
     description: 'Terroirs traditionnels (Tarbais, Vendée, Lauragais). Récolte en gousses sèches ou écossées. Sensible aux amplitudes thermiques brutales.',
   },
 };
@@ -94,7 +122,11 @@ export const GROWTH_STAGES_CATALOG: Record<CropGrowthStage, GrowthStageInfo> = {
     shortDescFr: 'Levée et développement des feuilles',
     fullDescFr: 'Installation du système racinaire et nodulation symbiotique (Rhizobium). Plante vulnérable aux gelées tardives et ravageurs précoces (sitones).',
     criticalRisks: ['Gel tardif (< 0°C)', 'Excès d\'eau au sol (asphyxie racinaire)', 'Attaque de sitone'],
-    emoji: '🌱',
+    accent: {
+      bg: 'rgba(16, 185, 129, 0.12)',
+      text: '#34d399',
+      border: 'rgba(16, 185, 129, 0.24)',
+    },
   },
   floraison: {
     id: 'floraison',
@@ -102,7 +134,11 @@ export const GROWTH_STAGES_CATALOG: Record<CropGrowthStage, GrowthStageInfo> = {
     shortDescFr: 'Ouverture des fleurs et nouaison',
     fullDescFr: 'Stade le plus sensible de tout le cycle cultural. Un pic de température supérieur à 28°C (ou 32°C pour le pois chiche) provoque l\'avortement floral et la stérilité pollinique.',
     criticalRisks: ['Canicule (> 28°C / 32°C)', 'Stress hydrique sévère', 'Interdiction de traitement phytosanitaire en journée (Protection pollinisateurs)'],
-    emoji: '🌸',
+    accent: {
+      bg: 'rgba(236, 72, 153, 0.12)',
+      text: '#f472b6',
+      border: 'rgba(236, 72, 153, 0.24)',
+    },
   },
   formation_gousses: {
     id: 'formation_gousses',
@@ -110,7 +146,11 @@ export const GROWTH_STAGES_CATALOG: Record<CropGrowthStage, GrowthStageInfo> = {
     shortDescFr: 'Élongation et développement des gousses',
     fullDescFr: 'Nombre de grains par gousse en cours de fixation. Sensible à la sécheresse prolongée et aux maladies fongiques (anthracnose, botrytis si humidité > 85%).',
     criticalRisks: ['Déficit hydrique', 'Maladies cryptogamiques (humidité stagnante)', 'Pression des pucerons'],
-    emoji: '🫘',
+    accent: {
+      bg: 'rgba(139, 92, 246, 0.12)',
+      text: '#a78bfa',
+      border: 'rgba(139, 92, 246, 0.24)',
+    },
   },
   remplissage_grain: {
     id: 'remplissage_grain',
@@ -118,7 +158,11 @@ export const GROWTH_STAGES_CATALOG: Record<CropGrowthStage, GrowthStageInfo> = {
     shortDescFr: 'Accumulation des protéines et de l\'amidon',
     fullDescFr: 'Transfert des réserves foliaires vers les graines. Un coup de chaud brutal accélère la maturation artificielle (grain échaudé à faible teneur protéique).',
     criticalRisks: ['Échaudage thermique', 'Chutes de grêle', 'Verse précoce sous orage'],
-    emoji: '📦',
+    accent: {
+      bg: 'rgba(59, 130, 246, 0.12)',
+      text: '#60a5fa',
+      border: 'rgba(59, 130, 246, 0.24)',
+    },
   },
   pret_recolter: {
     id: 'pret_recolter',
@@ -126,6 +170,10 @@ export const GROWTH_STAGES_CATALOG: Record<CropGrowthStage, GrowthStageInfo> = {
     shortDescFr: 'Dessiccation des gousses et maturité',
     fullDescFr: 'Le grain doit atteindre 14-15% d\'humidité. Risque d\'égrenage spontané au sol par temps caniculaire ou de forte réfaction de séchage si récolté sous la pluie.',
     criticalRisks: ['Égrenage au sol (> 30°C / air sec)', 'Pluie d\'orage (germination sur pied)', 'Pénalités de séchage en coopérative (> 16%)'],
-    emoji: '🚜',
+    accent: {
+      bg: 'rgba(245, 158, 11, 0.12)',
+      text: '#fbbf24',
+      border: 'rgba(245, 158, 11, 0.24)',
+    },
   },
 };

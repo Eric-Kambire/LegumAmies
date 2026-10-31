@@ -1,6 +1,7 @@
 import React from 'react';
 import type { LegumeCropType, CropGrowthStage } from '../../types/agricultural';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
+import { CropGlyph, StageGlyph } from '../Common/LegumeGlyphs';
 
 interface BotanicalCardProps {
   cropType?: LegumeCropType;
@@ -24,18 +25,25 @@ export const BotanicalCard: React.FC<BotanicalCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-2 active:scale-98 ${
+        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-2.5 active:scale-98 ${
           isSelected
             ? 'apple-glass border-white/40 shadow-xl bg-white/[0.15]'
             : 'apple-card hover:bg-white/[0.1]'
         }`}
       >
         <div className="flex items-start justify-between">
-          <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-xl shadow-inner">
-            {crop.emoji}
+          <div
+            className="w-10 h-10 rounded-2xl flex items-center justify-center border shadow-sm transition-colors"
+            style={{
+              backgroundColor: crop.accent.bg,
+              color: crop.accent.text,
+              borderColor: crop.accent.border,
+            }}
+          >
+            <CropGlyph crop={cropType} size={22} />
           </div>
           {isSelected && (
-            <span className="w-2 h-2 rounded-full bg-[#007aff]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#007aff] ring-4 ring-[#007aff]/20" />
           )}
         </div>
 
@@ -59,18 +67,25 @@ export const BotanicalCard: React.FC<BotanicalCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-2 active:scale-98 ${
+        className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-2.5 active:scale-98 ${
           isSelected
             ? 'apple-glass border-white/40 shadow-xl bg-white/[0.15]'
             : 'apple-card hover:bg-white/[0.1]'
         }`}
       >
         <div className="flex items-start justify-between">
-          <div className="w-10 h-10 rounded-2xl bg-white/[0.08] flex items-center justify-center text-xl">
-            {stage.emoji}
+          <div
+            className="w-10 h-10 rounded-2xl flex items-center justify-center border shadow-sm transition-colors"
+            style={{
+              backgroundColor: stage.accent.bg,
+              color: stage.accent.text,
+              borderColor: stage.accent.border,
+            }}
+          >
+            <StageGlyph stage={growthStage} size={22} />
           </div>
           {isSelected && (
-            <span className="w-2 h-2 rounded-full bg-[#007aff]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#007aff] ring-4 ring-[#007aff]/20" />
           )}
         </div>
 

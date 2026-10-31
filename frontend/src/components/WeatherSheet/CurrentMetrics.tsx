@@ -1,9 +1,10 @@
 import React from 'react';
-import { MapPin, SlidersHorizontal } from 'lucide-react';
+import { MapPin, SlidersHorizontal, Sprout } from 'lucide-react';
 import type { LocationWeatherData } from '../../types/weather';
 import type { SelectedField } from '../../types/agricultural';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
 import { getWmoWeatherDescription } from '../../services/weatherApi';
+import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface CurrentMetricsProps {
   weather: LocationWeatherData;
@@ -57,7 +58,11 @@ export const CurrentMetrics: React.FC<CurrentMetricsProps> = ({
         onClick={onOpenFieldConfig}
         className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.12] hover:bg-white/[0.18] border border-white/[0.15] text-xs text-white/90 font-medium transition-all active:scale-95 shadow-sm"
       >
-        <span className="text-xs">🌱</span>
+        {field ? (
+          <CropGlyph crop={field.cropType} size={15} />
+        ) : (
+          <Sprout className="w-3.5 h-3.5 text-white/70" />
+        )}
         <span>
           {field ? `${getCropNameFr(field.cropType)} • ${getGrowthStageFr(field.growthStage)}` : 'Configurer la parcelle'}
         </span>

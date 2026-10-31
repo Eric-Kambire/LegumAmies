@@ -7,6 +7,7 @@ import type { LocationWeatherData } from '../../types/weather';
 import type { SelectedField, AgriculturalRiskAlert } from '../../types/agricultural';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
+import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface ForecastInsightsViewProps {
   weather: LocationWeatherData | null;
@@ -76,7 +77,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 pt-6 pb-28 max-w-2xl mx-auto w-full select-none flex flex-col gap-4">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
       {/* Header & Mode Switcher */}
       <div className="flex items-center justify-between">
         <div>
@@ -90,7 +91,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
         <div className="apple-glass p-0.5 rounded-full flex items-center gap-1 shadow-lg">
           <button
             onClick={() => setViewMode('summary')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
               viewMode === 'summary'
                 ? 'bg-white text-black shadow-sm'
                 : 'text-white/60 hover:text-white'
@@ -100,7 +101,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           </button>
           <button
             onClick={() => setViewMode('scientific')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
               viewMode === 'scientific'
                 ? 'bg-white text-black shadow-sm'
                 : 'text-white/60 hover:text-white'
@@ -113,12 +114,21 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
 
       {/* VIEW MODE 1: SUMMARY (SYNTHÈSE CLAIRE) */}
       {viewMode === 'summary' && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           {/* Crop Phenological State Banner */}
           {field && (
             <div className="apple-card p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{crop?.emoji || '🌱'}</span>
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center border shadow-xs flex-shrink-0"
+                  style={{
+                    backgroundColor: crop?.accent.bg || 'rgba(255,255,255,0.08)',
+                    color: crop?.accent.text || '#fff',
+                    borderColor: crop?.accent.border || 'rgba(255,255,255,0.15)',
+                  }}
+                >
+                  <CropGlyph crop={field.cropType} size={20} />
+                </div>
                 <div>
                   <h3 className="text-xs font-semibold text-white">
                     {crop?.labelFr} • {getGrowthStageFr(field.growthStage)}
@@ -131,12 +141,15 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
 
               <button
                 onClick={onOpenFieldConfig}
-                className="apple-glass px-3 py-1.5 rounded-full text-xs text-white/80 hover:text-white active:scale-95 transition-transform"
+                className="apple-glass px-3.5 py-1.5 rounded-full text-xs text-white/80 hover:text-white active:scale-95 transition-transform"
               >
                 Changer
               </button>
             </div>
           )}
+
+          {/* Responsive 2-column Grid for Risks and Probabilities */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
           {/* Active Risks List with "Pourquoi cette prédiction ?" button */}
           <div className="flex flex-col gap-2.5">
@@ -225,11 +238,12 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* VIEW MODE 2: DETAILED SCIENTIFIC EXPLANATIONS (POURQUOI CETTE PRÉDICTION ?) */}
       {viewMode === 'scientific' && (
-        <div className="flex flex-col gap-4 animate-in fade-in duration-200">
+        <div className="flex flex-col gap-5 animate-in fade-in duration-200">
           {/* Transparency Disclaimer Card */}
           <div className="apple-card p-4 bg-sky-950/20 border-sky-800/30 text-xs text-white/80 flex items-start gap-2.5">
             <Info className="w-4 h-4 text-[#38bdf8] flex-shrink-0 mt-0.5" />
@@ -241,12 +255,13 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             </div>
           </div>
 
-          {/* Scientific Decision Traces */}
+          {/* Scientific Decision Traces Grid */}
           <div className="flex flex-col gap-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-white/50 px-1">
               Traçabilité des Décisions & Seuils
             </span>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {decisionTraces.map((trace) => {
               const isSelected = selectedAlertForWhy !== null && (
                 (selectedAlertForWhy.includes('heat') && trace.id.includes('heat')) ||
@@ -300,6 +315,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
               </div>
               );
             })}
+            </div>
           </div>
 
           {/* Data Sources Attribution & Uncertainty */}

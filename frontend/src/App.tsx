@@ -10,6 +10,8 @@ import { ForecastInsightsView } from './components/Insights/ForecastInsightsView
 import { NotificationsView } from './components/Notifications/NotificationsView';
 import { AppleTabBar } from './components/Navigation/AppleTabBar';
 import type { AppTab } from './components/Navigation/AppleTabBar';
+import { DesktopNavBar } from './components/Navigation/DesktopNavBar';
+import { useSystemEnvironment } from './hooks/useSystemEnvironment';
 import { FieldConfigModal } from './components/WeatherSheet/FieldConfigModal';
 import { BackendContractModal } from './components/Navigation/BackendContractModal';
 import { PwaInstallBanner } from './components/Navigation/PwaInstallBanner';
@@ -393,25 +395,43 @@ export const App: React.FC = () => {
       ? evaluateAgronomicRisks(activeField.cropType, activeField.growthStage, weatherData)
       : [];
 
+  const env = useSystemEnvironment();
   const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
   const currentRadarFrame = radarFrames[radarFrameIndex] || null;
 
   return (
-    <div className={`relative w-screen h-screen overflow-hidden bg-[#0b0f19] text-white ${isDarkMode ? 'dark' : ''}`}>
-      {/* 1. DESTINATION: HOME DASHBOARD */}
-      {activeTab === 'home' && (
-        <HomeView
-          fields={fields}
-          activeField={activeField}
-          onSelectActiveField={handleSelectActiveField}
-          weather={weatherData}
-          alerts={agriAlerts}
-          onNavigateToTab={setActiveTab}
-          onOpenCreateField={() => {
-            setActiveTab('fields');
-          }}
-        />
-      )}
+    <div
+      className={`relative w-screen h-screen overflow-hidden bg-gradient-to-b ${env.ambientBackgroundClass} text-white transition-colors duration-1000 ${
+        isDarkMode ? 'dark' : ''
+      } flex flex-col`}
+    >
+      {/* Desktop Top Navigation Bar (Visible on tablet & desktop) */}
+      <DesktopNavBar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        unreadCount={unreadNotifCount}
+        fields={fields}
+        activeField={activeField}
+        onSelectActiveField={handleSelectActiveField}
+        env={env}
+        onOpenContractModal={() => setIsBackendContractOpen(true)}
+      />
+
+      <main className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
+        {/* 1. DESTINATION: HOME DASHBOARD */}
+        {activeTab === 'home' && (
+          <HomeView
+            fields={fields}
+            activeField={activeField}
+            onSelectActiveField={handleSelectActiveField}
+            weather={weatherData}
+            alerts={agriAlerts}
+            onNavigateToTab={setActiveTab}
+            onOpenCreateField={() => {
+              setActiveTab('fields');
+            }}
+          />
+        )}
 
       {/* 2. DESTINATION: WEATHER MAP MODULE */}
       <div className={`w-full h-full relative ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
@@ -504,13 +524,16 @@ export const App: React.FC = () => {
           onNavigateToTab={setActiveTab}
         />
       )}
+      </main>
 
-      {/* Persistent Native Apple iOS Tab Bar */}
-      <AppleTabBar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        unreadCount={unreadNotifCount}
-      />
+      {/* Persistent Native Apple iOS Tab Bar (Mobile only) */}
+      <div className="md:hidden">
+        <AppleTabBar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          unreadCount={unreadNotifCount}
+        />
+      </div>
 
       {/* Field Configuration Modal (Accessible from anywhere) */}
       <FieldConfigModal

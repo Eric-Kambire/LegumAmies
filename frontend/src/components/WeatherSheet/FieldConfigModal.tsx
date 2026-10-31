@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import type { LegumeCropType, CropGrowthStage, SelectedField } from '../../types/agricultural';
+import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface FieldConfigModalProps {
   isOpen: boolean;
@@ -32,14 +33,14 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
 
   if (!isOpen) return null;
 
-  const crops: Array<{ id: LegumeCropType; label: string; icon: string }> = [
-    { id: 'pois_chiche', label: 'Pois chiche', icon: '🟡' },
-    { id: 'lentille', label: 'Lentille verte / blonde', icon: '🟢' },
-    { id: 'feverole', label: 'Féverole', icon: '🟤' },
-    { id: 'pois', label: 'Pois protéagineux', icon: '🟢' },
-    { id: 'soja', label: 'Soja local sans OGM', icon: '🌱' },
-    { id: 'lupin', label: 'Lupin blanc', icon: '🌾' },
-    { id: 'haricot_sec', label: 'Haricot sec', icon: '⚪' },
+  const crops: Array<{ id: LegumeCropType; label: string }> = [
+    { id: 'pois_chiche', label: 'Pois chiche' },
+    { id: 'lentille', label: 'Lentille verte / blonde' },
+    { id: 'feverole', label: 'Féverole' },
+    { id: 'pois', label: 'Pois protéagineux' },
+    { id: 'soja', label: 'Soja local sans OGM' },
+    { id: 'lupin', label: 'Lupin blanc' },
+    { id: 'haricot_sec', label: 'Haricot sec' },
   ];
 
   const stages: Array<{ id: CropGrowthStage; label: string; desc: string }> = [
@@ -118,7 +119,7 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
                       : 'bg-white/[0.05] border-white/[0.08] text-white/75 hover:bg-white/[0.1]'
                   }`}
                 >
-                  <span className="text-base">{c.icon}</span>
+                  <CropGlyph crop={c.id} size={16} />
                   <span className="truncate">{c.label}</span>
                 </button>
               );

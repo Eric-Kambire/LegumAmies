@@ -5,6 +5,7 @@ import { BotanicalCard } from './BotanicalCard';
 import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
 import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import { getCurrentGPSPosition, reverseGeocodeFrance, isWithinMetropolitanFrance } from '../../services/geoService';
+import { CropGlyph } from '../Common/LegumeGlyphs';
 
 interface MyFieldsViewProps {
   fields: SelectedField[];
@@ -118,7 +119,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   const stageKeys = Object.keys(GROWTH_STAGES_CATALOG) as CropGrowthStage[];
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 pt-6 pb-28 max-w-2xl mx-auto w-full select-none flex flex-col gap-4">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -137,8 +138,8 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
         </button>
       </div>
 
-      {/* Field List Cards */}
-      <div className="flex flex-col gap-3">
+      {/* Field List Responsive Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {fields.map((f) => {
           const isSelected = activeField?.id === f.id;
           const crop = LEGUME_CROPS_CATALOG[f.cropType];
@@ -147,19 +148,26 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
           return (
             <div
               key={f.id}
-              className={`apple-card p-4 flex flex-col gap-3 transition-all ${
+              className={`apple-card p-4 flex flex-col justify-between gap-3 transition-all ${
                 isSelected ? 'border-white/30 bg-white/[0.12] shadow-xl' : ''
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white/[0.08] flex items-center justify-center text-2xl flex-shrink-0">
-                    {crop?.emoji || '🌱'}
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border shadow-xs"
+                    style={{
+                      backgroundColor: crop?.accent.bg || 'rgba(255,255,255,0.08)',
+                      color: crop?.accent.text || '#fff',
+                      borderColor: crop?.accent.border || 'rgba(255,255,255,0.15)',
+                    }}
+                  >
+                    <CropGlyph crop={f.cropType} size={22} />
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-white">{f.name}</h3>
+                      <h3 className="text-sm font-semibold text-white truncate max-w-[150px]">{f.name}</h3>
                       {isSelected && (
                         <span className="px-2 py-0.5 rounded-full bg-[#007aff]/20 text-[#38bdf8] text-[10px] font-semibold border border-[#007aff]/30">
                           Active
