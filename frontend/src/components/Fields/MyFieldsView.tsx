@@ -244,6 +244,12 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
+                  <button type="button" onClick={() => setJournalFieldId(f.id)}
+                    title="Journal : irrigation, engrais, traitements"
+                    aria-label={"Journal d’interventions : " + f.name}
+                    className="p-2 rounded-full hover:bg-emerald-500/15 text-emerald-300/80 hover:text-emerald-200 transition-colors">
+                    <ClipboardList className="w-4 h-4" />
+                  </button>
                   {fields.length > 1 && (
                     <button
                       onClick={() => onDeleteField(f.id)}
@@ -276,6 +282,8 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
           );
         })}
       </div>
+
+      {journalField && <FieldActivityJournal field={journalField} onClose={() => setJournalFieldId(null)} />}
 
       {/* Progressive Creation Wizard Modal */}
       {isWizardOpen && (
@@ -364,6 +372,20 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                   </span>
                 </div>
 
+                <ParcelDrawMap
+                  latitude={latitude}
+                  longitude={longitude}
+                  vertices={polygonCoordinates}
+                  onVerticesChange={(vertices) => {
+                    setPolygonCoordinates(vertices);
+                    if (vertices.length >= 3 && !hasSelfIntersection(vertices)) {
+                      const hectares = computeParcelAreaHa(vertices);
+                      if (hectares >= 0.005) setAreaHectares(Number(hectares.toFixed(2)));
+                    }
+                  }}
+                  onPointChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
+                />
+                {polygonInvalid && <p role="alert" className="text-xs text-amber-300">Terminez un contour valide ou effacez-le pour saisir seulement un point GPS.</p>}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] text-white/50">Ou choisir parmi les bassins de référence :</span>
                   <div className="grid grid-cols-2 gap-1.5">
