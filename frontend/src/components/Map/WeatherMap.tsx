@@ -222,7 +222,8 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     if (!selectedField) return;
 
     // Leaflet divIcon interpolates HTML: escape user-supplied field names.
-    const safeFieldName = String(selectedField.name || 'Parcelle').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
+    const escapedChars: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    const safeFieldName = String(selectedField.name || 'Parcelle').replace(/[&<>"']/g, (c) => escapedChars[c] || c);
     const pinIcon = L.divIcon({
       className: 'custom-apple-pin',
       html: `
