@@ -89,7 +89,12 @@ def gather_context(field: dict, question: str, kb_client: Any = None) -> dict:
     ctx: dict = {"tools_used": [], "limitations": []}
 
     # (a) KB agronomic evidence - always, retrieval-first.
-    kb = tools.search_documents(question, client=kb_client)
+    # Include the selected crop in semantic retrieval, even when the farmer asks
+    # a short question such as 'Est-ce le bon moment pour semer ?'.
+    crop = str(field.get('crop') or '').strip()
+    crop_topic = crop.replace('_', ' ') if crop else ''
+    kb_query = ('Culture ' + crop_topic + '. ' + question) if crop_topic else question
+    kb = tools.search_documents(kb_query, client=kb_client)
     ctx["kb"] = kb
     ctx["tools_used"].append("search_documents")
     if not kb.get("available") or not kb.get("passages"):
