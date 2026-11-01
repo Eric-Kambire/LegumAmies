@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import type { WeatherLayerType, RadarFrame } from '../../types/weather';
+import type { WeatherLayerType, RadarFrame, LocationWeatherData } from '../../types/weather';
+import type { MapOverlayState } from './MapControls';
 import type { SelectedField } from '../../types/agricultural';
 import {
   FRANCE_CENTER,
@@ -12,6 +13,8 @@ import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import type { FrenchAgriBasin } from '../../data/frenchAgriBasins';
 
 interface WeatherMapProps {
+  overlays: MapOverlayState;
+  weather: LocationWeatherData | null;
   isActive?: boolean;
   selectedField: SelectedField | null;
   onSelectCoordinates: (lat: number, lng: number) => void;
@@ -25,6 +28,8 @@ interface WeatherMapProps {
 
 export const WeatherMap: React.FC<WeatherMapProps> = ({
   isActive = true,
+  overlays,
+  weather,
   selectedField,
   onSelectCoordinates,
   activeLayer,
@@ -41,6 +46,10 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   const fieldMarkerRef = useRef<L.Marker | null>(null);
   const gpsMarkerRef = useRef<L.LayerGroup | null>(null);
   const basinsLayerRef = useRef<L.LayerGroup | null>(null);
+  const soilLayerRef = useRef<L.TileLayer.WMS | null>(null);
+  const rpgLayerRef = useRef<L.GeoJSON | null>(null);
+  const adminLayerRef = useRef<L.GeoJSON | null>(null);
+  const weatherPointRef = useRef<L.CircleMarker | null>(null);
 
   // 1. Initialize Map and immediately attach base tile layer
   useEffect(() => {
@@ -271,6 +280,84 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     group.addTo(map);
     basinsLayerRef.current = group;
   }, [onSelectBasin]);
+
+  // SoilGrids 0-5 cm clay: actual 250 m WMS raster, independently toggleable.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (!overlays.soil) {
+      if (soilLayerRef.current) map.removeLayer(soilLayerRef.current);
+      soilLayerRef.current = null;
+      return;
+    }
+    const layer = L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/clay.map', {
+      layers: 'clay_0-5cm_mean',
+      format: 'image/png',
+      transparent: true,
+      version: '1.1.1',
+      opacity: overlays.opacity,
+      zIndex: 65,
+      attribution: 'ISRIC SoilGrids 2.0 · CC BY 4.0 · clay 0-5 cm',
+    }).addTo(map);
+    soilLayerRef.current = layer;
+    return () => { map.removeLayer(layer); if (soilLayerRef.current === layer) soilLayerRef.current = null; };
+  }, [overlays.soil, overlays.opacity]);
+
+  // Local, documented GeoJSON excerpts; do not suggest the layer covers all France.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !overlays.rpg) return;
+    const controller = new AbortController();
+    fetch('/geo/rpg2024_castelnaudary.geojson', { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error('RPG indisponible'); return r.json(); })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const layer = L.geoJSON(data, {
+          style: { color: '#f6cb73', weight: 1.4, opacity: overlays.opacity, fillOpacity: 0.06 },
+          onEachFeature: (feature, l) => {
+            const label = feature?.properties?.code_cultu || 'RPG 2024';
+            l.bindTooltip('Culture déclarée : ' + String(label).replace(/[<>]/g, ''), { sticky: true });
+          },
+        }).addTo(map);
+        rpgLayerRef.current = layer;
+      }).catch((e) => { if (!controller.signal.aborted) console.warn('RPG overlay:', e); });
+    return () => { controller.abort(); if (rpgLayerRef.current) { map.removeLayer(rpgLayerRef.current); rpgLayerRef.current = null; } };
+  }, [overlays.rpg, overlays.opacity]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !overlays.admin) return;
+    const controller = new AbortController();
+    fetch('/geo/adminexpress_commune_castelnaudary.geojson', { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error('Limites indisponibles'); return r.json(); })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const layer = L.geoJSON(data, {
+          style: { color: '#6ee7b7', weight: 2, dashArray: '7 5', opacity: overlays.opacity, fillOpacity: 0 },
+        }).addTo(map);
+        adminLayerRef.current = layer;
+      }).catch((e) => { if (!controller.signal.aborted) console.warn('ADMIN overlay:', e); });
+    return () => { controller.abort(); if (adminLayerRef.current) { map.removeLayer(adminLayerRef.current); adminLayerRef.current = null; } };
+  }, [overlays.admin, overlays.opacity]);
+
+  // Temperature, wind and cloud selectors show real point forecast values rather
+  // than a falsely interpolated nationwide raster.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (weatherPointRef.current) { map.removeLayer(weatherPointRef.current); weatherPointRef.current = null; }
+    if (activeLayer === 'radar' || !weather) return;
+    const value = activeLayer === 'temperature'
+      ? Math.round(weather.current.temperature) + ' °C'
+      : activeLayer === 'wind'
+        ? Math.round(weather.current.windSpeed) + ' km/h'
+        : Math.round(weather.current.cloudCover) + ' % nuages';
+    const circle = L.circleMarker([weather.latitude, weather.longitude], {
+      radius: 9, color: '#ffffff', fillColor: '#38bdf8', fillOpacity: 0.95, weight: 2,
+    }).addTo(map).bindTooltip(value + ' · prévision au point', { permanent: true, direction: 'top', offset: [0, -9] });
+    weatherPointRef.current = circle;
+    return () => { map.removeLayer(circle); if (weatherPointRef.current === circle) weatherPointRef.current = null; };
+  }, [activeLayer, weather]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden">
