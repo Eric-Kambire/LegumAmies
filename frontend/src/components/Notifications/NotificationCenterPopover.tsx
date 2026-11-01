@@ -44,9 +44,9 @@ export const NotificationCenterPopover: React.FC<Props> = ({
       <div className="min-h-0 overflow-y-auto p-2">
         {notifications.length === 0 && <p className="p-5 text-center text-xs text-white/55">Aucune notification pour le moment.</p>}
         {notifications.slice(0, 7).map((n) => {
-          const example = Boolean(n.isDemo) || ['field_lauragais_1', 'field_beauce_2', 'field_berry_3'].includes(n.fieldId || '');
+          const example = ['field_lauragais_1', 'field_beauce_2', 'field_berry_3'].includes(n.fieldId || '');
           return (
-            <button type="button" key={n.id} onClick={() => { onMarkRead(n.id); if (n.actionDestination && n.actionDestination !== 'notifications') { onNavigate(n.actionDestination); onClose(); } }} className="w-full text-left rounded-2xl p-3 hover:bg-white/[0.07] flex items-start gap-2.5">
+            <button type="button" key={n.id} onClick={() => { onMarkRead(n.id); if (n.actionDestination) { onNavigate(n.actionDestination); onClose(); } }} className="w-full text-left rounded-2xl p-3 hover:bg-white/[0.07] flex items-start gap-2.5">
               <span className={`mt-1 w-2 h-2 shrink-0 rounded-full ${n.isRead ? 'bg-white/15' : n.severity === 'critical' ? 'bg-rose-400' : 'bg-sky-400'}`}/>
               <span className="min-w-0 flex-1">
                 <span className="font-semibold text-[12px] text-white/90 leading-snug line-clamp-2">{n.title}</span>
