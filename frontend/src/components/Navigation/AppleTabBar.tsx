@@ -35,6 +35,7 @@ export const AppleTabBar: React.FC<AppleTabBarProps> = ({
           return (
             <button
               key={tab.id}
+              data-notification-trigger={tab.id === 'notifications' ? 'true' : undefined}
               onClick={() => onTabChange(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-1 px-1.5 rounded-full transition-all active:scale-90 ${
                 isActive

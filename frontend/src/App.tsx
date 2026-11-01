@@ -2,12 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { HomeView } from './components/Home/HomeView';
 import { WeatherMap } from './components/Map/WeatherMap';
 import { MapControls } from './components/Map/MapControls';
+import type { MapOverlayState } from './components/Map/MapControls';
 import { RadarTimeline } from './components/RadarTimeline/RadarTimeline';
 import { IntensityLegend } from './components/RadarTimeline/IntensityLegend';
 import { WeatherSheet } from './components/WeatherSheet/WeatherSheet';
 import { MyFieldsView } from './components/Fields/MyFieldsView';
 import { ForecastInsightsView } from './components/Insights/ForecastInsightsView';
 import { NotificationsView } from './components/Notifications/NotificationsView';
+import { NotificationCenterPopover } from './components/Notifications/NotificationCenterPopover';
+import { AmiFloatingChat } from './components/Chat/AmiFloatingChat';
 import { DuoNotificationBanner } from './components/Notifications/DuoNotificationBanner';
 import { AppleTabBar } from './components/Navigation/AppleTabBar';
 import type { AppTab } from './components/Navigation/AppleTabBar';
@@ -134,6 +137,8 @@ export const App: React.FC = () => {
   });
 
   const [activeLayer, setActiveLayer] = useState<WeatherLayerType>('radar');
+  const [mapOverlays, setMapOverlays] = useState<MapOverlayState>({ soil: false, rpg: false, admin: false, opacity: 0.65 });
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [weatherData, setWeatherData] = useState<LocationWeatherData | null>(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState<boolean>(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
@@ -400,6 +405,12 @@ export const App: React.FC = () => {
     });
   }, [agriAlerts, activeField]);
 
+  const handlePrimaryTabChange = (tab: AppTab) => {
+    if (tab === 'notifications') { setNotificationsOpen((v) => !v); return; }
+    setNotificationsOpen(false);
+    setActiveTab(tab);
+  };
+
   const env = useSystemEnvironment();
   const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
   const currentRadarFrame = radarFrames[radarFrameIndex] || null;
@@ -413,7 +424,7 @@ export const App: React.FC = () => {
       {/* Desktop Top Navigation Bar (Visible on tablet & desktop) */}
       <DesktopNavBar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handlePrimaryTabChange}
         unreadCount={unreadNotifCount}
         fields={fields}
         activeField={activeField}
@@ -421,6 +432,17 @@ export const App: React.FC = () => {
         env={env}
         onOpenContractModal={() => setIsBackendContractOpen(true)}
       />
+
+      {notificationsOpen && (
+        <NotificationCenterPopover
+          notifications={notifications}
+          onClose={() => setNotificationsOpen(false)}
+          onMarkRead={handleMarkAsRead}
+          onMarkAllRead={handleMarkAllAsRead}
+          onOpenHistory={() => { setNotificationsOpen(false); setActiveTab('notifications'); }}
+          onNavigate={(tab) => { setNotificationsOpen(false); setActiveTab(tab); }}
+        />
+      )}
 
       {/* Duolingo-style iOS Dynamic Island Push Banner */}
       <DuoNotificationBanner
@@ -441,6 +463,8 @@ export const App: React.FC = () => {
             activeField={activeField}
             onSelectActiveField={handleSelectActiveField}
             weather={weatherData}
+            backendResponse={backendResponse}
+            backendStatus={backendStatus}
             alerts={agriAlerts}
             onNavigateToTab={setActiveTab}
             onOpenCreateField={() => {
@@ -454,6 +478,8 @@ export const App: React.FC = () => {
       <div className={`w-full h-full absolute inset-0 ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
         <WeatherMap
           isActive={activeTab === 'weather'}
+          overlays={mapOverlays}
+          weather={weatherData}
           selectedField={activeField}
           onSelectCoordinates={handleSelectCoordinates}
           activeLayer={activeLayer}
@@ -465,7 +491,10 @@ export const App: React.FC = () => {
         />
 
         <MapControls
+          weather={weatherData}
           activeLayer={activeLayer}
+          overlays={mapOverlays}
+          onOverlaysChange={setMapOverlays}
           onLayerChange={setActiveLayer}
           onLocateMe={handleLocateMe}
           isLocating={isLocating}
@@ -551,7 +580,7 @@ export const App: React.FC = () => {
       <div className="md:hidden">
         <AppleTabBar
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handlePrimaryTabChange}
           unreadCount={unreadNotifCount}
         />
       </div>
@@ -572,6 +601,9 @@ export const App: React.FC = () => {
         isOpen={isBackendContractOpen}
         onClose={() => setIsBackendContractOpen(false)}
       />
+
+      {/* Global context-aware Bedrock adviser persists across all five tabs. */}
+      <AmiFloatingChat field={activeField} />
 
       {/* PWA Install Prompt Banner */}
       <PwaInstallBanner />
