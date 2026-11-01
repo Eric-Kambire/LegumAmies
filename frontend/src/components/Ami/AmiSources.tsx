@@ -73,6 +73,7 @@ export const AmiSources: React.FC<AmiSourcesProps> = ({ response }) => {
                       </a>
                     )}
                   </div>
+                  {(c.page || c.crop) && <p className="mt-1 text-[10px] text-emerald-200/80">{[c.crop ? "Culture : " + c.crop.replaceAll("_", " ") : "", c.page ? "Page " + c.page : ""].filter(Boolean).join(" · ")}</p>}
                   {c.snippet && <p className="mt-1 text-white/60 leading-relaxed">« {c.snippet} »</p>}
                   {c.validation_status && (
                     <p className="mt-1 text-white/45">Statut de validation : {c.validation_status}</p>
