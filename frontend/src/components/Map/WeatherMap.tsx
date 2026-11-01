@@ -311,6 +311,19 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     };
   }, [selectedField?.id, selectedField?.polygonCoordinates]);
 
+  // When entering the map, show the actual selected field (including its drawn
+  // boundary). A user-triggered France reset remains respected until next field change.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isActive || !selectedField) return;
+    const ring = selectedField.polygonCoordinates;
+    if (ring && ring.length >= 3 && ring.every(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng))) {
+      map.fitBounds(L.latLngBounds(ring), { padding: [36, 36], maxZoom: 16, animate: false });
+    } else {
+      map.setView([selectedField.latitude, selectedField.longitude], Math.max(map.getZoom(), 10), { animate: false });
+    }
+  }, [isActive, selectedField?.id, selectedField?.updatedAt]);
+
   // Without a real national weather tile service, anchor local weather values to
   // their true forecast point and move the map to it when the user changes layer.
   useEffect(() => {
