@@ -1,0 +1,1326 @@
+{
+  "base": "http://127.0.0.1:5180",
+  "api": "https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com",
+  "generatedAt": "2026-11-01T08:55:34.424Z",
+  "passed": 263,
+  "failed": 0,
+  "advisorRequests": 5,
+  "assessRequests": 86,
+  "results": [
+    {
+      "name": "[375] Home first visit shows the single create-field CTA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375] Example field is labelled Démo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375] Home loads real field weather (temperature visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375] Home: last element not hidden by tab bar",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":636,\"limit\":741,\"vh\":812}"
+    },
+    {
+      "name": "[375] No uncaught page error on Home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Home first visit shows the single create-field CTA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Example field is labelled Démo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Home loads real field weather (temperature visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Home: last element not hidden by tab bar",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":668,\"limit\":773,\"vh\":844}"
+    },
+    {
+      "name": "[390] Create CTA opens the wizard directly",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] After creating a field the first-visit card is gone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Hero shows the new real field without Démo",
+      "ok": true,
+      "detail": "Ferme test"
+    },
+    {
+      "name": "[390] Returning visit keeps the field (no first-visit card)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] No uncaught page error on Home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Home first visit shows the single create-field CTA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Example field is labelled Démo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Home loads real field weather (temperature visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] No uncaught page error on Home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Home first visit shows the single create-field CTA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Example field is labelled Démo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Home loads real field weather (temperature visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Create CTA opens the wizard directly",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] After creating a field the first-visit card is gone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Hero shows the new real field without Démo",
+      "ok": true,
+      "detail": "Ferme test"
+    },
+    {
+      "name": "[1366] Returning visit keeps the field (no first-visit card)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] No uncaught page error on Home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920] Home first visit shows the single create-field CTA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920] Example field is labelled Démo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920] Home loads real field weather (temperature visible)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920] No uncaught page error on Home",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Layers2 button visible top-right",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Layers2 button is in the right half and near the top",
+      "ok": true,
+      "detail": "{\"x\":1310,\"y\":76,\"width\":44,\"height\":44}"
+    },
+    {
+      "name": "[1366] Menu opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Four exclusive weather layers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] temperature: point value drawn on the map (12°C)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] temperature: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] wind: point value drawn on the map (17 km/h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] wind: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] clouds: point value drawn on the map (100 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] clouds: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Radar: point value removed, radar legend/validity shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] RPG overlay requests IGN LANDUSE.AGRICULTURE2024 tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Admin overlay requests ADMINEXPRESS tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Soil overlay requests ISRIC SoilGrids WMS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Terrain overlay requests IGN relief tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] RPG details state source, coverage, vintage and caveat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Soil layer says modelled, not measured",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Opacity slider updates (40 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Field polygon: honest \"no contour saved\" state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] X closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Escape closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Focus returns to the Layers2 button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Map: no fixed layers overlap each other",
+      "ok": true,
+      "detail": " [\"ami\",\"radar\",\"sheet\",\"layersBtn\",\"locate\",\"resetView\",\"theme\",\"layerChip\"]"
+    },
+    {
+      "name": "[1366] No page error on map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Layers2 button visible top-right",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Layers2 button is in the right half and near the top",
+      "ok": true,
+      "detail": "{\"x\":334,\"y\":12,\"width\":44,\"height\":44}"
+    },
+    {
+      "name": "[390] Menu opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Four exclusive weather layers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] temperature: point value drawn on the map (12°C)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] temperature: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] wind: point value drawn on the map (17 km/h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] wind: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] clouds: point value drawn on the map (100 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] clouds: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Radar: point value removed, radar legend/validity shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] RPG overlay requests IGN LANDUSE.AGRICULTURE2024 tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Admin overlay requests ADMINEXPRESS tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Soil overlay requests ISRIC SoilGrids WMS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Terrain overlay requests IGN relief tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] RPG details state source, coverage, vintage and caveat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Soil layer says modelled, not measured",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Opacity slider updates (40 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Field polygon: honest \"no contour saved\" state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] X closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Escape closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Focus returns to the Layers2 button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Map: no fixed layers overlap each other",
+      "ok": true,
+      "detail": " [\"tabbar\",\"ami\",\"radar\",\"sheet\",\"layersBtn\",\"locate\",\"layerChip\"]"
+    },
+    {
+      "name": "[390] No page error on map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Layers2 button visible top-right",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Layers2 button is in the right half and near the top",
+      "ok": true,
+      "detail": "{\"x\":712,\"y\":76,\"width\":44,\"height\":44}"
+    },
+    {
+      "name": "[768] Menu opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Four exclusive weather layers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] temperature: point value drawn on the map (12°C)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] temperature: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] wind: point value drawn on the map (17 km/h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] wind: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] clouds: point value drawn on the map (100 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] clouds: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Radar: point value removed, radar legend/validity shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] RPG overlay requests IGN LANDUSE.AGRICULTURE2024 tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Admin overlay requests ADMINEXPRESS tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Soil overlay requests ISRIC SoilGrids WMS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Terrain overlay requests IGN relief tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] RPG details state source, coverage, vintage and caveat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Soil layer says modelled, not measured",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Opacity slider updates (40 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Field polygon: honest \"no contour saved\" state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] X closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Escape closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Focus returns to the Layers2 button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Map: no fixed layers overlap each other",
+      "ok": true,
+      "detail": " [\"ami\",\"radar\",\"sheet\",\"layersBtn\",\"locate\",\"resetView\",\"theme\",\"layerChip\"]"
+    },
+    {
+      "name": "[768] No page error on map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Layers2 button visible top-right",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Layers2 button is in the right half and near the top",
+      "ok": true,
+      "detail": "{\"x\":644,\"y\":12,\"width\":44,\"height\":44}"
+    },
+    {
+      "name": "[700] Menu opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Four exclusive weather layers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] temperature: point value drawn on the map (12°C)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] temperature: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] wind: point value drawn on the map (17 km/h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] wind: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] clouds: point value drawn on the map (100 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] clouds: menu states it is a point forecast, not a national map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Radar: point value removed, radar legend/validity shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] RPG overlay requests IGN LANDUSE.AGRICULTURE2024 tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Admin overlay requests ADMINEXPRESS tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Soil overlay requests ISRIC SoilGrids WMS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Terrain overlay requests IGN relief tiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] RPG details state source, coverage, vintage and caveat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Soil layer says modelled, not measured",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Opacity slider updates (40 %)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Field polygon: honest \"no contour saved\" state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] X closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Escape closes the menu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Focus returns to the Layers2 button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700] Map: no fixed layers overlap each other",
+      "ok": true,
+      "detail": " [\"tabbar\",\"ami\",\"radar\",\"sheet\",\"layersBtn\",\"locate\",\"layerChip\"]"
+    },
+    {
+      "name": "[700] No page error on map",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375x812] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375x812] PWA install banner appears above the tab bar",
+      "ok": true,
+      "detail": "{\"banner\":{\"x\":16,\"y\":674,\"width\":343,\"height\":54},\"tab\":{\"x\":12,\"y\":741,\"width\":351,\"height\":59}}"
+    },
+    {
+      "name": "[375x812] With the banner, map layers still do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375x812] Map sheet sits above the install banner",
+      "ok": true,
+      "detail": "{\"sheet\":{\"x\":0,\"y\":241.765625,\"width\":375,\"height\":422.234375},\"bnr\":{\"x\":16,\"y\":674,\"width\":343,\"height\":54}}"
+    },
+    {
+      "name": "[390x844] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390x844] PWA install banner appears above the tab bar",
+      "ok": true,
+      "detail": "{\"banner\":{\"x\":16,\"y\":706,\"width\":358,\"height\":54},\"tab\":{\"x\":12,\"y\":773,\"width\":366,\"height\":59}}"
+    },
+    {
+      "name": "[390x844] With the banner, map layers still do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390x844] Map sheet sits above the install banner",
+      "ok": true,
+      "detail": "{\"sheet\":{\"x\":0,\"y\":257.125,\"width\":390,\"height\":438.875},\"bnr\":{\"x\":16,\"y\":706,\"width\":358,\"height\":54}}"
+    },
+    {
+      "name": "[768x1024] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366x768] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920x1080] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[640x900] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[640x900] PWA install banner appears above the tab bar",
+      "ok": true,
+      "detail": "{\"banner\":{\"x\":128,\"y\":762,\"width\":384,\"height\":54},\"tab\":{\"x\":64,\"y\":829,\"width\":512,\"height\":59}}"
+    },
+    {
+      "name": "[640x900] With the banner, map layers still do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[640x900] Map sheet sits above the install banner",
+      "ok": true,
+      "detail": "{\"sheet\":{\"x\":0,\"y\":284,\"width\":640,\"height\":468},\"bnr\":{\"x\":128,\"y\":762,\"width\":384,\"height\":54}}"
+    },
+    {
+      "name": "[700x900] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700x900] PWA install banner appears above the tab bar",
+      "ok": true,
+      "detail": "{\"banner\":{\"x\":158,\"y\":762,\"width\":384,\"height\":54},\"tab\":{\"x\":94,\"y\":829,\"width\":512,\"height\":59}}"
+    },
+    {
+      "name": "[700x900] With the banner, map layers still do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[700x900] Map sheet sits above the install banner",
+      "ok": true,
+      "detail": "{\"sheet\":{\"x\":0,\"y\":284,\"width\":700,\"height\":468},\"bnr\":{\"x\":158,\"y\":762,\"width\":384,\"height\":54}}"
+    },
+    {
+      "name": "[767x1024] Map: no overlap between tab bar, sheet, radar, Ami and controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[767x1024] PWA install banner appears above the tab bar",
+      "ok": true,
+      "detail": "{\"banner\":{\"x\":191.5,\"y\":886,\"width\":384,\"height\":54},\"tab\":{\"x\":127.5,\"y\":953,\"width\":512,\"height\":59}}"
+    },
+    {
+      "name": "[767x1024] With the banner, map layers still do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[767x1024] Map sheet sits above the install banner",
+      "ok": true,
+      "detail": "{\"sheet\":{\"x\":0,\"y\":343.53125,\"width\":767,\"height\":532.46875},\"bnr\":{\"x\":191.5,\"y\":886,\"width\":384,\"height\":54}}"
+    },
+    {
+      "name": "[375] Accueil: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":635.5,\"limit\":741,\"vh\":812}"
+    },
+    {
+      "name": "[375] Parcelles: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":238,\"limit\":741,\"vh\":812}"
+    },
+    {
+      "name": "[375] Analyses: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":636.25,\"limit\":741,\"vh\":812}"
+    },
+    {
+      "name": "[375] Alertes: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"skipped\":true}"
+    },
+    {
+      "name": "[375] No page error across tabs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Accueil: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":628.5,\"limit\":773,\"vh\":844}"
+    },
+    {
+      "name": "[390] Parcelles: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":238,\"limit\":773,\"vh\":844}"
+    },
+    {
+      "name": "[390] Analyses: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":649.75,\"limit\":773,\"vh\":844}"
+    },
+    {
+      "name": "[390] Alertes: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"skipped\":true}"
+    },
+    {
+      "name": "[390] No page error across tabs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[768] Accueil: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":603.75,\"limit\":1024,\"vh\":1024}"
+    },
+    {
+      "name": "[768] Parcelles: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":287.5,\"limit\":1024,\"vh\":1024}"
+    },
+    {
+      "name": "[768] Analyses: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":595,\"limit\":1024,\"vh\":1024}"
+    },
+    {
+      "name": "[768] Alertes: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"skipped\":true}"
+    },
+    {
+      "name": "[768] No page error across tabs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Accueil: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":504.75,\"limit\":768,\"vh\":768}"
+    },
+    {
+      "name": "[1366] Parcelles: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":287.5,\"limit\":768,\"vh\":768}"
+    },
+    {
+      "name": "[1366] Analyses: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":614.5,\"limit\":768,\"vh\":768}"
+    },
+    {
+      "name": "[1366] Alertes: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"skipped\":true}"
+    },
+    {
+      "name": "[1366] No page error across tabs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1920] Accueil: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":504.75,\"limit\":1080,\"vh\":1080}"
+    },
+    {
+      "name": "[1920] Parcelles: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":287.5,\"limit\":1080,\"vh\":1080}"
+    },
+    {
+      "name": "[1920] Analyses: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"bottom\":614.5,\"limit\":1080,\"vh\":1080}"
+    },
+    {
+      "name": "[1920] Alertes: last element fully above fixed navigation",
+      "ok": true,
+      "detail": "{\"ok\":true,\"skipped\":true}"
+    },
+    {
+      "name": "[1920] No page error across tabs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Real /assess response received",
+      "ok": true,
+      "detail": "48 hourly points, model meteofrance_arome_france_hd"
+    },
+    {
+      "name": "[1366] 48 h exceedance equals independent computation from the response",
+      "ok": true,
+      "detail": "UI 0 h, expected 0 h over 39 points"
+    },
+    {
+      "name": "[1366] Threshold line (25 °C, Terres Inovia) drawn",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Hourly table has one row per forecast point",
+      "ok": true,
+      "detail": "39 rows"
+    },
+    {
+      "name": "[1366] 24 h window recomputed",
+      "ok": true,
+      "detail": "UI 0 expected 0"
+    },
+    {
+      "name": "[1366] Window, model, unit and source are displayed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Arrow keys move the cursor along the curve",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] AIFS bars equal ensemble probabilities",
+      "ok": true,
+      "detail": "[0,0,7.8,19.6,39.2,17.6,5.9,9.8,9.8,11.8]"
+    },
+    {
+      "name": "[1366] AIFS card shows threshold, horizon, members, model",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] AIFS threshold note is shown in French",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Real /assess response received",
+      "ok": true,
+      "detail": "48 hourly points, model meteofrance_arome_france_hd"
+    },
+    {
+      "name": "[390] 48 h exceedance equals independent computation from the response",
+      "ok": true,
+      "detail": "UI 0 h, expected 0 h over 39 points"
+    },
+    {
+      "name": "[390] Threshold line (25 °C, Terres Inovia) drawn",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Hourly table has one row per forecast point",
+      "ok": true,
+      "detail": "39 rows"
+    },
+    {
+      "name": "[390] 24 h window recomputed",
+      "ok": true,
+      "detail": "UI 0 expected 0"
+    },
+    {
+      "name": "[390] Window, model, unit and source are displayed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Arrow keys move the cursor along the curve",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] AIFS bars equal ensemble probabilities",
+      "ok": true,
+      "detail": "[0,0,7.8,19.6,39.2,17.6,5.9,9.8,9.8,11.8]"
+    },
+    {
+      "name": "[390] AIFS card shows threshold, horizon, members, model",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] AIFS threshold note is shown in French",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[synthetic +20 °C] Exceedance hours match the independent computation",
+      "ok": true,
+      "detail": "UI 32, expected 32"
+    },
+    {
+      "name": "[synthetic +20 °C] One highlighted band per contiguous exceedance span",
+      "ok": true,
+      "detail": "2 spans"
+    },
+    {
+      "name": "[no threshold] Chickpea (no published threshold) shows a clear state, no exceedance number",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[wrong stage] Flowering threshold is not applied outside flowering",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[soil, deployed API] Honest unavailable state, no invented number",
+      "ok": true,
+      "detail": "Modèle de sol non disponible  Le modèle de sol n'est pas encore déployé sur l'API utilisée.  La vulnérabilité à l'érosio"
+    },
+    {
+      "name": "[soil, fixture] Index, RUSLE baseline, 3 scenarios, sensitivity and texture rendered",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Launcher visible bottom-right on desktop",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] No advisor request on load or navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Header shows selected field context",
+      "ok": true,
+      "detail": "Ami · Parcelle du Moulin"
+    },
+    {
+      "name": "[ami] Switching field updates the context label",
+      "ok": true,
+      "detail": "Ami · Les Terres Rouges"
+    },
+    {
+      "name": "[ami] Choosing \"Près de moi\" does not read the GPS by itself",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Composer is blocked until a position exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Denied permission shows a clear message and keeps the fallback",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Map pick mode: panel closed, banner shown, map visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Picking a point reopens Ami in \"Point choisi\" context",
+      "ok": true,
+      "detail": "Point choisi sur la carte · 43.311°N, 1.258°E.\nAmi n'a pas de culture ni de stade pour ce point : il décrit seulement la météo locale."
+    },
+    {
+      "name": "[ami] Map point is shown as an explored point, not as the field",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[ami] Granted GPS: context \"Près de moi\" with accuracy",
+      "ok": true,
+      "detail": "Position GPS · 43.320°N, 1.960°E · précision ±35 m. Ami n'a pas de culture ni de stade pour ce point : il décrit seulement la météo locale."
+    },
+    {
+      "name": "[ami] Position request uses the GPS coordinates and NO crop or stage",
+      "ok": true,
+      "detail": "{\"latitude\":43.32,\"longitude\":1.96,\"field_name\":\"Près de moi (±35 m)\"}"
+    },
+    {
+      "name": "[1366] Navigating tabs triggers no advisor request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Ami opens (floating panel)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Desktop Ami is a floating panel inside the viewport",
+      "ok": true,
+      "detail": "{\"x\":942,\"y\":40,\"width\":400,\"height\":640}"
+    },
+    {
+      "name": "[1366] Focus moves into the composer",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Suggestion fills the composer without sending",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Loading indicator shown while waiting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Real advisor answer received in 2.9s",
+      "ok": true,
+      "detail": "PRÉVISION MÉTÉO (SOURCE: OPEN-METEO / MÉTÉO-FRANCE AROME, ECMWF AIFS)  La température maximale prévue est de 15.4°C, ce qui est en dessous d"
+    },
+    {
+      "name": "[1366] Exactly one /advisor/ask request for one question",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "[1366] Request carries the selected field (coordinates, crop, stage)",
+      "ok": true,
+      "detail": "{\"latitude\":43.31,\"longitude\":1.95,\"crop\":\"feverole\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Ferme test floraison\"}"
+    },
+    {
+      "name": "[1366] Sources panel expands (citations / provenance / limitations)",
+      "ok": true,
+      "detail": "2 source"
+    },
+    {
+      "name": "[1366] Conversation persists across tab navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Still a single advisor request after navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] Escape closes Ami and focus returns to the launcher",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[1366] After switching field the request targets the other field",
+      "ok": true,
+      "detail": "{\"latitude\":46.81,\"longitude\":1.7,\"crop\":\"lentille\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Lentilles test\"}"
+    },
+    {
+      "name": "[390] Navigating tabs triggers no advisor request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Ami opens (full-screen dialog)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Mobile Ami fills the viewport",
+      "ok": true,
+      "detail": "{\"x\":0,\"y\":0,\"width\":390,\"height\":844}"
+    },
+    {
+      "name": "[390] Focus moves into the composer",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Suggestion fills the composer without sending",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Loading indicator shown while waiting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Real advisor answer received in 3.1s",
+      "ok": true,
+      "detail": "PRÉVISION MÉTÉO (SOURCE: OPEN-METEO / MÉTÉO-FRANCE AROME, ECMWF AIFS)  La température maximale prévue est de 15.4°C, ce qui est en dessous d"
+    },
+    {
+      "name": "[390] Exactly one /advisor/ask request for one question",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "[390] Request carries the selected field (coordinates, crop, stage)",
+      "ok": true,
+      "detail": "{\"latitude\":43.31,\"longitude\":1.95,\"crop\":\"feverole\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Ferme test floraison\"}"
+    },
+    {
+      "name": "[390] Sources panel expands (citations / provenance / limitations)",
+      "ok": true,
+      "detail": "2 source"
+    },
+    {
+      "name": "[390] Conversation persists across tab navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Still a single advisor request after navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Escape closes Ami and focus returns to the launcher",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] After switching field the request targets the other field",
+      "ok": true,
+      "detail": "{\"latitude\":46.81,\"longitude\":1.7,\"crop\":\"lentille\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Lentilles test\"}"
+    },
+    {
+      "name": "[bell] Unread badge shown on the bell",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "[bell] Popover opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Popover is fully inside the viewport and not clipped by the nav",
+      "ok": true,
+      "detail": "{\"x\":962,\"y\":72,\"width\":380,\"height\":544}"
+    },
+    {
+      "name": "[bell] Popover is the top-most layer at its position",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Count in the header equals the bell badge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Every item carries one provenance badge (forecast / example)",
+      "ok": true,
+      "detail": "Prévision,Exemple,Exemple,Exemple,Exemple"
+    },
+    {
+      "name": "[bell] Popover does not overlap the Ami launcher",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Opening an item closes the popover and navigates to its destination",
+      "ok": true,
+      "detail": "Analyses"
+    },
+    {
+      "name": "[bell] Item is marked read (badge decreases)",
+      "ok": true,
+      "detail": "5 -> 4 (Vent > 19 km/h (pulvérisation non conforme))"
+    },
+    {
+      "name": "[bell] Escape closes and returns focus to the bell",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Outside click closes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Close icon closes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] \"Tout lire\" clears the badge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[bell] Link opens the full Alertes page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Phone: notifications open as a sheet above the tab bar",
+      "ok": true,
+      "detail": "{\"cb\":{\"x\":0,\"y\":88.875,\"width\":390,\"height\":679.125},\"tb\":{\"x\":12,\"y\":773,\"width\":366,\"height\":59}}"
+    },
+    {
+      "name": "[390] Phone: Escape dismisses the sheet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[390] Phone: tapping outside dismisses the sheet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375] Phone: notifications open as a sheet above the tab bar",
+      "ok": true,
+      "detail": "{\"cb\":{\"x\":0,\"y\":56.875,\"width\":375,\"height\":679.125},\"tb\":{\"x\":12,\"y\":741,\"width\":351,\"height\":59}}"
+    },
+    {
+      "name": "[375] Phone: Escape dismisses the sheet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[375] Phone: tapping outside dismisses the sheet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "[a11y] prefers-reduced-motion is honoured by the global stylesheet",
+      "ok": true,
+      "detail": "1e-05s"
+    },
+    {
+      "name": "[a11y] Keyboard Tab reaches interactive controls",
+      "ok": true,
+      "detail": "BUTTON"
+    },
+    {
+      "name": "[a11y] Every icon-only button has an accessible name",
+      "ok": true,
+      "detail": "0 unnamed"
+    }
+  ]
+}

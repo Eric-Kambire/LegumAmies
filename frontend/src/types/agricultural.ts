@@ -102,7 +102,16 @@ export interface AgriculturalNotification {
   duoTone?: 'urgent' | 'loss_aversion' | 'playful' | 'streak_shield';
   duoTag?: string;
   economicImpact?: string;
+  /**
+   * Origin of the notification, shown with one consistent provenance badge:
+   * - example: illustrative seeded content (not about the user's farm)
+   * - simulated: triggered manually from the demonstration drawer
+   * - forecast: derived from the current forecast + sourced agronomic rules
+   */
+  provenance?: NotificationProvenance;
 }
+
+export type NotificationProvenance = 'example' | 'simulated' | 'forecast';
 
 export interface NotificationPreferences {
   pushEnabled: boolean;

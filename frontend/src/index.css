@@ -158,25 +158,125 @@ html, body, #root {
   -webkit-overflow-scrolling: touch;
 }
 
+/*
+ * Fixed-layer layout tokens. Everything that floats above the content (map sheet,
+ * radar timeline, Ami launcher, install banner, notification sheet) derives its
+ * position from these variables so nothing can hide under another fixed element.
+ *   <768px   : tab bar + optional install banner below, map sheet is a bottom sheet
+ *   768-1023 : desktop nav on top, map sheet is still a bottom sheet (no tab bar)
+ *   >=1024px : map sheet is a right-hand side panel
+ */
+:root {
+  --map-sheet-h: 0px;
+  --pwa-banner-h: 0px;
+  --bottom-stack: calc(var(--sab) + 4.75rem + var(--pwa-banner-h));
+  --ami-right: 1rem;
+  --ami-bottom: calc(var(--bottom-stack) + 0.5rem);
+}
+
+@media (max-width: 1023px) {
+  html[data-sheet-snap="peek"] { --map-sheet-h: 8rem; }
+  html[data-sheet-snap="half"] { --map-sheet-h: 52vh; }
+  html[data-sheet-snap="full"] { --map-sheet-h: 86vh; }
+}
+
+.app-root[data-tab="weather"] {
+  --ami-bottom: calc(var(--bottom-stack) + var(--map-sheet-h) + 0.75rem);
+}
+
 .map-bottom-sheet {
-  bottom: calc(var(--sab) + 4.75rem);
+  bottom: var(--bottom-stack);
 }
 
 .map-radar-timeline {
-  bottom: calc(var(--sab) + 5rem);
+  position: absolute;
+  z-index: 420;
+  left: 1rem;
+  right: 4.75rem;
+  bottom: calc(var(--bottom-stack) + var(--map-sheet-h) + 0.75rem);
+}
+
+.ami-launcher {
+  right: var(--ami-right);
+  bottom: var(--ami-bottom);
+}
+
+.ami-panel {
+  /* phones: full-screen dialog (inset-0 utility); wider screens override below */
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
+
+.ami-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.65);
+  animation: ami-bounce 1s infinite ease-in-out;
+}
+
+@keyframes ami-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+  40% { transform: translateY(-4px); opacity: 1; }
 }
 
 @media (min-width: 768px) {
+  :root {
+    --bottom-stack: 0px;
+    --ami-right: 1.5rem;
+    --ami-bottom: 1.5rem;
+  }
+
   .app-page-scroll {
     padding-bottom: 2rem;
   }
 
   .map-bottom-sheet {
+    bottom: 0;
+  }
+
+  .map-radar-timeline {
+    right: 14rem; /* leaves room for the Ami launcher with its label */
+    max-width: 26rem;
+    bottom: calc(var(--map-sheet-h) + 0.75rem);
+  }
+
+  .app-root[data-tab="weather"] {
+    --ami-bottom: calc(var(--map-sheet-h) + 0.75rem);
+  }
+
+  .ami-panel {
+    right: var(--ami-right);
+    bottom: 5.5rem;
+    height: min(40rem, calc(100dvh - 7.5rem));
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet map: the sheet occupies the bottom, so the chat floats above it. */
+  .app-root[data-tab="weather"] .ami-panel {
+    bottom: 1rem;
+    height: min(40rem, calc(100dvh - 6rem));
+  }
+}
+
+@media (min-width: 1024px) {
+  .map-bottom-sheet {
     bottom: 1.5rem;
   }
 
   .map-radar-timeline {
-    bottom: 1.5rem;
+    right: auto;
+    width: 24rem;
+    bottom: 4rem;
+  }
+
+  .app-root[data-tab="weather"] {
+    /* Keep Ami clear of the 420px side panel and the map controls column. */
+    --ami-right: 33rem;
+    --ami-bottom: 1.5rem;
   }
 }
 

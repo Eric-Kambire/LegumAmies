@@ -43,9 +43,8 @@ const FILTERS: Array<{ id: NotificationFilter; label: string }> = [
   { id: 'reminder', label: 'Rappels' },
 ];
 
-const DEMO_FIELD_IDS = new Set(['field_lauragais_1', 'field_beauce_2', 'field_berry_3']);
-const isDemoNotification = (notification: AgriculturalNotification) =>
-  Boolean(notification.fieldId && DEMO_FIELD_IDS.has(notification.fieldId));
+import { getNotificationProvenance } from '../../services/provenance';
+import { ProvenanceBadge } from '../Common/ProvenanceBadge';
 
 // Authentic Apple iOS Toggle Switch
 const AppleToggle: React.FC<{
@@ -532,7 +531,6 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         ) : (
           filteredNotifications.map((notif) => {
             const cropConfig = notif.cropType ? LEGUME_CROPS_CATALOG[notif.cropType] : null;
-            const isDemo = isDemoNotification(notif);
 
             return (
               <article
@@ -566,11 +564,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                         <h3 className="text-xs sm:text-sm font-bold text-white truncate">
                           {notif.title}
                         </h3>
-                        {isDemo && (
-                          <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-white/10 text-white/60">
-                            Démo
-                          </span>
-                        )}
+<ProvenanceBadge kind={getNotificationProvenance(notif)} />
                         {!notif.isRead && (
                           <span className="w-2 h-2 rounded-full bg-[#38bdf8] flex-shrink-0" />
                         )}

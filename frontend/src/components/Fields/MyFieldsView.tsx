@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, MapPin, Trash2, Edit3, Check, Navigation, ChevronRight } from 'lucide-react';
 import type { SelectedField, LegumeCropType, CropGrowthStage } from '../../types/agricultural';
 import { BotanicalCard } from './BotanicalCard';
@@ -7,8 +7,8 @@ import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import { getCurrentGPSPosition, reverseGeocodeFrance, isWithinMetropolitanFrance } from '../../services/geoService';
 import { CropGlyph } from '../Common/LegumeGlyphs';
 
-const DEMO_FIELD_IDS = new Set(['field_lauragais_1', 'field_beauce_2', 'field_berry_3']);
-const isDemoField = (field: SelectedField) => Boolean(field.isDemo) || DEMO_FIELD_IDS.has(field.id);
+import { isDemoField } from '../../services/provenance';
+import { DemoFieldBadge } from '../Common/ProvenanceBadge';
 
 interface MyFieldsViewProps {
   fields: SelectedField[];
@@ -16,6 +16,9 @@ interface MyFieldsViewProps {
   onSelectActiveField: (field: SelectedField) => void;
   onSaveField: (field: SelectedField) => void;
   onDeleteField: (fieldId: string) => void;
+  /** Set by the parent to open the creation wizard on arrival (e.g. from Accueil). */
+  autoOpenCreate?: boolean;
+  onAutoOpenHandled?: () => void;
 }
 
 export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
@@ -24,6 +27,8 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   onSelectActiveField,
   onSaveField,
   onDeleteField,
+  autoOpenCreate = false,
+  onAutoOpenHandled,
 }) => {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -61,6 +66,14 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
     setWizardStep(1);
     setIsWizardOpen(true);
   };
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      openNewFieldWizard();
+      onAutoOpenHandled?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenCreate]);
 
   const openEditField = (field: SelectedField) => {
     triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -193,11 +206,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">{f.name}</h3>
-                      {isDemoField(f) && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 text-[10px] font-semibold border border-amber-500/30">
-                          Démo
-                        </span>
-                      )}
+                      {isDemoField(f) && <DemoFieldBadge />}
                       {isSelected && (
                         <span className="px-2 py-0.5 rounded-full bg-[#007aff]/20 text-[#38bdf8] text-[10px] font-semibold border border-[#007aff]/30">
                           Active

@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { HomeView } from './components/Home/HomeView';
 import { WeatherMap } from './components/Map/WeatherMap';
 import { MapControls } from './components/Map/MapControls';
+import { MapLayerMenu } from './components/Map/MapLayerMenu';
 import { RadarTimeline } from './components/RadarTimeline/RadarTimeline';
 import { IntensityLegend } from './components/RadarTimeline/IntensityLegend';
 import { WeatherSheet } from './components/WeatherSheet/WeatherSheet';
 import { MyFieldsView } from './components/Fields/MyFieldsView';
 import { ForecastInsightsView } from './components/Insights/ForecastInsightsView';
 import { NotificationsView } from './components/Notifications/NotificationsView';
+import { NotificationCenter } from './components/Notifications/NotificationCenter';
 import { DuoNotificationBanner } from './components/Notifications/DuoNotificationBanner';
 import { AppleTabBar } from './components/Navigation/AppleTabBar';
 import type { AppTab } from './components/Navigation/AppleTabBar';
@@ -17,25 +19,41 @@ import { FieldConfigModal } from './components/WeatherSheet/FieldConfigModal';
 import { BackendContractModal } from './components/Navigation/BackendContractModal';
 import { PwaInstallBanner } from './components/Navigation/PwaInstallBanner';
 import { QuickBasins } from './components/Navigation/QuickBasins';
+import { AmiLauncher } from './components/Ami/AmiLauncher';
+import { AmiChatPanel } from './components/Ami/AmiChatPanel';
 
 import type { WeatherLayerType, LocationWeatherData, RadarData, RadarFrame } from './types/weather';
 import type { SelectedField, AgriculturalRiskAlert, AgriculturalNotification } from './types/agricultural';
 import type { FrenchAgriBasin } from './data/frenchAgriBasins';
+import {
+  DEFAULT_OVERLAYS,
+  PRIMARY_LAYERS,
+  cloudColor,
+  temperatureColor,
+  windColor,
+  type LayerStatus,
+  type OverlayId,
+  type OverlayState,
+  type PointValue,
+} from './data/mapLayers';
 import { fetchLocationWeather } from './services/weatherApi';
 import { fetchRainViewerRadar } from './services/radarApi';
 import {
   isWithinMetropolitanFrance,
   getCurrentGPSPosition,
   reverseGeocodeFrance,
+  distanceKm,
   FRANCE_CENTER,
 } from './services/geoService';
 import { evaluateAgronomicRisks } from './services/agriRiskService';
 import { useBackendAssess } from './hooks/useBackendAssess';
+import { useAmiChat } from './hooks/useAmiChat';
+import { useIsPhone } from './hooks/useMediaQuery';
 import { generateDuolingoNotificationsForFields } from './services/duoNotificationService';
 import { registerServiceWorker } from './services/pwaService';
 import { dispatchNativePushNotification } from './services/pushNotificationService';
 
-// Default initial farm parcels (representative French legume terroirs)
+// Default initial farm parcels (representative French legume terroirs). Marked as examples in the UI.
 const INITIAL_FIELDS: SelectedField[] = [
   {
     id: 'field_lauragais_1',
@@ -84,16 +102,40 @@ const INITIAL_FIELDS: SelectedField[] = [
   },
 ];
 
-// Initial realistic agricultural notifications generated with Duolingo engagement mechanics
-// directly tailored to the crops currently present on the farm
-const INITIAL_NOTIFICATIONS: AgriculturalNotification[] =
-  generateDuolingoNotificationsForFields(INITIAL_FIELDS);
+// Illustrative seeded notifications: always labelled "Exemple" by the provenance badge.
+const INITIAL_NOTIFICATIONS: AgriculturalNotification[] = generateDuolingoNotificationsForFields(
+  INITIAL_FIELDS
+).map((n) => ({ ...n, provenance: 'example' as const }));
+
+const OVERLAYS_KEY = 'legum_map_overlays_v1';
+const READ_FORECAST_KEY = 'legum_read_forecast_ids';
+/** A map point closer than this to the field counts as "the field itself". */
+const FIELD_RADIUS_KM = 0.3;
+
+function loadOverlays(): Record<OverlayId, OverlayState> {
+  try {
+    const raw = localStorage.getItem(OVERLAYS_KEY);
+    if (raw) return { ...DEFAULT_OVERLAYS, ...JSON.parse(raw) };
+  } catch {
+    /* ignore corrupted value */
+  }
+  return DEFAULT_OVERLAYS;
+}
+
+const IDLE_STATUS: Record<OverlayId, LayerStatus> = {
+  soil: 'idle',
+  terrain: 'idle',
+  rpg: 'idle',
+  admin: 'idle',
+  field: 'idle',
+};
 
 export const App: React.FC = () => {
-  // 1. Navigation Tab State
-  const [activeTab, setActiveTab] = useState<AppTab>('weather');
+  // 1. Navigation
+  const [activeTab, setActiveTab] = useState<AppTab>('home');
+  const isPhone = useIsPhone();
 
-  // 2. Farm Parcels State
+  // 2. Farm parcels
   const [fields, setFields] = useState<SelectedField[]>(() => {
     const saved = localStorage.getItem('legum_registered_fields');
     if (saved) {
@@ -113,7 +155,7 @@ export const App: React.FC = () => {
     return match || fields[0] || INITIAL_FIELDS[0];
   });
 
-  // 3. Notifications State
+  // 3. Notifications
   const [notifications, setNotifications] = useState<AgriculturalNotification[]>(() => {
     const saved = localStorage.getItem('legum_notifications');
     if (saved) {
@@ -126,27 +168,46 @@ export const App: React.FC = () => {
     }
     return INITIAL_NOTIFICATIONS;
   });
+  const [readForecastIds, setReadForecastIds] = useState<string[]>(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(READ_FORECAST_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isNotifCenterOpen, setNotifCenterOpen] = useState(false);
+  const bellRef = useRef<HTMLButtonElement>(null);
 
-  // 4. Coordinates & Weather State (tied to activeField)
+  // 4. Inspected point (map click / GPS / basin) and its weather. The field is never moved by these.
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number }>({
     lat: activeField.latitude,
     lng: activeField.longitude,
   });
-
+  const [pointGeo, setPointGeo] = useState<{ commune?: string; department?: string } | null>(null);
   const [activeLayer, setActiveLayer] = useState<WeatherLayerType>('radar');
   const [weatherData, setWeatherData] = useState<LocationWeatherData | null>(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState<boolean>(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [fieldWeather, setFieldWeather] = useState<LocationWeatherData | null>(null);
 
-  // 5. Radar State
+  // 5. Radar
   const [radarData, setRadarData] = useState<RadarData | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
   const [radarFrameIndex, setRadarFrameIndex] = useState<number>(0);
   const [isRadarPlaying, setIsRadarPlaying] = useState<boolean>(false);
 
-  // 6. UI & Modals State
+  // 6. Map layers
+  const [overlays, setOverlays] = useState<Record<OverlayId, OverlayState>>(loadOverlays);
+  const [overlayStatus, setOverlayStatus] = useState<Record<OverlayId, LayerStatus>>(IDLE_STATUS);
+  const [isLayerMenuOpen, setLayerMenuOpen] = useState(false);
+  const [mapZoom, setMapZoom] = useState(6);
+  const layerButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 7. UI & modals
   const [isFieldConfigOpen, setIsFieldConfigOpen] = useState(false);
   const [isBackendContractOpen, setIsBackendContractOpen] = useState(false);
+  const [createFieldRequested, setCreateFieldRequested] = useState(false);
   const [gpsPosition, setGpsPosition] = useState<{
     latitude: number;
     longitude: number;
@@ -156,17 +217,21 @@ export const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeDuoBannerNotification, setActiveDuoBannerNotification] = useState<AgriculturalNotification | null>(null);
+  const amiLauncherRef = useRef<HTMLButtonElement>(null);
 
-  // Save fields when updated
+  const ami = useAmiChat(activeField, {
+    onGpsFix: (pos) => setGpsPosition(pos),
+    onMapPickRequested: () => setActiveTab('weather'),
+  });
+
   const persistFields = (updatedFields: SelectedField[]) => {
     setFields(updatedFields);
     localStorage.setItem('legum_registered_fields', JSON.stringify(updatedFields));
   };
 
-  // Register PWA service worker on boot & handle native push clicks
+  // PWA service worker + native notification click routing
   useEffect(() => {
     registerServiceWorker();
-
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       const handleSwMessage = (event: MessageEvent) => {
         if (event.data?.type === 'NAVIGATE_TAB' && event.data.tab) {
@@ -174,37 +239,29 @@ export const App: React.FC = () => {
         }
       };
       navigator.serviceWorker.addEventListener('message', handleSwMessage);
-      return () => {
-        navigator.serviceWorker.removeEventListener('message', handleSwMessage);
-      };
+      return () => navigator.serviceWorker.removeEventListener('message', handleSwMessage);
     }
   }, []);
 
-  // Show auto-dismissing toast
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fetch Radar Frames
+  // Radar frames
   useEffect(() => {
     fetchRainViewerRadar()
       .then((data) => {
         setRadarData(data);
-        const combined = [...data.past, ...data.nowcast];
-        setRadarFrames(combined);
-        const latestPastIdx = Math.max(0, data.past.length - 1);
-        setRadarFrameIndex(latestPastIdx);
+        setRadarFrames([...data.past, ...data.nowcast]);
+        setRadarFrameIndex(Math.max(0, data.past.length - 1));
       })
-      .catch((err) => {
-        console.warn('Radar RainViewer indisponible:', err);
-      });
+      .catch((err) => console.warn('Radar RainViewer indisponible:', err));
   }, []);
 
-  // Fetch Weather whenever coordinates change
+  // Weather of the inspected point (drives the map sheet and point layers)
   useEffect(() => {
     let isCancelled = false;
-
     async function loadCoordsWeather() {
       setIsWeatherLoading(true);
       setWeatherError(null);
@@ -213,41 +270,46 @@ export const App: React.FC = () => {
           fetchLocationWeather(selectedCoords.lat, selectedCoords.lng),
           reverseGeocodeFrance(selectedCoords.lat, selectedCoords.lng),
         ]);
-
         if (!isCancelled) {
           setWeatherData(data);
-
-          // Update active field commune if empty or changed
-          setActiveField((prev) => {
-            if (!prev) return prev;
-            const updated = {
-              ...prev,
-              commune: geo.commune || prev.commune,
-              departmentCode: geo.department || prev.departmentCode,
-            };
-            return updated;
-          });
+          setPointGeo({ commune: geo.commune, department: geo.department });
         }
       } catch (err: unknown) {
         if (!isCancelled) {
-          const errorMsg = err instanceof Error ? err.message : 'Erreur chargement météo';
-          setWeatherError(errorMsg);
+          setWeatherError(err instanceof Error ? err.message : 'Erreur chargement météo');
         }
       } finally {
-        if (!isCancelled) {
-          setIsWeatherLoading(false);
-        }
+        if (!isCancelled) setIsWeatherLoading(false);
       }
     }
-
     loadCoordsWeather();
-
     return () => {
       isCancelled = true;
     };
   }, [selectedCoords.lat, selectedCoords.lng]);
 
-  // Handle active field selection
+  // Weather of the selected FIELD (Home, Analyses, risk screening). Independent from the inspected point.
+  useEffect(() => {
+    let isCancelled = false;
+    fetchLocationWeather(activeField.latitude, activeField.longitude)
+      .then((data) => {
+        if (!isCancelled) setFieldWeather(data);
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          console.warn('Météo de la parcelle indisponible:', err);
+          setFieldWeather(null);
+        }
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeField.id, activeField.latitude, activeField.longitude]);
+
+  const pointOnField =
+    distanceKm(selectedCoords.lat, selectedCoords.lng, activeField.latitude, activeField.longitude) < FIELD_RADIUS_KM;
+
+  // Field selection
   const handleSelectActiveField = (field: SelectedField) => {
     setActiveField(field);
     setSelectedCoords({ lat: field.latitude, lng: field.longitude });
@@ -255,17 +317,10 @@ export const App: React.FC = () => {
     showToast(`Parcelle active : "${field.name}"`);
   };
 
-  // Handle saving (creating or editing) a field
   const handleSaveField = (field: SelectedField) => {
     const existingIndex = fields.findIndex((f) => f.id === field.id);
-    let updatedList: SelectedField[];
-    if (existingIndex >= 0) {
-      updatedList = [...fields];
-      updatedList[existingIndex] = field;
-    } else {
-      updatedList = [field, ...fields];
-    }
-
+    const updatedList =
+      existingIndex >= 0 ? fields.map((f, i) => (i === existingIndex ? field : f)) : [field, ...fields];
     persistFields(updatedList);
     setActiveField(field);
     setSelectedCoords({ lat: field.latitude, lng: field.longitude });
@@ -273,7 +328,6 @@ export const App: React.FC = () => {
     showToast(`Parcelle "${field.name}" enregistrée`);
   };
 
-  // Handle deleting a field
   const handleDeleteField = (fieldId: string) => {
     if (fields.length <= 1) {
       showToast('Impossible de supprimer la dernière parcelle.');
@@ -281,45 +335,28 @@ export const App: React.FC = () => {
     }
     const filtered = fields.filter((f) => f.id !== fieldId);
     persistFields(filtered);
-    if (activeField.id === fieldId) {
-      handleSelectActiveField(filtered[0]);
-    }
+    if (activeField.id === fieldId) handleSelectActiveField(filtered[0]);
     showToast('Parcelle supprimée');
   };
 
-  // Handle Map Click
+  // Map click: inspects a point and, if Ami asked for it, gives Ami a position. Never moves the field.
+  const applyMapPickRef = useRef(ami.applyMapPick);
+  useEffect(() => {
+    applyMapPickRef.current = ami.applyMapPick;
+  });
   const handleSelectCoordinates = useCallback((lat: number, lng: number) => {
+    applyMapPickRef.current(lat, lng);
     setSelectedCoords({ lat, lng });
-
-    setActiveField((prev) => {
-      const updated = {
-        ...prev,
-        latitude: lat,
-        longitude: lng,
-      };
-      return updated;
-    });
   }, []);
 
-  // Handle Basin Selection
   const handleSelectBasin = useCallback(
     (basin: FrenchAgriBasin) => {
       setSelectedCoords({ lat: basin.latitude, lng: basin.longitude });
-
-      setActiveField((prev) => ({
-        ...prev,
-        latitude: basin.latitude,
-        longitude: basin.longitude,
-        commune: basin.name.split(' ')[0],
-        departmentCode: basin.department.match(/\(([^)]+)\)/)?.[1] || 'FR',
-      }));
-
-      showToast(`Bassin ${basin.name} sélectionné`);
+      showToast(`Bassin ${basin.name} : prévision du point exploré`);
     },
     [showToast]
   );
 
-  // Handle GPS Locate Me
   const handleLocateMe = async () => {
     setIsLocating(true);
     try {
@@ -329,24 +366,83 @@ export const App: React.FC = () => {
         return;
       }
       setGpsPosition(pos);
-      handleSelectCoordinates(pos.latitude, pos.longitude);
-      showToast('Position GPS détectée avec succès.');
+      setSelectedCoords({ lat: pos.latitude, lng: pos.longitude });
+      showToast('Position GPS détectée. Ce point ne remplace pas votre parcelle.');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur géolocalisation';
-      showToast(msg);
+      showToast(err instanceof Error ? err.message : 'Erreur géolocalisation');
     } finally {
       setIsLocating(false);
     }
   };
 
-  // Handle Reset to France National View
   const handleResetFranceView = () => {
     setSelectedCoords({ lat: FRANCE_CENTER[0], lng: FRANCE_CENTER[1] });
     showToast('Vue nationale France réinitialisée');
   };
 
-  // Handle notification read
+  const handleBackToField = () => setSelectedCoords({ lat: activeField.latitude, lng: activeField.longitude });
+
+  // Layers
+  const handleOverlayChange = (id: OverlayId, patch: Partial<OverlayState>) => {
+    setOverlays((prev) => {
+      const next = { ...prev, [id]: { ...prev[id], ...patch } };
+      localStorage.setItem(OVERLAYS_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+  const handleOverlayStatus = useCallback((id: OverlayId, status: LayerStatus) => {
+    setOverlayStatus((prev) => (prev[id] === status ? prev : { ...prev, [id]: status }));
+  }, []);
+
+  // Notifications: forecast-backed alerts are derived from the current assessment of the selected field.
+  const clientAlerts: AgriculturalRiskAlert[] =
+    fieldWeather && activeField
+      ? evaluateAgronomicRisks(activeField.cropType, activeField.growthStage, fieldWeather)
+      : [];
+  const { status: backendStatus, alerts: backendAlerts, response: backendResponse } = useBackendAssess(activeField);
+  const agriAlerts: AgriculturalRiskAlert[] = backendStatus === 'ok' ? backendAlerts : clientAlerts;
+
+  const forecastNotifications = useMemo<AgriculturalNotification[]>(
+    () =>
+      agriAlerts
+        .filter((a) => a.severity !== 'favorable')
+        .map((a) => {
+          const id = `fc_${activeField.id}_${a.id}`;
+          return {
+            id,
+            title: a.title,
+            message: a.description,
+            category: 'weather_risk' as const,
+            severity: a.severity === 'critique' ? ('critical' as const) : ('warning' as const),
+            fieldId: activeField.id,
+            fieldName: activeField.name,
+            cropType: activeField.cropType,
+            growthStage: activeField.growthStage,
+            timestamp: 'Prévision actuelle',
+            isRead: readForecastIds.includes(id),
+            actionLabel: "Voir l'analyse",
+            actionDestination: 'insights' as const,
+            provenance: 'forecast' as const,
+          };
+        }),
+    [agriAlerts, activeField, readForecastIds]
+  );
+  const allNotifications = useMemo(
+    () => [...forecastNotifications, ...notifications],
+    [forecastNotifications, notifications]
+  );
+  const unreadNotifCount = allNotifications.filter((n) => !n.isRead).length;
+
   const handleMarkAsRead = (id: string) => {
+    if (id.startsWith('fc_')) {
+      setReadForecastIds((prev) => {
+        if (prev.includes(id)) return prev;
+        const next = [...prev, id].slice(-100);
+        localStorage.setItem(READ_FORECAST_KEY, JSON.stringify(next));
+        return next;
+      });
+      return;
+    }
     const updated = notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n));
     setNotifications(updated);
     localStorage.setItem('legum_notifications', JSON.stringify(updated));
@@ -356,41 +452,49 @@ export const App: React.FC = () => {
     const updated = notifications.map((n) => ({ ...n, isRead: true }));
     setNotifications(updated);
     localStorage.setItem('legum_notifications', JSON.stringify(updated));
+    const ids = forecastNotifications.map((n) => n.id);
+    setReadForecastIds((prev) => {
+      const next = Array.from(new Set([...prev, ...ids])).slice(-100);
+      localStorage.setItem(READ_FORECAST_KEY, JSON.stringify(next));
+      return next;
+    });
     showToast('Toutes les alertes sont marquées comme lues');
   };
 
-  // Handle Duolingo simulation trigger
   const handleTriggerSimulation = (notif: AgriculturalNotification) => {
+    const simulated = { ...notif, provenance: 'simulated' as const };
     setNotifications((prev) => {
-      const updated = [notif, ...prev];
+      const updated = [simulated, ...prev];
       localStorage.setItem('legum_notifications', JSON.stringify(updated));
       return updated;
     });
-    setActiveDuoBannerNotification(notif);
+    setActiveDuoBannerNotification(simulated);
   };
 
-  // Evaluate Agronomic Risks for active field.
-  // Prefer the live backend /assess (sourced rules + provenance) when
-  // VITE_API_BASE_URL is configured and reachable; otherwise fall back to the
-  // sourced client-side screening. Both paths avoid fabricated values.
-  const clientAlerts: AgriculturalRiskAlert[] =
-    weatherData && activeField
-      ? evaluateAgronomicRisks(activeField.cropType, activeField.growthStage, weatherData)
-      : [];
-  const { status: backendStatus, alerts: backendAlerts, response: backendResponse } = useBackendAssess(activeField);
-  const agriAlerts: AgriculturalRiskAlert[] =
-    backendStatus === 'ok' ? backendAlerts : clientAlerts;
+  const handleOpenNotification = (n: AgriculturalNotification) => {
+    if (!n.isRead) handleMarkAsRead(n.id);
+    setNotifCenterOpen(false);
+    setActiveTab(n.actionDestination ?? 'notifications');
+  };
 
-  // Dispatch real native OS notification for newly detected critical agronomic risks
+  const handleTabChange = (tab: AppTab) => {
+    // Phones: the Alertes tab opens the notification sheet; its footer leads to the full history.
+    if (tab === 'notifications' && isPhone && activeTab !== 'notifications') {
+      setNotifCenterOpen((open) => !open);
+      return;
+    }
+    setNotifCenterOpen(false);
+    setLayerMenuOpen(false);
+    setActiveTab(tab);
+  };
+
+  // Native OS notification for newly detected critical risks (local, while the app runs)
   useEffect(() => {
     if (!agriAlerts || agriAlerts.length === 0 || !activeField) return;
-
     const critical = agriAlerts.find((a) => a.severity === 'critique' || a.severity === 'alerte');
     if (!critical) return;
-
     const notifKey = `os_notif_${activeField.id}_${critical.id}_${new Date().toDateString()}`;
     if (sessionStorage.getItem(notifKey)) return;
-
     sessionStorage.setItem(notifKey, 'sent');
     dispatchNativePushNotification(`Légume'Ami : ${critical.title}`, {
       body: `Parcelle ${activeField.name} : ${critical.description}`,
@@ -401,28 +505,64 @@ export const App: React.FC = () => {
   }, [agriAlerts, activeField]);
 
   const env = useSystemEnvironment();
-  const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
   const currentRadarFrame = radarFrames[radarFrameIndex] || null;
+  const activeOverlayCount = (Object.keys(overlays) as OverlayId[]).filter(
+    (id) => id !== 'field' && overlays[id].enabled
+  ).length;
+
+  // Point value drawn on the map for temperature / wind / cloud layers (point forecast, not a raster).
+  const pointValue = useMemo<PointValue | null>(() => {
+    if (activeLayer === 'radar' || !weatherData || isWeatherLoading) return null;
+    const c = weatherData.current;
+    const base = { lat: selectedCoords.lat, lng: selectedCoords.lng };
+    if (activeLayer === 'temperature') {
+      return { ...base, primary: `${Math.round(c.temperature)}°C`, color: temperatureColor(c.temperature) };
+    }
+    if (activeLayer === 'wind') {
+      return {
+        ...base,
+        primary: `${Math.round(c.windSpeed)} km/h`,
+        color: windColor(c.windSpeed),
+        rotation: (c.windDirection + 180) % 360,
+      };
+    }
+    return { ...base, primary: `${Math.round(c.cloudCover)} %`, color: cloudColor(c.cloudCover) };
+  }, [activeLayer, weatherData, isWeatherLoading, selectedCoords]);
+
+  const layerChip = useMemo(() => {
+    const def = PRIMARY_LAYERS.find((l) => l.id === activeLayer) ?? PRIMARY_LAYERS[0];
+    if (activeLayer === 'radar') {
+      const detail = currentRadarFrame
+        ? `${currentRadarFrame.type === 'past' ? 'observé' : 'extrapolé'} ${new Date(
+            currentRadarFrame.time * 1000
+          ).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+        : 'indisponible';
+      return { label: 'Radar de pluie', detail };
+    }
+    return { label: def.label, detail: 'prévision au point' };
+  }, [activeLayer, currentRadarFrame]);
 
   return (
     <div
-      className={`relative w-screen h-screen overflow-hidden bg-gradient-to-b ${env.ambientBackgroundClass} text-white transition-colors duration-1000 ${
+      data-tab={activeTab}
+      className={`app-root relative w-screen h-screen overflow-hidden bg-gradient-to-b ${env.ambientBackgroundClass} text-white transition-colors duration-1000 ${
         isDarkMode ? 'dark' : ''
       } flex flex-col`}
     >
-      {/* Desktop Top Navigation Bar (Visible on tablet & desktop) */}
       <DesktopNavBar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         unreadCount={unreadNotifCount}
         fields={fields}
         activeField={activeField}
         onSelectActiveField={handleSelectActiveField}
         env={env}
         onOpenContractModal={() => setIsBackendContractOpen(true)}
+        bellRef={bellRef}
+        isNotificationsOpen={isNotifCenterOpen}
+        onToggleNotifications={() => setNotifCenterOpen((open) => !open)}
       />
 
-      {/* Duolingo-style iOS Dynamic Island Push Banner */}
       <DuoNotificationBanner
         key={activeDuoBannerNotification?.id}
         notification={activeDuoBannerNotification}
@@ -434,151 +574,221 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-1 min-h-0 w-full relative overflow-hidden flex flex-col">
-        {/* 1. DESTINATION: HOME DASHBOARD */}
+        {/* 1. ACCUEIL */}
         {activeTab === 'home' && (
           <HomeView
             fields={fields}
             activeField={activeField}
             onSelectActiveField={handleSelectActiveField}
-            weather={weatherData}
+            weather={fieldWeather}
             alerts={agriAlerts}
+            backendStatus={backendStatus}
             onNavigateToTab={setActiveTab}
             onOpenCreateField={() => {
+              setCreateFieldRequested(true);
               setActiveTab('fields');
             }}
+            onAskAmi={ami.openWithQuestion}
             currentHour={env.currentHour}
           />
         )}
 
-      {/* 2. DESTINATION: WEATHER MAP MODULE */}
-      <div className={`w-full h-full absolute inset-0 ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
-        <WeatherMap
-          isActive={activeTab === 'weather'}
-          selectedField={activeField}
-          onSelectCoordinates={handleSelectCoordinates}
-          activeLayer={activeLayer}
-          radarHost={radarData?.host || 'https://tilecache.rainviewer.com'}
-          currentRadarFrame={currentRadarFrame}
-          gpsPosition={gpsPosition}
-          isDarkMode={isDarkMode}
-          onSelectBasin={handleSelectBasin}
-        />
-
-        <MapControls
-          activeLayer={activeLayer}
-          onLayerChange={setActiveLayer}
-          onLocateMe={handleLocateMe}
-          isLocating={isLocating}
-          onResetFranceView={handleResetFranceView}
-          isDarkMode={isDarkMode}
-          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-          onRefreshWeather={() => setSelectedCoords((prev) => ({ ...prev }))}
-          isRefreshing={isWeatherLoading}
-          isCached={weatherData?.isCached || false}
-          dataSource={weatherData?.dataSource || 'Météo-France'}
-        />
-
-        {/* Pulse Basins Horizontal Bar (Desktop) */}
-        <div className="absolute top-16 left-4 z-[390] hidden lg:block max-w-xl">
-          <QuickBasins
+        {/* 2. CARTE */}
+        <div className={`w-full h-full absolute inset-0 ${activeTab === 'weather' ? 'block' : 'hidden'}`}>
+          <WeatherMap
+            isActive={activeTab === 'weather'}
+            selectedField={activeField}
+            selectedPoint={pointOnField ? null : selectedCoords}
+            onSelectCoordinates={handleSelectCoordinates}
+            activeLayer={activeLayer}
+            radarHost={radarData?.host || 'https://tilecache.rainviewer.com'}
+            currentRadarFrame={currentRadarFrame}
+            gpsPosition={gpsPosition}
+            isDarkMode={isDarkMode}
             onSelectBasin={handleSelectBasin}
-            selectedBasinId={activeField?.id}
+            overlays={overlays}
+            onOverlayStatus={handleOverlayStatus}
+            onZoomChange={setMapZoom}
+            pointValue={pointValue}
+            pickMode={ami.mapPickActive}
+          />
+
+          <MapControls
+            layerChip={layerChip}
+            isLayerMenuOpen={isLayerMenuOpen}
+            onToggleLayerMenu={() => setLayerMenuOpen((open) => !open)}
+            layerButtonRef={layerButtonRef}
+            activeOverlayCount={activeOverlayCount}
+            onLocateMe={handleLocateMe}
+            isLocating={isLocating}
+            onResetFranceView={handleResetFranceView}
+            isDarkMode={isDarkMode}
+            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+            onRefreshWeather={() => setSelectedCoords((prev) => ({ ...prev }))}
+            isRefreshing={isWeatherLoading}
+            isCached={weatherData?.isCached || false}
+            dataSource={weatherData?.dataSource || 'Météo-France'}
+          />
+
+          <MapLayerMenu
+            isOpen={isLayerMenuOpen && activeTab === 'weather'}
+            onClose={() => setLayerMenuOpen(false)}
+            returnFocusRef={layerButtonRef}
+            activeLayer={activeLayer}
+            onLayerChange={setActiveLayer}
+            overlays={overlays}
+            overlayStatus={overlayStatus}
+            onOverlayChange={handleOverlayChange}
+            zoom={mapZoom}
+            radarFrame={currentRadarFrame}
+            weather={weatherData}
+            fieldHasPolygon={Boolean(activeField.polygonCoordinates && activeField.polygonCoordinates.length >= 3)}
+            onResetFranceView={handleResetFranceView}
+            isDarkMode={isDarkMode}
+            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          />
+
+          {ami.mapPickActive && (
+            <div
+              role="status"
+              data-testid="ami-pick-banner"
+              className="absolute top-16 left-1/2 -translate-x-1/2 z-[570] apple-glass rounded-full pl-4 pr-2 py-2 flex items-center gap-3 text-xs shadow-2xl"
+            >
+              <span>Touchez la carte pour choisir le point d'Ami</span>
+              <button
+                type="button"
+                onClick={ami.cancelMapPick}
+                className="px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 font-semibold"
+              >
+                Annuler
+              </button>
+            </div>
+          )}
+
+          <div className="absolute top-16 left-4 z-[390] hidden lg:block max-w-xl">
+            <QuickBasins onSelectBasin={handleSelectBasin} selectedBasinId={activeField?.id} />
+          </div>
+
+          {activeLayer === 'radar' && radarFrames.length > 0 && (
+            <div className="map-radar-timeline flex flex-col items-center gap-2 pointer-events-auto" data-testid="radar-timeline">
+              <div className="max-md:hidden">
+                <IntensityLegend />
+              </div>
+              <RadarTimeline
+                frames={radarFrames}
+                currentIndex={radarFrameIndex}
+                isPlaying={isRadarPlaying}
+                onIndexChange={setRadarFrameIndex}
+                onTogglePlay={() => setIsRadarPlaying(!isRadarPlaying)}
+              />
+            </div>
+          )}
+
+          <WeatherSheet
+            weather={weatherData}
+            isLoading={isWeatherLoading}
+            error={weatherError}
+            selectedField={activeField}
+            agriAlerts={agriAlerts}
+            onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
+            onOpenBackendContract={() => setIsBackendContractOpen(true)}
+            pointMode={!pointOnField}
+            pointLabel={pointGeo?.commune}
+            onBackToField={handleBackToField}
           />
         </div>
 
-        {/* Radar Animation Scrubber (When radar layer is active) */}
-        {activeLayer === 'radar' && radarFrames.length > 0 && (
-          <div className="map-radar-timeline absolute bottom-36 sm:bottom-6 left-1/2 -translate-x-1/2 z-[420] flex flex-col items-center gap-2 w-[calc(100%-2rem)] max-w-sm pointer-events-auto">
-            <IntensityLegend />
-            <RadarTimeline
-              frames={radarFrames}
-              currentIndex={radarFrameIndex}
-              isPlaying={isRadarPlaying}
-              onIndexChange={setRadarFrameIndex}
-              onTogglePlay={() => setIsRadarPlaying(!isRadarPlaying)}
-            />
-          </div>
+        {/* 3. PARCELLES */}
+        {activeTab === 'fields' && (
+          <MyFieldsView
+            fields={fields}
+            activeField={activeField}
+            onSelectActiveField={handleSelectActiveField}
+            onSaveField={handleSaveField}
+            onDeleteField={handleDeleteField}
+            autoOpenCreate={createFieldRequested}
+            onAutoOpenHandled={() => setCreateFieldRequested(false)}
+          />
         )}
 
-        {/* Apple Weather Bottom Sheet / Contextual Floating Panel */}
-        <WeatherSheet
-          weather={weatherData}
-          isLoading={isWeatherLoading}
-          error={weatherError}
-          selectedField={activeField}
-          agriAlerts={agriAlerts}
-          onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
-          onOpenBackendContract={() => setIsBackendContractOpen(true)}
-        />
-      </div>
+        {/* 4. ANALYSES */}
+        {activeTab === 'insights' && (
+          <ForecastInsightsView
+            weather={fieldWeather}
+            field={activeField}
+            alerts={agriAlerts}
+            backendStatus={backendStatus}
+            backendResponse={backendResponse}
+            onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
+            onAskAmi={ami.openWithQuestion}
+          />
+        )}
 
-      {/* 3. DESTINATION: MY FIELDS & ONBOARDING */}
-      {activeTab === 'fields' && (
-        <MyFieldsView
-          fields={fields}
-          activeField={activeField}
-          onSelectActiveField={handleSelectActiveField}
-          onSaveField={handleSaveField}
-          onDeleteField={handleDeleteField}
-        />
-      )}
-
-      {/* 4. DESTINATION: FORECAST & SCIENTIFIC INSIGHTS */}
-      {activeTab === 'insights' && (
-        <ForecastInsightsView
-          weather={weatherData}
-          field={activeField}
-          alerts={agriAlerts}
-          backendStatus={backendStatus}
-          backendResponse={backendResponse}
-          onOpenFieldConfig={() => setIsFieldConfigOpen(true)}
-        />
-      )}
-
-      {/* 5. DESTINATION: NOTIFICATIONS & ALERTS */}
-      {activeTab === 'notifications' && (
-        <NotificationsView
-          notifications={notifications}
-          onMarkAsRead={handleMarkAsRead}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          onNavigateToTab={setActiveTab}
-          onTriggerSimulation={handleTriggerSimulation}
-        />
-      )}
+        {/* 5. ALERTES */}
+        {activeTab === 'notifications' && (
+          <NotificationsView
+            notifications={allNotifications}
+            onMarkAsRead={handleMarkAsRead}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            onNavigateToTab={setActiveTab}
+            onTriggerSimulation={handleTriggerSimulation}
+          />
+        )}
       </main>
 
-      {/* Persistent Native Apple iOS Tab Bar (Mobile only) */}
+      {/* Phones: persistent iOS tab bar */}
       <div className="md:hidden">
-        <AppleTabBar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          unreadCount={unreadNotifCount}
-        />
+        <AppleTabBar activeTab={activeTab} onTabChange={handleTabChange} unreadCount={unreadNotifCount} />
       </div>
 
-      {/* Field Configuration Modal (Accessible from anywhere) */}
+      <AmiLauncher
+        ref={amiLauncherRef}
+        isOpen={ami.isOpen}
+        onToggle={ami.toggle}
+        contextLabel={ami.contextLabel}
+        hasMessages={ami.messages.length > 0}
+      />
+      <AmiChatPanel
+        ami={ami}
+        fields={fields}
+        activeField={activeField}
+        onSelectField={handleSelectActiveField}
+        returnFocusRef={amiLauncherRef}
+      />
+
+      <NotificationCenter
+        isOpen={isNotifCenterOpen}
+        onClose={() => setNotifCenterOpen(false)}
+        notifications={allNotifications}
+        onOpenItem={handleOpenNotification}
+        onMarkAllAsRead={handleMarkAllAsRead}
+        onOpenAll={() => {
+          setNotifCenterOpen(false);
+          setActiveTab('notifications');
+        }}
+        anchorRef={bellRef}
+      />
+
+      {/* The modal edits the SELECTED FIELD, never the inspected map point. */}
       <FieldConfigModal
         isOpen={isFieldConfigOpen}
         onClose={() => setIsFieldConfigOpen(false)}
         currentField={activeField}
-        latitude={selectedCoords.lat}
-        longitude={selectedCoords.lng}
-        commune={activeField?.commune}
+        latitude={activeField.latitude}
+        longitude={activeField.longitude}
+        commune={activeField.commune}
         onSaveField={handleSaveField}
       />
 
-      {/* Backend Contract Modal (FastAPI / Kiro) */}
-      <BackendContractModal
-        isOpen={isBackendContractOpen}
-        onClose={() => setIsBackendContractOpen(false)}
-      />
+      <BackendContractModal isOpen={isBackendContractOpen} onClose={() => setIsBackendContractOpen(false)} />
 
-      {/* PWA Install Prompt Banner */}
       <PwaInstallBanner />
 
-      {/* Floating Feedback Toast */}
       {toastMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[800] apple-glass px-4 py-2 rounded-full shadow-2xl text-xs text-white font-medium animate-in fade-in duration-200">
+        <div
+          role="status"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[800] apple-glass px-4 py-2 rounded-full shadow-2xl text-xs text-white font-medium animate-in fade-in duration-200"
+        >
           {toastMessage}
         </div>
       )}

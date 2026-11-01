@@ -22,7 +22,19 @@ export const PwaInstallBanner: React.FC = () => {
     });
   }, []);
 
-  if (!canInstall || isDismissed) return null;
+  const isVisible = canInstall && !isDismissed;
+
+  // Tell the other fixed layers (map sheet, Ami, radar timeline) how much room the banner takes.
+  useEffect(() => {
+    if (!isVisible) return;
+    const root = document.documentElement;
+    root.style.setProperty('--pwa-banner-h', '4.5rem');
+    return () => {
+      root.style.removeProperty('--pwa-banner-h');
+    };
+  }, [isVisible]);
+
+  if (!isVisible) return null;
 
   const handleInstallClick = async () => {
     if (isIos) {
@@ -41,7 +53,7 @@ export const PwaInstallBanner: React.FC = () => {
   };
 
   return (
-    <div className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] left-1/2 -translate-x-1/2 z-[600] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-bottom-4 duration-300">
+    <div data-testid="pwa-banner" className="md:hidden fixed bottom-[calc(var(--sab)+5.25rem)] left-1/2 -translate-x-1/2 z-[600] max-w-sm w-[calc(100%-2rem)] animate-in slide-in-from-bottom-4 duration-300">
       <div className="apple-glass px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3 text-white select-none border border-white/20">
         <div className="flex items-center gap-2.5 min-w-0">
           <img
