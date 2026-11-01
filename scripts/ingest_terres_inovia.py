@@ -146,6 +146,9 @@ def run() -> int:
     uploaded = []
     for doc, path, sha in processed:
         key = prefix + "/" + doc["filename"]
+        # Keep the filterable metadata small: the KB vector store is S3 Vectors, which caps
+        # filterable metadata at 2048 bytes per record (chunk text + attributes). We keep only
+        # the attributes needed for citations and drop the redundant publisher page URL.
         attr = {
             "document_id": doc["id"],
             "crop": doc["crop"],
@@ -153,15 +156,19 @@ def run() -> int:
             "publisher": "Terres Inovia",
             "publication_year": doc["year"],
             "original_source_url": doc["official_url"],
-            "source_page_url": doc["publisher_page"],
             "language": "fr",
         }
-        body = json.dumps({"metadataAttributes": attr}, ensure_ascii=False).encode("utf-8")
+        # NOTE: this KB's vector store is S3 Vectors, which caps filterable metadata at 2048
+        # bytes per record (chunk text + attributes). A custom `*.metadata.json` sidecar pushes
+        # larger PDF chunks over that limit and the ingestion job FAILS. We therefore upload the
+        # PDF only. Citations still resolve to the correct publisher, exact source URL and real
+        # page number via src/advisor/tools.py (_DOC_PROVENANCE filename map +
+        # x-amz-bedrock-kb-document-page-number that Bedrock populates for PDFs). `attr` is kept
+        # for reference / a future non-S3-Vectors store.
+        _ = attr
         s3.upload_file(str(path), bucket, key,
                        ExtraArgs={"ContentType": "application/pdf",
                                   "Metadata": {"sha256": sha, "source-id": doc["id"]}})
-        s3.put_object(Bucket=bucket, Key=key + ".metadata.json", Body=body,
-                      ContentType="application/json; charset=utf-8")
         uploaded.append({"document_id": doc["id"], "s3_key": key, "sha256": sha})
         print("UPLOADED", "s3://" + bucket + "/" + key)
 
