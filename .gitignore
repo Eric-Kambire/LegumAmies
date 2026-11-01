@@ -30,3 +30,6 @@ models/*
 
 # Lambda build artifacts
 build/
+
+# Private third-party documents used for the RAG ingestion (never publish PDFs)
+data/rag/private-pdfs/
