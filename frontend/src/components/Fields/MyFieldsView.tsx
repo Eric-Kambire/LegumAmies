@@ -288,7 +288,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
             }
           }}
         >
-          <div className="apple-glass rounded-[28px] max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 text-white max-h-[90vh] overflow-y-auto scrollbar-none">
+          <div className="apple-glass rounded-[28px] max-w-lg w-full px-6 pt-6 pb-0 shadow-2xl flex flex-col gap-4 text-white max-h-[90dvh] overflow-y-auto scrollbar-none">
             {/* Wizard Step Indicator */}
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
@@ -465,7 +465,10 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
+            {/* Sticky footer: stays pinned to the bottom of the (scrollable) card so
+                the Enregistrer / Continuer button is always visible and tappable on
+                mobile, above the safe-area / browser chrome. */}
+            <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] mt-1 flex items-center justify-between border-t border-white/[0.08] bg-[#0f1623]/85 backdrop-blur-md">
               {wizardStep > 1 ? (
                 <button
                   type="button"
