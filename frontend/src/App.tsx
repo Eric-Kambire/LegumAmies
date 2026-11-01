@@ -33,6 +33,7 @@ import { evaluateAgronomicRisks } from './services/agriRiskService';
 import { useBackendAssess } from './hooks/useBackendAssess';
 import { generateDuolingoNotificationsForFields } from './services/duoNotificationService';
 import { registerServiceWorker } from './services/pwaService';
+import { dispatchNativePushNotification } from './services/pushNotificationService';
 
 // Default initial farm parcels (representative French legume terroirs)
 const INITIAL_FIELDS: SelectedField[] = [
@@ -162,9 +163,21 @@ export const App: React.FC = () => {
     localStorage.setItem('legum_registered_fields', JSON.stringify(updatedFields));
   };
 
-  // Register PWA service worker on boot
+  // Register PWA service worker on boot & handle native push clicks
   useEffect(() => {
     registerServiceWorker();
+
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      const handleSwMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'NAVIGATE_TAB' && event.data.tab) {
+          setActiveTab(event.data.tab);
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+      };
+    }
   }, []);
 
   // Show auto-dismissing toast
@@ -367,6 +380,25 @@ export const App: React.FC = () => {
   const { status: backendStatus, alerts: backendAlerts, response: backendResponse } = useBackendAssess(activeField);
   const agriAlerts: AgriculturalRiskAlert[] =
     backendStatus === 'ok' ? backendAlerts : clientAlerts;
+
+  // Dispatch real native OS notification for newly detected critical agronomic risks
+  useEffect(() => {
+    if (!agriAlerts || agriAlerts.length === 0 || !activeField) return;
+
+    const critical = agriAlerts.find((a) => a.severity === 'critique' || a.severity === 'alerte');
+    if (!critical) return;
+
+    const notifKey = `os_notif_${activeField.id}_${critical.id}_${new Date().toDateString()}`;
+    if (sessionStorage.getItem(notifKey)) return;
+
+    sessionStorage.setItem(notifKey, 'sent');
+    dispatchNativePushNotification(`Légume'Ami : ${critical.title}`, {
+      body: `Parcelle ${activeField.name} : ${critical.description}`,
+      tag: `risk-${activeField.id}-${critical.id}`,
+      data: { destination: 'insights', fieldId: activeField.id },
+      promptIfDefault: false,
+    });
+  }, [agriAlerts, activeField]);
 
   const env = useSystemEnvironment();
   const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
