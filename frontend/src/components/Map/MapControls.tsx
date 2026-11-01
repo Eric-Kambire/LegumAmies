@@ -13,7 +13,7 @@ import {
   Map as MapIcon,
   Sprout,
 } from 'lucide-react';
-import type { WeatherLayerType } from '../../types/weather';
+import type { WeatherLayerType, LocationWeatherData } from '../../types/weather';
 
 export interface MapOverlayState { soil: boolean; rpg: boolean; admin: boolean; opacity: number }
 
@@ -31,6 +31,7 @@ interface MapControlsProps {
   isRefreshing: boolean;
   isCached: boolean;
   dataSource: string;
+  weather: LocationWeatherData | null;
 }
 
 export const MapControls: React.FC<MapControlsProps> = ({
@@ -47,6 +48,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   isRefreshing,
   isCached,
   dataSource,
+  weather,
 }) => {
   const [isLayersOpen, setIsLayersOpen] = useState(false);
   const layers: Array<{ id: WeatherLayerType; label: string; icon: React.ReactNode }> = [
@@ -93,6 +95,33 @@ export const MapControls: React.FC<MapControlsProps> = ({
           </div>
         )}
       </div>
+
+      {activeLayer !== 'radar' && (
+        <aside aria-label="Météo locale sur la carte" className="absolute left-3 top-[4.7rem] lg:top-[8.5rem] z-[440] w-[min(218px,calc(100vw-7rem))] rounded-[20px] apple-glass px-3.5 py-3 text-white border border-white/15 shadow-xl pointer-events-auto">
+          <div className="flex items-center gap-2 text-[11px] text-white/55 font-medium mb-2">
+            {activeLayer === 'wind' ? <Wind className="w-4 h-4 text-sky-300" /> : activeLayer === 'clouds' ? <Cloud className="w-4 h-4 text-sky-300"/> : <Thermometer className="w-4 h-4 text-amber-300"/>}
+            <span>{activeLayer === 'wind' ? 'Vent au point sélectionné' : activeLayer === 'clouds' ? 'Couverture nuageuse' : 'Température locale'}</span>
+          </div>
+          {weather ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-[30px] font-light leading-none tabular-nums">
+                  {activeLayer === 'wind' ? Math.round(weather.current.windSpeed) : activeLayer === 'clouds' ? Math.round(weather.current.cloudCover) : Math.round(weather.current.temperature)}
+                </span>
+                <span className="text-xs text-white/65">{activeLayer === 'wind' ? 'km/h' : activeLayer === 'clouds' ? '%' : '°C'}</span>
+                {activeLayer === 'wind' && <Navigation className="w-5 h-5 text-sky-300 ml-auto" aria-label="Direction du vent" style={{ transform: `rotate(${(weather.current.windDirection + 180) % 360}deg)` }} />}
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15">
+                {activeLayer === 'clouds' ? <div className="h-full bg-sky-300 rounded-full" style={{ width: `${Math.min(100, Math.max(0, weather.current.cloudCover))}%` }} /> : <div className="h-full bg-sky-400 rounded-full w-full opacity-60"/>}
+              </div>
+              <p className="text-[10px] text-white/45 mt-2 leading-snug">
+                {activeLayer === 'wind' ? `Direction météo ${Math.round(weather.current.windDirection)}° · 10 m` : activeLayer === 'clouds' ? 'Fraction de ciel couvert par les nuages' : 'Température de l’air à 2 m'}.
+              </p>
+              <p className="text-[10px] text-white/35 mt-1 truncate">{weather.dataSource} · {weather.isCached ? 'cache' : 'actualisé'} · point GPS</p>
+            </>
+          ) : <p className="text-xs text-white/60">Chargement des prévisions pour la parcelle…</p>}
+        </aside>
+      )}
 
       {/* Floating Circular Action Buttons (Apple Maps Style) */}
       <div className="absolute top-[4.5rem] right-4 z-[400] flex flex-col gap-2.5">
