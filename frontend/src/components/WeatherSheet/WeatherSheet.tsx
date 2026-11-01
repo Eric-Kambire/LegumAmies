@@ -32,7 +32,7 @@ export const WeatherSheet: React.FC<WeatherSheetProps> = ({
 
   if (isLoading) {
     return (
-      <div className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:top-20 md:bottom-6 md:w-[400px] lg:w-[420px] z-[500] p-6 apple-glass rounded-t-[28px] md:rounded-[28px] animate-pulse">
+      <div className="map-bottom-sheet absolute left-0 right-0 md:left-auto md:right-6 md:top-20 md:w-[400px] lg:w-[420px] z-[500] p-6 apple-glass rounded-t-[28px] md:rounded-[28px] animate-pulse">
         <div className="w-9 h-1 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
         <div className="h-4 bg-white/10 rounded-md w-1/3 mx-auto mb-3" />
         <div className="h-14 bg-white/10 rounded-md w-1/2 mx-auto mb-4" />
@@ -43,7 +43,7 @@ export const WeatherSheet: React.FC<WeatherSheetProps> = ({
 
   if (error || !weather) {
     return (
-      <div className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:top-20 md:bottom-6 md:w-[400px] lg:w-[420px] z-[500] p-6 apple-glass rounded-t-[28px] md:rounded-[28px] text-xs text-white">
+      <div className="map-bottom-sheet absolute left-0 right-0 md:left-auto md:right-6 md:top-20 md:w-[400px] lg:w-[420px] z-[500] p-6 apple-glass rounded-t-[28px] md:rounded-[28px] text-xs text-white">
         <p className="font-semibold text-rose-300">Météo indisponible</p>
         <p className="text-white/60 mt-1">{error || 'Touchez un point en France pour charger les prévisions.'}</p>
       </div>
@@ -69,7 +69,7 @@ export const WeatherSheet: React.FC<WeatherSheetProps> = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:top-20 md:bottom-6 md:w-[400px] lg:w-[420px] md:max-h-[calc(100vh-6.5rem)] md:h-auto z-[500] apple-glass rounded-t-[28px] md:rounded-[28px] flex flex-col transition-all duration-300 ease-out overflow-hidden ${getMobileHeightClass()}`}
+      className={`map-bottom-sheet absolute left-0 right-0 md:left-auto md:right-6 md:top-20 md:w-[400px] lg:w-[420px] md:max-h-[calc(100vh-6.5rem)] md:h-auto z-[500] apple-glass rounded-t-[28px] md:rounded-[28px] flex flex-col transition-all duration-300 ease-out overflow-hidden ${getMobileHeightClass()}`}
     >
       {/* iOS Drag Handle Indicator (Mobile only) */}
       <div

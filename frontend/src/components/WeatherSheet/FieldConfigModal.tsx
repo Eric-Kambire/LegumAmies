@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Check } from 'lucide-react';
 import type { LegumeCropType, CropGrowthStage, SelectedField } from '../../types/agricultural';
 import { CropGlyph } from '../Common/LegumeGlyphs';
@@ -30,6 +30,12 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
   const [areaHectares, setAreaHectares] = useState<number | undefined>(
     currentField?.areaHectares || 12
   );
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) dialogRef.current?.querySelector<HTMLElement>('input, button, select')?.focus();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,12 +76,33 @@ export const FieldConfigModal: React.FC<FieldConfigModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-[900] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="field-config-title"
+      ref={dialogRef}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          onClose();
+        }
+        if (event.key === 'Tab') {
+          const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])'));
+          const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+          const nextIndex = event.shiftKey ? currentIndex - 1 : currentIndex + 1;
+          if (nextIndex < 0 || nextIndex >= focusable.length) {
+            event.preventDefault();
+            focusable[event.shiftKey ? focusable.length - 1 : 0]?.focus();
+          }
+        }
+      }}
+    >
       <div className="apple-glass rounded-[28px] max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 text-white max-h-[90vh] overflow-y-auto scrollbar-none">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
           <div>
-            <h3 className="font-semibold text-base text-white">Configurer la Parcelle</h3>
+            <h3 id="field-config-title" className="font-semibold text-base text-white">Configurer la Parcelle</h3>
             <p className="text-xs text-white/50 mt-0.5">
               {commune ? `${commune} • ` : ''}
               {latitude.toFixed(2)}°N, {longitude.toFixed(2)}°E

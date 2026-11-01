@@ -60,6 +60,8 @@ export interface SelectedField {
   areaHectares?: number;
   sowingDate?: string;
   soilType?: 'calcaire' | 'argilo_calcaire' | 'limon' | 'sableux';
+  /** Marque les parcelles préchargées uniquement pour la démonstration. */
+  isDemo?: boolean;
   /** Polygone vectoriel des contours de la parcelle [[lat, lng], ...] */
   polygonCoordinates?: Array<[number, number]>;
   createdAt: string;

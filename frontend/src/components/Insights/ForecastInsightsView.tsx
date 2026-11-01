@@ -31,6 +31,11 @@ interface ForecastInsightsViewProps {
   onOpenFieldConfig: () => void;
 }
 
+const localizeHarvestNote = (note?: string) =>
+  note && /deterministic weather-only decision aid|weather-only,\s*provisional/i.test(note)
+    ? 'Aide à la décision fondée uniquement sur la météo, sans validation agronomique complète. La disponibilité du matériel n’est pas fournie : les jours sont considérés disponibles à titre provisoire. L’humidité du grain et la portance du sol ne sont pas mesurées.'
+    : note;
+
 export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   weather,
   field,
@@ -125,8 +130,8 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           .map(([k, v]) => `${k}=${v}`)
           .join(', ')}`,
         scientificExplanation:
-          backendResponse.harvest.days[0]?.explanation ||
-          backendResponse.harvest.note ||
+          localizeHarvestNote(backendResponse.harvest.days[0]?.explanation) ||
+          localizeHarvestNote(backendResponse.harvest.note) ||
           'Classement basé sur les probabilités de pluie AIFS.',
         parameters: [
           {
@@ -151,7 +156,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
         ruleType: 'Aide à la décision inactive avant maturité',
         formula: 'Condition : stade phénologique == prêt à récolter',
         scientificExplanation:
-          backendResponse?.harvest?.note ||
+          localizeHarvestNote(backendResponse?.harvest?.note) ||
           'La parcelle n\'a pas atteint le stade prêt à récolter. L\'algorithme de battage ne s\'active qu\'à maturité pour éviter les récoltes prématurées.',
         parameters: [
           {
@@ -166,7 +171,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   const decisionTraces: DecisionTrace[] = [heatTrace, sprayTrace, harvestTrace];
 
   return (
-    <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-4 sm:gap-5">
+    <div className="app-page-scroll flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 max-w-6xl mx-auto w-full flex flex-col gap-4 sm:gap-5">
       {/* Header & Mode Switcher */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
@@ -177,7 +182,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
                 Prévisions & Analyses Scientifiques
               </h1>
               {/* Backend connection status pill */}
@@ -198,7 +203,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
                 </span>
               )}
             </div>
-            <p className="text-xs text-white/50 mt-0.5 truncate">
+            <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
               {field?.name || 'Parcelle'} • {field ? getCropNameFr(field.cropType) : 'Culture'} ({field ? getGrowthStageFr(field.growthStage) : 'Stade'})
             </p>
           </div>
@@ -390,8 +395,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             </div>
           )}
 
-          {/* Section: Agricultural Advisor Agent (Bedrock Converse / Knowledge Base C5WRYFYF1O) */}
-          <BedrockAdvisorCard field={field} />
         </div>
       )}
 
@@ -405,8 +408,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             shapOutputs={null}
           />
 
-          {/* Section: Agricultural Advisor Agent (Bedrock Converse / Knowledge Base C5WRYFYF1O) */}
-          <BedrockAdvisorCard field={field} />
 
           {/* Data Sources Attribution & Model Provenance */}
           <div className="apple-card p-4 sm:p-5 flex flex-col gap-3 border-white/15">
@@ -449,6 +450,9 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* One mounted advisor preserves its answer across view-mode changes. */}
+      <BedrockAdvisorCard field={field} />
     </div>
   );
 };

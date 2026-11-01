@@ -150,3 +150,51 @@ html, body, #root {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
 }
+
+/* Shared page geometry keeps every scrollable destination above the iOS tab bar. */
+.app-page-scroll {
+  padding-bottom: calc(var(--sab) + 11rem);
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.map-bottom-sheet {
+  bottom: calc(var(--sab) + 4.75rem);
+}
+
+.map-radar-timeline {
+  bottom: calc(var(--sab) + 5rem);
+}
+
+@media (min-width: 768px) {
+  .app-page-scroll {
+    padding-bottom: 2rem;
+  }
+
+  .map-bottom-sheet {
+    bottom: 1.5rem;
+  }
+
+  .map-radar-timeline {
+    bottom: 1.5rem;
+  }
+}
+
+:where(button, a, input, select, [role="button"]):focus-visible {
+  outline: 3px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+#root > div {
+  min-height: 100dvh;
+  height: 100dvh;
+}

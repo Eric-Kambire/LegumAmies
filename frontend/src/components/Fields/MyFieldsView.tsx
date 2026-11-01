@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Plus, MapPin, Trash2, Edit3, Check, Navigation, ChevronRight } from 'lucide-react';
 import type { SelectedField, LegumeCropType, CropGrowthStage } from '../../types/agricultural';
 import { BotanicalCard } from './BotanicalCard';
@@ -6,6 +6,9 @@ import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCa
 import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import { getCurrentGPSPosition, reverseGeocodeFrance, isWithinMetropolitanFrance } from '../../services/geoService';
 import { CropGlyph } from '../Common/LegumeGlyphs';
+
+const DEMO_FIELD_IDS = new Set(['field_lauragais_1', 'field_beauce_2', 'field_berry_3']);
+const isDemoField = (field: SelectedField) => Boolean(field.isDemo) || DEMO_FIELD_IDS.has(field.id);
 
 interface MyFieldsViewProps {
   fields: SelectedField[];
@@ -23,6 +26,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   onDeleteField,
 }) => {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Wizard state
@@ -38,7 +42,13 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   const [soilType, setSoilType] = useState<'calcaire' | 'argilo_calcaire' | 'limon' | 'sableux'>('argilo_calcaire');
   const [isLocating, setIsLocating] = useState(false);
 
+  const closeWizard = () => {
+    setIsWizardOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  };
+
   const openNewFieldWizard = () => {
+    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingFieldId(null);
     setName('Nouvelle Parcelle');
     setLatitude(FRENCH_AGRI_BASINS[0].latitude);
@@ -53,6 +63,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   };
 
   const openEditField = (field: SelectedField) => {
+    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingFieldId(field.id);
     setName(field.name);
     setLatitude(field.latitude);
@@ -112,14 +123,14 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
     };
 
     onSaveField(updated);
-    setIsWizardOpen(false);
+    closeWizard();
   };
 
   const cropKeys = Object.keys(LEGUME_CROPS_CATALOG) as LegumeCropType[];
   const stageKeys = Object.keys(GROWTH_STAGES_CATALOG) as CropGrowthStage[];
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
+    <div className="app-page-scroll flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 max-w-6xl mx-auto w-full flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
@@ -129,8 +140,8 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
             className="w-10 h-10 object-contain drop-shadow-md flex-shrink-0"
           />
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">Mes Parcelles</h1>
-            <p className="text-xs text-white/50 mt-0.5 truncate">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">Mes parcelles</h1>
+            <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
               Gérez vos assolements et suivez chaque stade phénologique
             </p>
           </div>
@@ -144,6 +155,13 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
           <span className="hidden sm:inline">Nouvelle parcelle</span>
         </button>
       </div>
+
+      {fields.some(isDemoField) && (
+        <section className="apple-card p-3.5 flex items-center justify-between gap-3 border-amber-500/25">
+          <div><p className="text-xs font-semibold text-amber-200">Parcelles d’exemple</p><p className="text-[11px] text-white/60 mt-0.5">Les cartes marquées « Démo » ne sont pas vos parcelles.</p></div>
+          <button onClick={openNewFieldWizard} className="text-xs text-[#38bdf8] font-semibold hover:underline whitespace-nowrap">Créer la mienne</button>
+        </section>
+      )}
 
       {/* Field List Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -174,7 +192,12 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-white truncate max-w-[150px]">{f.name}</h3>
+                      <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">{f.name}</h3>
+                      {isDemoField(f) && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 text-[10px] font-semibold border border-amber-500/30">
+                          Démo
+                        </span>
+                      )}
                       {isSelected && (
                         <span className="px-2 py-0.5 rounded-full bg-[#007aff]/20 text-[#38bdf8] text-[10px] font-semibold border border-[#007aff]/30">
                           Active
@@ -192,6 +215,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                     onClick={() => openEditField(f)}
                     className="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                     title="Modifier la parcelle"
+                    aria-label={`Modifier ${f.name}`}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
@@ -200,6 +224,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                       onClick={() => onDeleteField(f.id)}
                       className="p-2 rounded-full hover:bg-rose-500/20 text-white/40 hover:text-rose-300 transition-colors"
                       title="Supprimer la parcelle"
+                      aria-label={`Supprimer ${f.name}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -229,7 +254,27 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
 
       {/* Progressive Creation Wizard Modal */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[900] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="field-wizard-title"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              closeWizard();
+            }
+            if (event.key === 'Tab') {
+              const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])'));
+              const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+              const nextIndex = event.shiftKey ? currentIndex - 1 : currentIndex + 1;
+              if (nextIndex < 0 || nextIndex >= focusable.length) {
+                event.preventDefault();
+                focusable[event.shiftKey ? focusable.length - 1 : 0]?.focus();
+              }
+            }
+          }}
+        >
           <div className="apple-glass rounded-[28px] max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 text-white max-h-[90vh] overflow-y-auto scrollbar-none">
             {/* Wizard Step Indicator */}
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
@@ -237,7 +282,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
                   Étape {wizardStep} sur 4
                 </span>
-                <h3 className="text-base font-semibold text-white">
+                <h3 id="field-wizard-title" className="text-base font-semibold text-white">
                   {wizardStep === 1 && "1. Nom & Localisation"}
                   {wizardStep === 2 && "2. Choix de la Légumineuse"}
                   {wizardStep === 3 && "3. Stade Phénologique"}
@@ -264,6 +309,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                   <label className="text-xs font-medium text-white/70">Nom de la parcelle</label>
                   <input
                     type="text"
+                    autoFocus
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ex : Champ du Moulin, Parcelle Sud"
@@ -403,7 +449,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
               ) : (
                 <button
                   type="button"
-                  onClick={() => setIsWizardOpen(false)}
+                  onClick={closeWizard}
                   className="px-4 py-2 rounded-full text-xs font-medium text-white/40 hover:text-white"
                 >
                   Annuler

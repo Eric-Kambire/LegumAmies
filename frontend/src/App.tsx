@@ -414,6 +414,7 @@ export const App: React.FC = () => {
             onOpenCreateField={() => {
               setActiveTab('fields');
             }}
+            currentHour={env.currentHour}
           />
         )}
 
@@ -455,7 +456,7 @@ export const App: React.FC = () => {
 
         {/* Radar Animation Scrubber (When radar layer is active) */}
         {activeLayer === 'radar' && radarFrames.length > 0 && (
-          <div className="absolute bottom-36 sm:bottom-6 left-1/2 -translate-x-1/2 z-[420] flex flex-col items-center gap-2 w-[calc(100%-2rem)] max-w-sm pointer-events-auto">
+          <div className="map-radar-timeline absolute bottom-36 sm:bottom-6 left-1/2 -translate-x-1/2 z-[420] flex flex-col items-center gap-2 w-[calc(100%-2rem)] max-w-sm pointer-events-auto">
             <IntensityLegend />
             <RadarTimeline
               frames={radarFrames}

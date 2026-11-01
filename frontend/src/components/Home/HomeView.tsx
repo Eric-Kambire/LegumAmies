@@ -16,12 +16,8 @@ import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService'
 import { LEGUME_CROPS_CATALOG } from '../../data/legumeCatalog';
 import { CropGlyph } from '../Common/LegumeGlyphs';
 
-// Fixed reference date computed at module initialization for pure component rendering
-const TODAY_FORMATTED = new Date().toLocaleDateString('fr-FR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
+const DEMO_FIELD_IDS = new Set(['field_lauragais_1', 'field_beauce_2', 'field_berry_3']);
+const isDemoField = (field: SelectedField) => Boolean(field.isDemo) || DEMO_FIELD_IDS.has(field.id);
 
 interface HomeViewProps {
   fields: SelectedField[];
@@ -31,6 +27,7 @@ interface HomeViewProps {
   alerts: AgriculturalRiskAlert[];
   onNavigateToTab: (tab: 'weather' | 'fields' | 'insights' | 'notifications') => void;
   onOpenCreateField: () => void;
+  currentHour: number;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -41,32 +38,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
   alerts,
   onNavigateToTab,
   onOpenCreateField,
+  currentHour,
 }) => {
-  const todayFormatted = TODAY_FORMATTED;
-
+  const timeOfDay = currentHour < 6 ? 'Cette nuit' : currentHour < 12 ? 'Ce matin' : currentHour < 18 ? 'Cet après-midi' : 'Ce soir';
+  const allFieldsAreDemo = fields.length > 0 && fields.every(isDemoField);
   const totalHectares = fields.reduce((acc, f) => acc + (f.areaHectares || 0), 0);
 
-  // Generate a personalized agricultural briefing based on live weather & active crops
   const getDailyBriefing = () => {
-    if (!weather) return "Chargement des conditions météo locales...";
-    const temp = Math.round(weather.current.temperature);
-    const wind = weather.current.windSpeed;
+    if (!weather) return 'Chargement des conditions météo locales et de leur provenance…';
+
+    const temperature = Math.round(weather.current.temperature);
+    const wind = Math.round(weather.current.windSpeed);
     const rain = weather.current.precipitation;
+    const humidity = weather.current.relativeHumidity;
+    const stage = activeField ? getGrowthStageFr(activeField.growthStage).toLowerCase() : 'stade non renseigné';
 
     if (rain > 0) {
-      return `Pluie en cours (${rain.toFixed(1)} mm) sur votre secteur. Chantiers de battage suspendus et pulvérisations interdites. Profitez-en pour mettre à jour les stades phénologiques de vos parcelles.`;
+      return `${timeOfDay}, ${rain.toFixed(1)} mm de précipitations sont signalés par les données météo disponibles. La parcelle est au stade ${stage}. Consultez la carte et les analyses avant toute décision au champ.`;
     }
-    if (temp >= 28) {
-      return `Chaleur marquée (${temp}°C) aujourd'hui. Vos légumineuses en floraison subissent un stress thermique. Évitez les interventions foliaires en journée et reportez la moisson aux heures plus fraîches.`;
+    if (wind >= 19) {
+      return `${timeOfDay}, le vent estimé est de ${wind} km/h. Il atteint le seuil réglementaire utilisé par Légume'Ami pour signaler un risque de dérive. Les détails et la source sont disponibles dans Analyses.`;
     }
-    if (wind < 15) {
-      return `Excellentes conditions ce matin : vent calme (${wind} km/h) et hygrométrie favorable. Fenêtre de traitement optimale ouverte jusqu'en début d'après-midi.`;
-    }
-    return `Temps doux (${temp}°C) avec un vent modéré (${wind} km/h). Risque d'égrenage faible. Consultez le calendrier de récolte pour anticiper la dessiccation du grain.`;
+    return `${timeOfDay}, les données météo disponibles indiquent ${temperature} °C, ${wind} km/h de vent et ${humidity}% d’humidité pour une parcelle au stade ${stage}. Ces mesures décrivent la situation actuelle ; vérifiez les prévisions, la rosée et les contraintes de la parcelle avant d’intervenir.`;
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
+    <div className="app-page-scroll flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 max-w-6xl mx-auto w-full flex flex-col gap-5">
       {/* 1. Welcoming Header (Apple iOS Style) */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3.5 min-w-0">
@@ -77,13 +74,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           />
           <div className="min-w-0">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50 capitalize block truncate">
-              {todayFormatted}
+              Point météo local
             </span>
-            <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white mt-0.5 truncate">
-              Tableau de Bord Agricole
+            <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white mt-0.5 leading-tight">
+              Tableau de bord agricole
             </h1>
-            <p className="text-xs text-white/60 mt-0.5 truncate">
-              {fields.length} {fields.length > 1 ? 'parcelles enregistrées' : 'parcelle enregistrée'} • {totalHectares} ha sous surveillance
+            <p className="text-xs text-white/60 mt-0.5 leading-relaxed">
+              {allFieldsAreDemo
+                ? `${fields.length} parcelles d'exemple • ${totalHectares} ha de démonstration`
+                : `${fields.length} ${fields.length > 1 ? 'parcelles enregistrées' : 'parcelle enregistrée'} • ${totalHectares} ha sous surveillance`}
             </p>
           </div>
         </div>
@@ -91,11 +90,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <button
           onClick={onOpenCreateField}
           className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform flex-shrink-0"
+          aria-label="Créer une parcelle réelle"
+          title="Créer une parcelle réelle"
         >
           <Plus className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Ajouter une parcelle</span>
         </button>
       </div>
+
+      {allFieldsAreDemo && (
+        <section className="apple-card p-3.5 flex items-center justify-between gap-3 border-amber-500/25">
+          <div className="min-w-0"><p className="text-xs font-semibold text-amber-200">Mode démonstration</p><p className="text-[11px] text-white/60 mt-0.5">Ces parcelles sont des exemples préchargés. Créez votre parcelle pour obtenir un suivi personnel.</p></div>
+          <button onClick={onOpenCreateField} className="text-xs text-[#38bdf8] font-semibold hover:underline flex-shrink-0">Créer la mienne</button>
+        </section>
+      )}
 
       {/* Main Responsive Grid (Mobile: 1 col, Desktop: 12 cols split) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -106,7 +114,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.08]">
               <span className="w-2 h-2 rounded-full bg-[#007aff] animate-pulse" />
               <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
-                Briefing Agronomique du Jour
+                Point météo actuel
               </span>
             </div>
             <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-normal">
@@ -118,21 +126,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {activeField && weather && (
             <div
               onClick={() => onNavigateToTab('weather')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onNavigateToTab('weather');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Voir la météo détaillée de ${activeField.name}`}
               className="apple-card p-5 cursor-pointer hover:bg-white/[0.1] transition-all active:scale-[0.99] flex flex-col gap-3 group"
             >
-              <div className="flex items-center justify-between text-xs text-white/60">
-                <div className="flex items-center gap-1.5 font-medium text-white/80">
-                  <MapPin className="w-3.5 h-3.5 text-[#007aff]" />
-                  <span className="text-sm font-semibold text-white">{activeField.name}</span>
-                  <span>• {activeField.commune || 'France'}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-white/60">
+                <div className="flex items-start gap-1.5 font-medium text-white/80 min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-[#007aff] flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold text-white leading-snug">{activeField.name}</span>
+                  {isDemoField(activeField) && <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] text-amber-200 flex-shrink-0">Démo</span>}
+                  <span className="text-white/60">• {activeField.commune || 'France'}</span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-white/50 group-hover:text-white transition-colors">
+                <div className="flex items-center gap-1 text-[11px] text-white/50 group-hover:text-white transition-colors flex-shrink-0">
                   <span>Voir la carte</span>
                   <ArrowRight className="w-3 h-3" />
                 </div>
               </div>
 
-              <div className="flex items-baseline justify-between my-0.5">
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 my-0.5">
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-thin tracking-tighter text-white">
                     {Math.round(weather.current.temperature)}°
@@ -212,8 +230,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <h2 className="text-xs font-semibold text-white truncate">{alert.title}</h2>
                         <span className="text-[10px] text-white/40 font-mono ml-2">{alert.metricValue}</span>
                       </div>
-                      <p className="text-[11px] text-white/70 mt-0.5 line-clamp-2 leading-relaxed">
-                        {alert.recommendation}
+                      <p className="text-[11px] text-white/70 mt-0.5 leading-relaxed">
+                        {alert.metricValue} — détails, incertitudes et source réglementaire dans Analyses.
                       </p>
                     </div>
                   </div>
@@ -274,6 +292,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <span className="text-xs font-semibold text-white truncate max-w-[150px]">
                           {f.name}
                         </span>
+                        {isDemoField(f) && <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] text-amber-200">Démo</span>}
                       </div>
                       {isSelected && (
                         <span className="w-2 h-2 rounded-full bg-[#007aff]" title="Parcelle active" />
