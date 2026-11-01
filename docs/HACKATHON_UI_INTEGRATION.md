@@ -33,8 +33,8 @@ Branch `feature/hackathon-ami-integration`. Frontend only: no Python, Bedrock ag
 
 | Layer | Type | Source | Honest scope |
 |---|---|---|---|
-| Radar de précipitations | raster, mutually exclusive | RainViewer | Observation, extrapolation flagged. |
-| Température, Vent, Nuages | **point value at the selected point** | Open-Meteo / Météo-France | Not a national map. The menu says so. A coloured value marker is drawn at the point. |
+| Radar de précipitations | raster, mutually exclusive | RainViewer | Observation, extrapolation flagged. Frames are re-fetched every 5 min and when the tab becomes visible; the chip shows the image age. |
+| Température, Vent, Nuages | **real point forecasts**: the selected point and each of the 7 reference sectors (chips on the map) | Open-Meteo / Météo-France | Nothing is interpolated between points; not a national map, and the menu says so. Sector data is requested only while one of these layers is active, refreshed every 10 min. |
 | Texture du sol | WMS overlay | ISRIC SoilGrids 2.0, clay 0-5 cm | France-wide, 250 m, **modelled**. |
 | Parcelles déclarées | WMTS overlay | IGN RPG 2024 | PAC declarations, not ownership. |
 | Limites administratives | WMTS overlay | IGN ADMIN EXPRESS | |

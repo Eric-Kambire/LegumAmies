@@ -357,6 +357,57 @@ test('map-layers', async () => {
   }
 });
 
+// 2b. Every reference sector shows its own real forecast -------------------------------------
+test('map-sector-values', async () => {
+  for (const vp of [{ w: 1366, h: 768 }, { w: 390, h: 844 }]) {
+    const s = await newSession(vp);
+    const { page } = s;
+    const forecasts = new Map(); // "lat,lon" -> current block of the real Open-Meteo response
+    page.on('response', async (r) => {
+      if (!r.url().includes('open-meteo.com/v1') || !r.url().includes('current=')) return;
+      try {
+        const j = await r.json();
+        const u = new URL(r.url());
+        forecasts.set(`${(+u.searchParams.get('latitude')).toFixed(2)},${(+u.searchParams.get('longitude')).toFixed(2)}`, j.current);
+      } catch { /* ignore non-JSON */ }
+    });
+    await gotoTab(s, 'Carte');
+    record(`[${vp.w}] Radar layer: sector chips carry no value (radar is the spatial layer)`, (await page.getByTestId('sector-value').count()) === 0);
+    await page.getByTestId('layers-button').click();
+    await page.getByTestId('primary-temperature').click();
+    await page.getByTestId('layers-close').click();
+    await page.waitForFunction(() => document.querySelectorAll('[data-testid="sector-value"]').length >= 7, null, { timeout: 30000 }).catch(() => {});
+    const chips = await page.getByTestId('sector-chip').evaluateAll((els) => els.map((e) => ({ name: e.textContent.replace(/\s+/g, ' ').trim(), value: e.querySelector('[data-testid="sector-value"]')?.textContent.trim() ?? null })));
+    record(`[${vp.w}] Temperature: all 7 reference sectors display a forecast value`, chips.length === 7 && chips.every((c) => c.value && /°/.test(c.value)), JSON.stringify(chips.map((c) => c.name)));
+    await page.waitForTimeout(0);
+    // values equal the real provider responses (rounded) for the basin coordinates
+    const basins = [[43.3183, 1.9538], [48.4561, 1.484], [46.8115, 1.6989]];
+    const okAll = basins.every(([lat, lon]) => {
+      const cur = forecasts.get(`${lat.toFixed(2)},${lon.toFixed(2)}`);
+      if (!cur) return false;
+      return chips.some((c) => c.value === `${Math.round(cur.temperature_2m)}°`);
+    });
+    record(`[${vp.w}] Sector values equal the real provider responses`, okAll, `${forecasts.size} forecasts captured; ${chips.map((c) => c.value).join(' ')}`);
+    await shot(s, '04b-map-sector-temperature');
+    await page.getByTestId('layers-button').click();
+    await page.getByTestId('primary-wind').click();
+    await page.getByTestId('layers-close').click();
+    await page.waitForTimeout(600);
+    const wind = await page.getByTestId('sector-value').allInnerTexts();
+    record(`[${vp.w}] Wind: sectors switch to wind speed values`, wind.length >= 7 && wind.every((t) => /^\d+$/.test(t.trim())), wind.join(' '));
+    const chip = await page.getByTestId('map-layer-chip').textContent();
+    record(`[${vp.w}] Layer chip states how many sectors have data`, /7 secteurs/.test(chip), chip.replace(/\n/g, ' '));
+    await page.getByTestId('layers-button').click();
+    await page.getByTestId('primary-radar').click();
+    await page.getByTestId('layers-close').click();
+    await page.waitForTimeout(500);
+    record(`[${vp.w}] Back to radar: sector values removed`, (await page.getByTestId('sector-value').count()) === 0);
+    const radarChip = await page.getByTestId('map-layer-chip').textContent();
+    record(`[${vp.w}] Radar chip shows the age of the image`, /observé \d{2}:\d{2}/.test(radarChip), radarChip.replace(/\n/g, ' '));
+    await s.ctx.close();
+  }
+});
+
 // 3. Map fixed layers across the 640-767 band, PWA banner included -------------------
 test('map-fixed-layers-and-pwa', async () => {
   for (const vp of [...VIEWPORTS, ...EDGE_WIDTHS]) {

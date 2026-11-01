@@ -35,7 +35,9 @@ import {
   type OverlayId,
   type OverlayState,
   type PointValue,
+  type SectorValue,
 } from './data/mapLayers';
+import { FRENCH_AGRI_BASINS } from './data/frenchAgriBasins';
 import { fetchLocationWeather } from './services/weatherApi';
 import { fetchRainViewerRadar } from './services/radarApi';
 import {
@@ -48,6 +50,8 @@ import {
 import { evaluateAgronomicRisks } from './services/agriRiskService';
 import { useBackendAssess } from './hooks/useBackendAssess';
 import { useAmiChat } from './hooks/useAmiChat';
+import { useBasinWeather } from './hooks/useBasinWeather';
+import { useNow } from './hooks/useNow';
 import { useIsPhone } from './hooks/useMediaQuery';
 import { generateDuolingoNotificationsForFields } from './services/duoNotificationService';
 import { registerServiceWorker } from './services/pwaService';
@@ -248,15 +252,34 @@ export const App: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Radar frames
+  // Radar frames: fetched on load, then every 5 minutes and whenever the tab becomes visible again,
+  // so the map never keeps drawing an outdated radar image.
+  const isRadarPlayingRef = useRef(isRadarPlaying);
   useEffect(() => {
-    fetchRainViewerRadar()
-      .then((data) => {
-        setRadarData(data);
-        setRadarFrames([...data.past, ...data.nowcast]);
-        setRadarFrameIndex(Math.max(0, data.past.length - 1));
-      })
-      .catch((err) => console.warn('Radar RainViewer indisponible:', err));
+    isRadarPlayingRef.current = isRadarPlaying;
+  });
+  useEffect(() => {
+    let cancelled = false;
+    const load = () =>
+      fetchRainViewerRadar()
+        .then((data) => {
+          if (cancelled) return;
+          setRadarData(data);
+          setRadarFrames([...data.past, ...data.nowcast]);
+          if (!isRadarPlayingRef.current) setRadarFrameIndex(Math.max(0, data.past.length - 1));
+        })
+        .catch((err) => console.warn('Radar RainViewer indisponible:', err));
+    void load();
+    const timer = window.setInterval(load, 5 * 60 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Weather of the inspected point (drives the map sheet and point layers)
@@ -505,6 +528,8 @@ export const App: React.FC = () => {
   }, [agriAlerts, activeField]);
 
   const env = useSystemEnvironment();
+  const clock = useNow();
+  const basinWeather = useBasinWeather(activeLayer !== 'radar');
   const currentRadarFrame = radarFrames[radarFrameIndex] || null;
   const activeOverlayCount = (Object.keys(overlays) as OverlayId[]).filter(
     (id) => id !== 'field' && overlays[id].enabled
@@ -529,18 +554,40 @@ export const App: React.FC = () => {
     return { ...base, primary: `${Math.round(c.cloudCover)} %`, color: cloudColor(c.cloudCover) };
   }, [activeLayer, weatherData, isWeatherLoading, selectedCoords]);
 
+  // Real forecast of each reference sector for the active point-based layer.
+  const sectorValues = useMemo<Record<string, SectorValue> | null>(() => {
+    if (activeLayer === 'radar' || basinWeather.count === 0) return null;
+    const out: Record<string, SectorValue> = {};
+    FRENCH_AGRI_BASINS.forEach((b) => {
+      const w = basinWeather.byBasin[b.id];
+      if (!w) return;
+      const c = w.current;
+      if (activeLayer === 'temperature') out[b.id] = { label: `${Math.round(c.temperature)}°`, color: temperatureColor(c.temperature) };
+      else if (activeLayer === 'wind')
+        out[b.id] = { label: `${Math.round(c.windSpeed)}`, color: windColor(c.windSpeed), rotation: (c.windDirection + 180) % 360 };
+      else out[b.id] = { label: `${Math.round(c.cloudCover)}%`, color: cloudColor(c.cloudCover) };
+    });
+    return out;
+  }, [activeLayer, basinWeather]);
+
   const layerChip = useMemo(() => {
     const def = PRIMARY_LAYERS.find((l) => l.id === activeLayer) ?? PRIMARY_LAYERS[0];
     if (activeLayer === 'radar') {
-      const detail = currentRadarFrame
-        ? `${currentRadarFrame.type === 'past' ? 'observé' : 'extrapolé'} ${new Date(
-            currentRadarFrame.time * 1000
-          ).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
-        : 'indisponible';
+      if (!currentRadarFrame) return { label: 'Radar de pluie', detail: 'indisponible' };
+      const t = new Date(currentRadarFrame.time * 1000);
+      const age = Math.max(0, Math.round((clock.getTime() - t.getTime()) / 60000));
+      const hour = t.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const detail =
+        currentRadarFrame.type === 'past' ? `observé ${hour}${age >= 1 ? ` (il y a ${age} min)` : ''}` : `extrapolé ${hour}`;
       return { label: 'Radar de pluie', detail };
     }
-    return { label: def.label, detail: 'prévision au point' };
-  }, [activeLayer, currentRadarFrame]);
+    const sectors = basinWeather.failed
+      ? 'secteurs indisponibles'
+      : basinWeather.count > 0
+        ? `${basinWeather.count} secteurs`
+        : 'chargement des secteurs';
+    return { label: def.label, detail: `prévision · ${sectors}` };
+  }, [activeLayer, currentRadarFrame, basinWeather, clock]);
 
   return (
     <div
@@ -610,6 +657,7 @@ export const App: React.FC = () => {
             onOverlayStatus={handleOverlayStatus}
             onZoomChange={setMapZoom}
             pointValue={pointValue}
+            sectorValues={sectorValues}
             pickMode={ami.mapPickActive}
           />
 

@@ -165,23 +165,30 @@ export const PRIMARY_LAYERS: PrimaryLayerDef[] = [
     label: 'Température',
     spatial: false,
     source: 'Open-Meteo, modèle Météo-France (point)',
-    note: 'Prévision ponctuelle au point sélectionné. Aucune carte nationale de température.',
+    note: 'Prévisions ponctuelles au point sélectionné et aux 7 secteurs de référence, sans interpolation. Aucune carte nationale de température.',
   },
   {
     id: 'wind',
     label: 'Vent',
     spatial: false,
     source: 'Open-Meteo, modèle Météo-France (point)',
-    note: 'Prévision ponctuelle au point sélectionné. Aucune carte nationale du vent.',
+    note: 'Prévisions ponctuelles au point sélectionné et aux 7 secteurs de référence, sans interpolation. Aucune carte nationale du vent.',
   },
   {
     id: 'clouds',
     label: 'Couverture nuageuse',
     spatial: false,
     source: 'Open-Meteo, modèle Météo-France (point)',
-    note: 'Prévision ponctuelle au point sélectionné. Aucune carte nationale des nuages.',
+    note: 'Prévisions ponctuelles au point sélectionné et aux 7 secteurs de référence, sans interpolation. Aucune carte nationale des nuages.',
   },
 ];
+
+/** Value shown on a sector chip for point-based primary layers. */
+export interface SectorValue {
+  label: string;
+  color: string;
+  rotation?: number;
+}
 
 /** Value drawn on the map for point-based primary layers. */
 export interface PointValue {

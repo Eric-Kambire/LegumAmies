@@ -16,6 +16,7 @@ import {
   type OverlayId,
   type OverlayState,
   type PointValue,
+  type SectorValue,
 } from '../../data/mapLayers';
 
 interface WeatherMapProps {
@@ -34,6 +35,8 @@ interface WeatherMapProps {
   onOverlayStatus: (id: OverlayId, status: LayerStatus) => void;
   onZoomChange?: (zoom: number) => void;
   pointValue: PointValue | null;
+  /** Forecast value per reference sector (basin id), when a point-based weather layer is active. */
+  sectorValues: Record<string, SectorValue> | null;
   pickMode?: boolean;
 }
 
@@ -61,6 +64,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   onOverlayStatus,
   onZoomChange,
   pointValue,
+  sectorValues,
   pickMode = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -379,7 +383,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       icon: L.divIcon({
         className: 'custom-point-value',
         html: `
-          <div data-testid="map-point-value" class="-translate-x-1/2 translate-y-3 select-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-xl border border-white/30"
+          <div data-testid="map-point-value" class="-translate-x-1/2 translate-y-5 select-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-xl border border-white/30"
                style="background:${pointValue.color};color:#0b0f19">
             ${arrow}<span>${escapeHtml(pointValue.primary)}</span>
             ${pointValue.secondary ? `<span class="font-medium opacity-75">${escapeHtml(pointValue.secondary)}</span>` : ''}
@@ -392,7 +396,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     }).addTo(map);
   }, [pointValue]);
 
-  // 9. Basin chips.
+  // 9. Sector chips (agricultural basins), with their own forecast value when a point layer is active.
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -402,13 +406,22 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     }
     const group = L.layerGroup();
     FRENCH_AGRI_BASINS.forEach((basin) => {
+      const v = sectorValues?.[basin.id];
+      const arrow =
+        v && v.rotation !== undefined
+          ? `<svg width="11" height="11" viewBox="0 0 24 24" style="transform:rotate(${Math.round(v.rotation)}deg)" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 9l6-6 6 6"/></svg>`
+          : '';
+      const value = v
+        ? `<span data-testid="sector-value" class="px-1.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1" style="background:${v.color};color:#0b0f19">${arrow}${escapeHtml(v.label)}</span>`
+        : '';
       const marker = L.marker([basin.latitude, basin.longitude], {
         icon: L.divIcon({
           className: 'custom-basin-chip',
           html: `
-            <button class="apple-glass text-white/90 hover:text-white px-2.5 py-1 rounded-full text-[11px] font-medium shadow-lg transition-all active:scale-95 whitespace-nowrap flex items-center gap-1.5 -translate-x-1/2 -translate-y-1/2">
+            <button data-testid="sector-chip" class="apple-glass text-white/90 hover:text-white pl-2.5 ${v ? 'pr-1' : 'pr-2.5'} py-1 rounded-full text-[11px] font-medium shadow-lg transition-all active:scale-95 whitespace-nowrap flex items-center gap-1.5 -translate-x-1/2 -translate-y-1/2">
               <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
               <span>${escapeHtml(basin.name.split(' ')[0])}</span>
+              ${value}
             </button>`,
           iconSize: [0, 0],
           iconAnchor: [0, 0],
@@ -422,7 +435,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     });
     group.addTo(map);
     basinsLayerRef.current = group;
-  }, []);
+  }, [sectorValues]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden">
