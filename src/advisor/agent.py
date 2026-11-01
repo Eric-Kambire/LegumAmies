@@ -205,12 +205,13 @@ def _citations(ctx: dict) -> list[dict]:
     cites: list[dict] = []
     seen = set()
     for p in ctx.get("kb", {}).get("passages", []) or []:
-        key = p.get("source_url") or p.get("document")
+        key = (p.get("source_url") or p.get("document"), p.get("page"))
         if key and key not in seen:
             seen.add(key)
             cites.append({"type": "agronomic_evidence", "institution": p.get("institution"),
                           "document": p.get("document"), "source_url": p.get("source_url"),
-                          "score": p.get("score"), "snippet": p.get("text", "")[:200]})
+                          "score": p.get("score"), "snippet": p.get("text", "")[:200],
+                          "page": p.get("page"), "crop": p.get("crop")})
     for a in ctx.get("risk", {}).get("alerts", []) or []:
         url = a.get("source_url")
         if url and url not in seen:
