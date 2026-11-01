@@ -24,8 +24,10 @@ export const NotificationCenterPopover: React.FC<Props> = ({
           !(e.target as HTMLElement).closest?.('[data-notification-trigger]')) onClose();
     };
     window.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPointer);
-    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onPointer); };
+    // Capture phase so the outside-click still fires even when Leaflet (or other
+    // widgets) stop pointer-event propagation before it reaches document.
+    document.addEventListener('pointerdown', onPointer, true);
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onPointer, true); };
   }, [onClose]);
 
   return (

@@ -133,7 +133,13 @@ export function useBackendAssess(field: SelectedField | null): {
       });
 
     return () => controller.abort();
-  }, [field]);
+    // Depend on the stable request-defining key (id + coords + crop + stage),
+    // not the field object reference. App mutates the field object on mount
+    // (reverse-geocoded commune/department) which previously re-fired an
+    // identical /assess request. Keying on the scalar signature dedupes it
+    // while still refetching when a relevant attribute actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFieldKey]);
 
   return { status, alerts, response };
 }

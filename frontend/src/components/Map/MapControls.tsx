@@ -61,7 +61,8 @@ export const MapControls: React.FC<MapControlsProps> = ({
   return (
     <>
       {/* Compact, collapsible map layer switcher. Weather modes use local field values unless raster tiles exist. */}
-      <div className="absolute top-3 right-3 z-[480] flex flex-col items-end gap-2 pointer-events-auto">
+      {/* z-[520] keeps the layer toggle and its panel above the weather bottom-sheet (z-[500]) so mode buttons stay clickable on desktop. */}
+      <div className="absolute top-3 right-3 z-[520] flex flex-col items-end gap-2 pointer-events-auto">
         <button type="button" onClick={() => setIsLayersOpen((v) => !v)} aria-label="Personnaliser les couches de carte" aria-expanded={isLayersOpen} className="apple-glass flex items-center gap-2 rounded-full px-3.5 py-2.5 text-xs font-semibold text-white shadow-xl border border-white/15">
           <Layers2 className="w-4 h-4 text-sky-300"/> Couches <span className="text-white/45">· {layers.find((l) => l.id === activeLayer)?.label}</span>
         </button>

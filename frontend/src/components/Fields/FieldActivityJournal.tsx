@@ -24,7 +24,7 @@ const LABELS: Record<FieldEvent['type'], string> = {
   spraying: 'Traitement', tillage: 'Travail du sol', cover_crop: 'Couverture végétale', crop_rotation: 'Rotation / culture précédente',
 };
 
-export const FieldActivityJournal: React.FC<{ field: SelectedField; onClose: (); onSaved?: () => void }> = ({ field, onClose, onSaved }) => {
+export const FieldActivityJournal: React.FC<{ field: SelectedField; onClose: () => void; onSaved?: () => void }> = ({ field, onClose, onSaved }) => {
   const [events, setEvents] = useState<FieldEvent[]>(() => readFieldEvents(field.id));
   const [type, setType] = useState<FieldEvent['type']>('irrigation');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
