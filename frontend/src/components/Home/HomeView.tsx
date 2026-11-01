@@ -1,37 +1,38 @@
 import React from 'react';
-import {
-  MapPin,
-  AlertTriangle,
-  CheckCircle2,
-  Layers,
-  ArrowRight,
-  TrendingUp,
-  Map as MapIcon,
-  ShieldCheck,
-  Plus,
-} from 'lucide-react';
-import type { SelectedField, AgriculturalRiskAlert } from '../../types/agricultural';
+import { AlertTriangle, ArrowRight, CheckCircle2, MapPin, MessageCircle, Plus, Sprout, WifiOff } from 'lucide-react';
+import type { SelectedField, AgriculturalRiskAlert, RiskSeverity } from '../../types/agricultural';
 import type { LocationWeatherData } from '../../types/weather';
+import type { BackendStatus } from '../../hooks/useBackendAssess';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
+import { isDemoField } from '../../services/provenance';
 import { LEGUME_CROPS_CATALOG } from '../../data/legumeCatalog';
 import { CropGlyph } from '../Common/LegumeGlyphs';
-
-// Fixed reference date computed at module initialization for pure component rendering
-const TODAY_FORMATTED = new Date().toLocaleDateString('fr-FR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
+import { DemoFieldBadge } from '../Common/ProvenanceBadge';
 
 interface HomeViewProps {
   fields: SelectedField[];
   activeField: SelectedField | null;
   onSelectActiveField: (field: SelectedField) => void;
+  /** Weather of the selected FIELD (not of an inspected map point). */
   weather: LocationWeatherData | null;
   alerts: AgriculturalRiskAlert[];
+  backendStatus: BackendStatus;
   onNavigateToTab: (tab: 'weather' | 'fields' | 'insights' | 'notifications') => void;
   onOpenCreateField: () => void;
+  onAskAmi: (question: string) => void;
+  currentHour: number;
 }
+
+const SEVERITY_RANK: Record<RiskSeverity, number> = { critique: 3, alerte: 2, vigilance: 1, favorable: 0 };
+
+const SEVERITY_STYLE: Record<RiskSeverity, { chip: string; label: string }> = {
+  critique: { chip: 'bg-rose-500/20 text-rose-200 border-rose-500/30', label: 'Critique' },
+  alerte: { chip: 'bg-amber-500/20 text-amber-200 border-amber-500/30', label: 'Alerte' },
+  vigilance: { chip: 'bg-sky-500/20 text-sky-200 border-sky-500/30', label: 'Vigilance' },
+  favorable: { chip: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30', label: 'Favorable' },
+};
+
+const shortName = (name: string) => name.replace(/\s*\([^)]*\)\s*$/, '').trim() || name;
 
 export const HomeView: React.FC<HomeViewProps> = ({
   fields,
@@ -39,289 +40,269 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onSelectActiveField,
   weather,
   alerts,
+  backendStatus,
   onNavigateToTab,
   onOpenCreateField,
+  onAskAmi,
+  currentHour,
 }) => {
-  const todayFormatted = TODAY_FORMATTED;
+  const greeting = currentHour < 6 ? 'Bonne nuit' : currentHour < 18 ? 'Bonjour' : 'Bonsoir';
+  const timeOfDay = currentHour < 6 ? 'Cette nuit' : currentHour < 12 ? 'Ce matin' : currentHour < 18 ? 'Cet après-midi' : 'Ce soir';
+  const isFirstVisit = fields.length > 0 && fields.every(isDemoField);
 
-  const totalHectares = fields.reduce((acc, f) => acc + (f.areaHectares || 0), 0);
+  const topRisk = [...alerts]
+    .filter((a) => a.severity !== 'favorable')
+    .sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity])[0];
 
-  // Generate a personalized agricultural briefing based on live weather & active crops
-  const getDailyBriefing = () => {
-    if (!weather) return "Chargement des conditions météo locales...";
-    const temp = Math.round(weather.current.temperature);
-    const wind = weather.current.windSpeed;
-    const rain = weather.current.precipitation;
+  const crop = activeField ? getCropNameFr(activeField.cropType) : '';
+  const stage = activeField ? getGrowthStageFr(activeField.growthStage) : '';
 
-    if (rain > 0) {
-      return `Pluie en cours (${rain.toFixed(1)} mm) sur votre secteur. Chantiers de battage suspendus et pulvérisations interdites. Profitez-en pour mettre à jour les stades phénologiques de vos parcelles.`;
-    }
-    if (temp >= 28) {
-      return `Chaleur marquée (${temp}°C) aujourd'hui. Vos légumineuses en floraison subissent un stress thermique. Évitez les interventions foliaires en journée et reportez la moisson aux heures plus fraîches.`;
-    }
-    if (wind < 15) {
-      return `Excellentes conditions ce matin : vent calme (${wind} km/h) et hygrométrie favorable. Fenêtre de traitement optimale ouverte jusqu'en début d'après-midi.`;
-    }
-    return `Temps doux (${temp}°C) avec un vent modéré (${wind} km/h). Risque d'égrenage faible. Consultez le calendrier de récolte pour anticiper la dessiccation du grain.`;
-  };
+  const briefing = (() => {
+    if (!weather) return null;
+    const c = weather.current;
+    const base = `${timeOfDay} : ${Math.round(c.temperature)} °C, vent ${Math.round(c.windSpeed)} km/h, humidité ${c.relativeHumidity} %.`;
+    return c.precipitation > 0 ? `${base} ${c.precipitation.toFixed(1)} mm de pluie dans l'heure.` : base;
+  })();
+
+  const retrieved = weather ? new Date(weather.retrievedAt) : null;
+  const retrievedLabel =
+    retrieved && !Number.isNaN(retrieved.getTime())
+      ? retrieved.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : null;
+
+  const askQuestion = topRisk
+    ? `Explique-moi ce risque pour ma parcelle : ${topRisk.title}`
+    : `Quelles sont les conditions cette semaine pour mon ${crop.toLowerCase()} ?`;
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-5">
-      {/* 1. Welcoming Header (Apple iOS Style) */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <img
-            src="/legumeAmi.png"
-            alt="Légume'Ami Logo"
-            className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-lg flex-shrink-0"
-          />
+    <div className="app-page-scroll flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-5 max-w-5xl mx-auto w-full flex flex-col gap-4">
+      {/* Header: one line of context, one title */}
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src="/legumeAmi.png" alt="Logo Légume'Ami" className="w-11 h-11 object-contain drop-shadow-lg flex-shrink-0" />
           <div className="min-w-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50 capitalize block truncate">
-              {todayFormatted}
-            </span>
-            <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white mt-0.5 truncate">
-              Tableau de Bord Agricole
-            </h1>
-            <p className="text-xs text-white/60 mt-0.5 truncate">
-              {fields.length} {fields.length > 1 ? 'parcelles enregistrées' : 'parcelle enregistrée'} • {totalHectares} ha sous surveillance
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white leading-tight">{greeting}</h1>
+            <p className="text-xs text-white/55 leading-snug">
+              {isFirstVisit ? 'Voici une parcelle d\u2019exemple pour découvrir l\u2019application.' : 'Voici l\u2019état de votre parcelle.'}
             </p>
           </div>
         </div>
+        {!isFirstVisit && (
+          <button
+            type="button"
+            onClick={onOpenCreateField}
+            className="w-10 h-10 rounded-full apple-glass flex items-center justify-center text-white shadow-md active:scale-95 flex-shrink-0"
+            aria-label="Créer une parcelle"
+            title="Créer une parcelle"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+          </button>
+        )}
+      </header>
 
-        <button
-          onClick={onOpenCreateField}
-          className="apple-glass px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 shadow-md active:scale-95 transition-transform flex-shrink-0"
+      {/* First visit: the single call to action */}
+      {isFirstVisit && (
+        <section
+          data-testid="first-visit-card"
+          className="apple-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-[#0a84ff]/35 bg-gradient-to-br from-[#0a84ff]/15 to-transparent"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Ajouter une parcelle</span>
-        </button>
-      </div>
-
-      {/* Main Responsive Grid (Mobile: 1 col, Desktop: 12 cols split) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Column (lg:col-span-7): Daily Briefing + Active Field + Critical Alerts */}
-        <div className="lg:col-span-7 flex flex-col gap-5">
-          {/* 2. Daily Agricultural Briefing Card */}
-          <div className="apple-card p-4 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.03]">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.08]">
-              <span className="w-2 h-2 rounded-full bg-[#007aff] animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
-                Briefing Agronomique du Jour
-              </span>
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="w-9 h-9 rounded-2xl bg-[#0a84ff]/25 text-[#7cc4ff] flex items-center justify-center flex-shrink-0">
+              <Sprout className="w-4 h-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-white">Commencez par votre parcelle</h2>
+              <p className="text-xs text-white/60 leading-relaxed mt-0.5">
+                Indiquez où elle se trouve et ce que vous y cultivez : les prévisions et les risques seront calculés pour elle.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-normal">
-              {getDailyBriefing()}
-            </p>
           </div>
+          <button
+            type="button"
+            onClick={onOpenCreateField}
+            data-testid="create-first-field"
+            className="px-4 py-2 rounded-full bg-white text-black text-xs font-semibold shadow-md active:scale-95 whitespace-nowrap self-start sm:self-auto"
+          >
+            Créer ma première parcelle
+          </button>
+        </section>
+      )}
 
-          {/* 3. Active Field Live Status Hero Card */}
-          {activeField && weather && (
-            <div
-              onClick={() => onNavigateToTab('weather')}
-              className="apple-card p-5 cursor-pointer hover:bg-white/[0.1] transition-all active:scale-[0.99] flex flex-col gap-3 group"
-            >
-              <div className="flex items-center justify-between text-xs text-white/60">
-                <div className="flex items-center gap-1.5 font-medium text-white/80">
-                  <MapPin className="w-3.5 h-3.5 text-[#007aff]" />
-                  <span className="text-sm font-semibold text-white">{activeField.name}</span>
-                  <span>• {activeField.commune || 'France'}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        {/* Hero: selected parcel, its real weather, its main risk */}
+        {activeField && (
+          <section aria-label="Parcelle sélectionnée" className="lg:col-span-7 apple-card p-4 sm:p-5 flex flex-col gap-4" data-testid="home-hero">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-semibold text-white leading-snug">{activeField.name}</h2>
+                  {isDemoField(activeField) && <DemoFieldBadge />}
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-white/50 group-hover:text-white transition-colors">
-                  <span>Voir la carte</span>
-                  <ArrowRight className="w-3 h-3" />
-                </div>
+                <p className="flex items-center gap-1 text-xs text-white/55 mt-0.5">
+                  <MapPin className="w-3 h-3" aria-hidden="true" />
+                  {activeField.commune || 'France'}
+                  {activeField.areaHectares ? ` · ${activeField.areaHectares} ha` : ''}
+                </p>
               </div>
-
-              <div className="flex items-baseline justify-between my-0.5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-thin tracking-tighter text-white">
-                    {Math.round(weather.current.temperature)}°
-                  </span>
-                  <span className="text-xs text-white/70 font-medium capitalize">
-                    Vent {weather.current.windSpeed} km/h • Humidité {weather.current.relativeHumidity}%
-                  </span>
-                </div>
-
-                <div className="text-right">
-                  <div
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-xs"
-                    style={{
-                      backgroundColor: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.bg || 'rgba(255,255,255,0.1)',
-                      color: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.text || '#fff',
-                      borderColor: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.border || 'rgba(255,255,255,0.2)',
-                    }}
-                  >
-                    <CropGlyph crop={activeField.cropType} size={15} />
-                    <span>{getCropNameFr(activeField.cropType)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-xs">
-                <span className="text-white/60">
-                  Stade : <strong className="text-white font-medium">{getGrowthStageFr(activeField.growthStage)}</strong>
-                </span>
-                <span className="text-[#38bdf8] text-[11px] font-medium flex items-center gap-1">
-                  <span>Météo détaillée & radar</span>
-                  <ArrowRight className="w-3 h-3" />
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* 4. Critical Farm Risks & Recommendations */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                Alertes & Risques Météo
-              </span>
-              <button
-                onClick={() => onNavigateToTab('insights')}
-                className="text-[11px] text-[#38bdf8] hover:underline font-medium"
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border flex-shrink-0 self-start"
+                style={{
+                  backgroundColor: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.bg,
+                  color: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.text,
+                  borderColor: LEGUME_CROPS_CATALOG[activeField.cropType]?.accent.border,
+                }}
               >
-                Toutes les analyses
-              </button>
+                <CropGlyph crop={activeField.cropType} size={14} />
+                <span>
+                  {crop} · {stage}
+                </span>
+              </span>
             </div>
 
-            {alerts.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {alerts.slice(0, 2).map((alert) => (
-                  <div
-                    key={alert.id}
-                    onClick={() => onNavigateToTab('insights')}
-                    className="apple-card p-3.5 flex items-start gap-3 cursor-pointer hover:bg-white/[0.1] transition-all"
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        alert.severity === 'critique'
-                          ? 'bg-rose-500/20 text-rose-300'
-                          : alert.severity === 'alerte'
-                          ? 'bg-amber-500/20 text-amber-300'
-                          : 'bg-[#22c55e]/20 text-[#34d399]'
-                      }`}
-                    >
-                      {alert.severity === 'favorable' ? (
-                        <CheckCircle2 className="w-4 h-4" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4" />
-                      )}
-                    </div>
+            {weather ? (
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <span className="text-6xl font-thin tracking-tighter text-white leading-none">{Math.round(weather.current.temperature)}°</span>
+                  <p className="text-xs text-white/60 mt-1">{briefing}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-pulse flex flex-col gap-2" role="status" aria-label="Chargement de la météo de la parcelle">
+                <div className="h-12 w-24 rounded-xl bg-white/10" />
+                <div className="h-3 w-3/4 rounded bg-white/10" />
+              </div>
+            )}
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-xs font-semibold text-white truncate">{alert.title}</h2>
-                        <span className="text-[10px] text-white/40 font-mono ml-2">{alert.metricValue}</span>
+            {weather?.isCached && (
+              <p className="flex items-center gap-1.5 text-[11px] text-amber-200" data-testid="cached-weather">
+                <WifiOff className="w-3.5 h-3.5" aria-hidden="true" /> Données en cache : la prévision peut ne plus être à jour.
+              </p>
+            )}
+
+            {/* Main risk */}
+            <div className="rounded-2xl bg-black/25 border border-white/[0.08] p-3.5 flex flex-col gap-2.5" data-testid="main-risk">
+              {topRisk ? (
+                <>
+                  <div className="flex items-start gap-3">
+                    <span className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[11px] uppercase tracking-wider text-white/45 font-semibold">Risque principal</p>
+                        <span className={`px-1.5 py-0.5 rounded-full border text-[10px] font-semibold ${SEVERITY_STYLE[topRisk.severity].chip}`}>
+                          {SEVERITY_STYLE[topRisk.severity].label}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-white/70 mt-0.5 line-clamp-2 leading-relaxed">
-                        {alert.recommendation}
+                      <h3 className="text-sm font-semibold text-white leading-snug mt-0.5">{topRisk.title}</h3>
+                      <p className="text-xs text-white/60 mt-0.5">
+                        Prévu : <span className="font-mono text-white/85">{topRisk.metricValue}</span>
+                        {topRisk.triggerThreshold ? (
+                          <>
+                            {' '}
+                            · seuil <span className="font-mono text-white/85">{topRisk.triggerThreshold}</span>
+                          </>
+                        ) : null}
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="apple-card p-4 flex items-center gap-3 text-xs text-white/60">
-                <ShieldCheck className="w-5 h-5 text-[#22c55e] flex-shrink-0" />
-                <span>Aucune anomalie critique détectée aujourd'hui sur vos parcelles.</span>
-              </div>
-            )}
-          </div>
-        </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                  </span>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    {weather
+                      ? 'Aucun seuil publié n\u2019est dépassé dans la prévision actuelle pour ce stade.'
+                      : 'Analyse du risque en attente de la prévision.'}
+                  </p>
+                </div>
+              )}
+              <p className="text-[10px] text-white/40">
+                {backendStatus === 'ok'
+                  ? 'Prévision AROME/AIFS via l\u2019API Légume\u2019Ami'
+                  : backendStatus === 'loading'
+                    ? 'Analyse en cours…'
+                    : 'Règles locales sourcées (API indisponible)'}
+                {retrievedLabel ? ` · météo de ${retrievedLabel}` : ''}
+              </p>
+            </div>
 
-        {/* Right Column (lg:col-span-5): Parcels Carousel/List + Quick Hub */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
-          {/* 5. Registered Fields Grid */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                Mes Parcelles ({fields.length})
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => onNavigateToTab('fields')}
-                className="text-[11px] text-[#38bdf8] hover:underline font-medium"
+                type="button"
+                onClick={() => onNavigateToTab('insights')}
+                data-testid="home-primary-cta"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black text-xs font-semibold shadow-md active:scale-95"
               >
-                Gérer le parcellaire
+                {topRisk ? 'Voir l\u2019analyse du risque' : 'Voir les prévisions'} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateToTab('weather')}
+                className="px-3 py-2 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10"
+              >
+                Voir sur la carte
+              </button>
+              <button
+                type="button"
+                onClick={() => onAskAmi(askQuestion)}
+                data-testid="home-ask-ami"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-[#7cc4ff] hover:bg-white/10"
+              >
+                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" /> Demander à Ami
               </button>
             </div>
+          </section>
+        )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
-              {fields.map((f) => {
-                const isSelected = activeField?.id === f.id;
-                const cropInfo = LEGUME_CROPS_CATALOG[f.cropType];
-
-                return (
-                  <div
-                    key={f.id}
-                    onClick={() => onSelectActiveField(f)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${
-                      isSelected
-                        ? 'apple-glass border-white/30 shadow-lg'
-                        : 'apple-card hover:bg-white/[0.1]'
-                    }`}
+        {/* Parcels: switch in one tap */}
+        <section aria-label="Mes parcelles" className="lg:col-span-5 flex flex-col gap-2">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/50">Mes parcelles</h2>
+            <button type="button" onClick={() => onNavigateToTab('fields')} className="text-[11px] text-[#38bdf8] hover:underline font-medium">
+              Gérer
+            </button>
+          </div>
+          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-1 -mx-1 px-1 snap-x">
+            {fields.map((f) => {
+              const selected = activeField?.id === f.id;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => onSelectActiveField(f)}
+                  aria-pressed={selected}
+                  className={`snap-start flex items-center gap-3 text-left px-3 py-2.5 rounded-2xl border min-w-[14rem] lg:min-w-0 transition-colors ${
+                    selected ? 'apple-glass border-white/30' : 'apple-card hover:bg-white/[0.1]'
+                  }`}
+                >
+                  <span
+                    className="w-8 h-8 rounded-xl flex items-center justify-center border flex-shrink-0"
+                    style={{
+                      backgroundColor: LEGUME_CROPS_CATALOG[f.cropType]?.accent.bg,
+                      color: LEGUME_CROPS_CATALOG[f.cropType]?.accent.text,
+                      borderColor: LEGUME_CROPS_CATALOG[f.cropType]?.accent.border,
+                    }}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-7 h-7 rounded-xl flex items-center justify-center border shadow-xs"
-                          style={{
-                            backgroundColor: cropInfo?.accent.bg || 'rgba(255,255,255,0.08)',
-                            color: cropInfo?.accent.text || '#fff',
-                            borderColor: cropInfo?.accent.border || 'rgba(255,255,255,0.15)',
-                          }}
-                        >
-                          <CropGlyph crop={f.cropType} size={15} />
-                        </div>
-                        <span className="text-xs font-semibold text-white truncate max-w-[150px]">
-                          {f.name}
-                        </span>
-                      </div>
-                      {isSelected && (
-                        <span className="w-2 h-2 rounded-full bg-[#007aff]" title="Parcelle active" />
-                      )}
-                    </div>
-
-                    <div className="text-[11px] text-white/60 flex items-center justify-between">
-                      <span>{f.commune || 'France'}</span>
-                      <span>{f.areaHectares ? `${f.areaHectares} ha` : ''}</span>
-                    </div>
-
-                    <div className="mt-2 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px]">
-                      <span className="text-white/45">Stade phénologique :</span>
-                      <span className="text-white font-medium">{getGrowthStageFr(f.growthStage)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    <CropGlyph crop={f.cropType} size={16} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-white truncate">{shortName(f.name)}</span>
+                      {isDemoField(f) && <DemoFieldBadge />}
+                    </span>
+                    <span className="block text-[11px] text-white/50 truncate">
+                      {f.commune || 'France'} · {getGrowthStageFr(f.growthStage)}
+                    </span>
+                  </span>
+                  {selected && <span className="w-2 h-2 rounded-full bg-[#0a84ff] flex-shrink-0" title="Parcelle active" />}
+                </button>
+              );
+            })}
           </div>
-
-          {/* 6. Quick Module Navigation Hub */}
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            <button
-              onClick={() => onNavigateToTab('weather')}
-              className="apple-card p-3 flex flex-col items-center text-center gap-1.5 hover:bg-white/[0.1] transition-all active:scale-95"
-            >
-              <MapIcon className="w-5 h-5 text-[#38bdf8]" />
-              <span className="text-[11px] font-medium text-white">Carte Météo</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateToTab('insights')}
-              className="apple-card p-3 flex flex-col items-center text-center gap-1.5 hover:bg-white/[0.1] transition-all active:scale-95"
-            >
-              <TrendingUp className="w-5 h-5 text-[#34d399]" />
-              <span className="text-[11px] font-medium text-white">Prévisions</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateToTab('fields')}
-              className="apple-card p-3 flex flex-col items-center text-center gap-1.5 hover:bg-white/[0.1] transition-all active:scale-95"
-            >
-              <Layers className="w-5 h-5 text-amber-300" />
-              <span className="text-[11px] font-medium text-white">Parcelles</span>
-            </button>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ export const DuoNotificationBanner: React.FC<DuoNotificationBannerProps> = ({
   return (
     <aside
       aria-label="Notification d'alerte Duolingo"
-      className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-[999] w-[calc(100%-1.5rem)] max-w-md pt-[env(safe-area-inset-top,0px)] animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
+      className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-[650] w-[calc(100%-1.5rem)] max-w-md pt-[env(safe-area-inset-top,0px)] animate-in slide-in-from-top-4 duration-300 pointer-events-auto"
     >
       <div className="apple-glass rounded-3xl p-4 shadow-2xl border border-white/20 text-white flex flex-col gap-2.5 bg-gradient-to-br from-[#121826]/95 to-[#0b0f19]/95 backdrop-blur-2xl">
         {/* Dynamic Island Header with Streak Badge */}

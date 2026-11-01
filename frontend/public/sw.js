@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legumamies-v3';
+const CACHE_NAME = 'legumamies-v4';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -108,15 +108,19 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// PWA Web Push Notification click handler
+// PWA Web Push Notification click handler (routes user to appropriate tab upon click)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const targetUrl = event.notification.data?.url || '/';
+  const destination = event.notification.data?.destination || null;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url && 'focus' in client) {
+          if (destination && client.postMessage) {
+            client.postMessage({ type: 'NAVIGATE_TAB', tab: destination });
+          }
           return client.focus();
         }
       }
@@ -130,9 +134,9 @@ self.addEventListener('notificationclick', (event) => {
 // PWA Web Push event handler
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'LegumAmies',
+    title: "Légume'Ami",
     body: 'Nouvelle alerte agronomique disponible.',
-    icon: '/apple-touch-icon.png',
+    icon: '/legumeAmi.png',
     badge: '/icon-192.png',
   };
 
@@ -147,7 +151,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: data.icon || '/apple-touch-icon.png',
+      icon: data.icon || '/legumeAmi.png',
       badge: data.badge || '/icon-192.png',
       vibrate: [200, 100, 200],
       data: data.data || {},

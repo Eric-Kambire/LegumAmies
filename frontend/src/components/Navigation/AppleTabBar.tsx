@@ -23,7 +23,7 @@ export const AppleTabBar: React.FC<AppleTabBarProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[500] pointer-events-none flex justify-center pb-[max(env(safe-area-inset-bottom,0px),12px)] px-3">
+    <div className="fixed bottom-0 left-0 right-0 z-[700] pointer-events-none flex justify-center pb-[max(env(safe-area-inset-bottom,0px),12px)] px-3">
       <nav
         aria-label="Navigation principale"
         className="pointer-events-auto apple-glass rounded-full px-2 sm:px-3 py-1.5 shadow-2xl flex items-center justify-around gap-1 max-w-lg w-full border border-white/15"
