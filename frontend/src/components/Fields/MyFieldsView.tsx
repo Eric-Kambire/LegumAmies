@@ -130,6 +130,18 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
     setCropType(basin.typicalCrops[0] || 'pois_chiche');
   };
 
+  const handleDrawLocation = (lat: number, lng: number) => {
+    if (!isWithinMetropolitanFrance(lat, lng)) return;
+    setLatitude(lat);
+    setLongitude(lng);
+    void reverseGeocodeFrance(lat, lng).then((geo) => {
+      setCommune(geo.commune || '');
+      if (geo.department) setDepartmentCode(geo.department);
+    }).catch(() => {
+      // Coordinates remain valid even when reverse geocoding is temporarily offline.
+    });
+  };
+
   const handleSave = () => {
     if (polygonInvalid) return;
     const previous = fields.find((f) => f.id === editingFieldId);
@@ -383,7 +395,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                       if (hectares >= 0.005) setAreaHectares(Number(hectares.toFixed(2)));
                     }
                   }}
-                  onPointChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
+                  onPointChange={handleDrawLocation}
                 />
                 {polygonInvalid && <p role="alert" className="text-xs text-amber-300">Terminez un contour valide ou effacez-le pour saisir seulement un point GPS.</p>}
                 <div className="flex flex-col gap-1.5">
