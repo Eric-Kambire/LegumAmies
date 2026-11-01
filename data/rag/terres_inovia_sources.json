@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "license_note": "Copyright Terres Inovia. Official links and metadata only in public GitHub. Store PDFs only in access-controlled KB source when authorized; do not redistribute without publisher permission.",
+  "publisher": "Terres Inovia",
+  "documents": [
+    {
+      "id": "terres-inovia-pois-chiche-2026",
+      "crop": "pois_chiche",
+      "title": "Pois chiche — Guide de culture 2026",
+      "year": 2026,
+      "language": "fr",
+      "format": "pdf",
+      "filename": "guide_culture_pois-chiche_2026_terresinovia.pdf",
+      "official_url": "https://www.terresinovia.fr/sites/default/files/2026-04/guide_culture_pois-chiche_2026_terresinovia.pdf",
+      "publisher_page": "https://www.terresinovia.fr/fr/guides/pois-chiche-guide-de-culture",
+      "pages": 20,
+      "uploaded_sha256": "a4b436f9d77fbbe1fac0a0c598871b5876c0cc0ffe5d2454f5abaca283be86a3"
+    },
+    {
+      "id": "terres-inovia-pois-2025",
+      "crop": "pois",
+      "title": "Pois — Guide de culture 2025",
+      "year": 2025,
+      "language": "fr",
+      "format": "pdf",
+      "filename": "guide-de-culture-pois-conventionnel-2025.pdf",
+      "official_url": "https://www.terresinovia.fr/sites/default/files/2025-05/guide-de-culture-pois-conventionnel-2025.pdf",
+      "publisher_page": "https://www.terresinovia.fr/fr/actualites/le-guide-de-culture-pois-2025-est-disponible-pour-accompagner-producteurs-et-conseillers",
+      "pages": 36,
+      "uploaded_sha256": "951b0c58bd0a21bbc517b1af8dc60259440fc52773ee3ef694879fc182958f9f"
+    },
+    {
+      "id": "terres-inovia-lentille-2023",
+      "crop": "lentille",
+      "title": "Lentille — Guide de culture 2023",
+      "year": 2023,
+      "language": "fr",
+      "format": "pdf",
+      "filename": "guide-de-culture-lentille-2023.pdf",
+      "official_url": "https://www.terresinovia.fr/sites/default/files/2025-06/guide-de-culture-lentille-2023.pdf",
+      "publisher_page": "https://www.terresinovia.fr/fr/guides/lentille-guide-de-culture",
+      "pages": null,
+      "uploaded_sha256": null
+    }
+  ]
+}
