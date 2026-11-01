@@ -1,0 +1,23 @@
+{
+  "item_id": "S2B_31TDJ_20250903_0_L2A",
+  "datetime": "2025-09-03T10:48:57.512000Z",
+  "cloud_cover_pct": 0.000304,
+  "crs": "EPSG:32631",
+  "boa_offset_applied": true,
+  "ndvi_shape": [
+    448,
+    330
+  ],
+  "valid_fraction_after_cloud_mask": 0.983,
+  "ndvi_mean": 0.733,
+  "ndvi_p10": 0.257,
+  "ndvi_p90": 1.0,
+  "vegetation_cover_fraction_mean": 0.728,
+  "scaling": "reflectance=(DN-1000)/10000; NDVI=(NIR-RED)/(NIR+RED)",
+  "cloud_mask": "SCL in {3,8,9,10,11} masked",
+  "source": "Copernicus Sentinel-2 L2A via Earth Search STAC + sentinel-cogs (AWS Open Data)",
+  "licence": "Copernicus Sentinel data (free & open)",
+  "file": "data/geo/samples/sentinel2_ndvi_castelnaudary.tif",
+  "size_bytes": 36054,
+  "sha256": "fa6c237495fc2fffb2fbe5401cd9b823589c4eae8ee4e7a8493206432856f1b3"
+}

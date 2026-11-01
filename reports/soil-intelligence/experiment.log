@@ -1,0 +1,6 @@
+2026-11-01 06:20:11,701 INFO study_area=Castelnaudary / Lauragais (Aude, FR)
+2026-11-01 06:20:11,701 INFO inputs slope={'mean_deg': 2.72, 'p90_deg': 6.06, 'max_deg': 23.41} soil={'clay_pct': 31.1, 'sand_pct': 26.3, 'silt_pct': 42.6, 'oc_plough_pct': 2.27, 'ph_h2o': 7.43} ndvi_cover=0.728 rain={'years': 10, 'annual_precip_mm_mean': np.float64(909.0), 'heavy_rain_days_gt20mm_per_year': 5.6, 'max_daily_precip_mm': 60.9}
+2026-11-01 06:20:11,702 INFO vulnerability=40.5 (modéré)
+2026-11-01 06:20:11,702 INFO RUSLE baseline A=6.68 t/ha/yr (K=0.0341 LS=0.9797)
+2026-11-01 06:20:13,230 INFO Saved figures: ['01_scenario_comparison.png', '02_factor_breakdown.png', '03_tornado_sensitivity.png', '04_rainfall_exposure_timeseries.png', '05_soil_slope_maps.png', '06_uncertainty_range.png']
+2026-11-01 06:20:13,231 INFO DONE

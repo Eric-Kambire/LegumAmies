@@ -55,6 +55,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Geospatial Soil Intelligence router (prototype, additive). Adds /geo/* routes
+# only; the existing /assess, /advisor/ask, /health and /meta contracts are
+# untouched and backward-compatible. Not redeployed to AWS in this branch.
+from ..geo.api import router as geo_router  # noqa: E402
+
+app.include_router(geo_router)
+
 
 @app.get("/health")
 def health() -> dict:
