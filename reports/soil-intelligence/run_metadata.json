@@ -1,0 +1,111 @@
+{
+  "generated_at_utc": "2026-11-01T06:20:11.701111+00:00",
+  "model_version": "rusle-1.0.0",
+  "equation": "A = R * K * LS * C * P  [t/ha/yr]",
+  "study_area": {
+    "name": "Castelnaudary / Lauragais (Aude, FR)",
+    "field": "Parcelle du Moulin (Lauragais) \u2014 demo field",
+    "lat": 43.31,
+    "lon": 1.95,
+    "bbox_4326": [
+      1.93,
+      43.29,
+      1.97,
+      43.33
+    ],
+    "coverage": "single_study_area"
+  },
+  "sources": [
+    {
+      "name": "Copernicus DEM GLO-30",
+      "use": "slope / LS",
+      "licence": "Copernicus free"
+    },
+    {
+      "name": "ISRIC SoilGrids 2.0",
+      "use": "texture/SOC/pH -> K",
+      "licence": "CC-BY 4.0"
+    },
+    {
+      "name": "Copernicus Sentinel-2 L2A",
+      "use": "NDVI vegetation cover",
+      "licence": "Copernicus free"
+    },
+    {
+      "name": "ERA5 (Open-Meteo archive)",
+      "use": "rainfall exposure series",
+      "licence": "CC-BY 4.0"
+    },
+    {
+      "name": "IGN RPG 2024",
+      "use": "declared crop / parcel",
+      "licence": "Etalab/IGN"
+    },
+    {
+      "name": "Panagos et al. 2015 (R & C factors)",
+      "use": "RUSLE parameters",
+      "licence": "literature"
+    },
+    {
+      "name": "Williams 1995 EPIC; McCool 1987",
+      "use": "K & LS methods",
+      "licence": "literature"
+    }
+  ],
+  "assumptions": [
+    "Plough-layer OC = depth-weighted 0-15 cm (0-5 & 5-15 cm SoilGrids).",
+    "Slope length not measured; 100 m assumed (varied 50-150 m).",
+    "R-factor literature-derived (Panagos 2015); scenario range used."
+  ],
+  "parameters": {
+    "R": {
+      "baseline": 1000.0,
+      "range": [
+        700.0,
+        1800.0
+      ],
+      "unit": "MJ mm ha-1 h-1 yr-1",
+      "source": "Panagos et al. 2015, Rainfall erosivity in Europe (STOTEN 511:801-814)",
+      "assumption": "Literature-derived estimate for SW France / Aude; ESDAC R raster requires login (not accessed). Scenario range stated explicitly. NOT derived from raw ERA5 rainfall totals."
+    },
+    "K": {
+      "method": "Williams (1995) EPIC from SoilGrids sand/silt/clay/OC x0.1317 -> SI",
+      "range_driver": "organic carbon 1.37-4.09 % (SoilGrids 0-5 / 5-15 cm)",
+      "unit": "t ha h ha-1 MJ-1 mm-1",
+      "assumption": "Texture normalised to 100%; plough-layer OC depth-weighted (0-15 cm). Structure/permeability not required by the Williams estimator."
+    },
+    "LS": {
+      "method": "McCool 1987 (S) + RUSLE L with slope-dependent m",
+      "slope_length_m_baseline": 100.0,
+      "slope_length_range_m": [
+        50.0,
+        150.0
+      ],
+      "source": "Copernicus DEM GLO-30 slope",
+      "assumption": "Representative slope length 100 m (field-scale); varied 50-150 m."
+    },
+    "C": {
+      "baseline": 0.2,
+      "range": [
+        0.1,
+        0.45
+      ],
+      "improved": 0.07,
+      "improved_range": [
+        0.03,
+        0.12
+      ],
+      "source": "Panagos et al. 2015, C-factor at European scale (Land Use Policy 48:38-50)",
+      "assumption": "Conventional arable legume/cereal baseline; improved = cover crops + reduced tillage."
+    },
+    "P": {
+      "baseline": 1.0,
+      "range": [
+        0.6,
+        1.0
+      ],
+      "assumption": "P=1 when no support practice declared; contour/strip practices lower P."
+    }
+  },
+  "disclaimer": "Model-estimated erosion potential under stated assumptions; not a field measurement. Coverage: single study area (Castelnaudary), not nationwide."
+}
