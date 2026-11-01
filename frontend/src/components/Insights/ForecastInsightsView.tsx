@@ -20,7 +20,8 @@ import { HarvestRecommendationsCard } from '../Scientific/HarvestRecommendations
 import { UncertaintyRainChart } from '../Scientific/UncertaintyRainChart';
 import { SourceCitedAdviceCard } from '../Scientific/SourceCitedAdviceCard';
 import { ExplainabilityPanel, type DecisionTrace } from '../Scientific/ExplainabilityPanel';
-import { BedrockAdvisorCard } from '../Scientific/BedrockAdvisorCard';
+import { FloweringHeatRiskChart } from '../Scientific/FloweringHeatRiskChart';
+import { SoilIntelligenceCard } from '../Scientific/SoilIntelligenceCard';
 
 interface ForecastInsightsViewProps {
   weather: LocationWeatherData | null;
@@ -269,6 +270,8 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
             </div>
           )}
 
+          <FloweringHeatRiskChart field={field} assessment={backendResponse} />
+
           {/* Section: Sourced Agronomic Risk Predictions */}
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between px-1">
@@ -409,6 +412,8 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           />
 
 
+          <SoilIntelligenceCard field={field} />
+
           {/* Data Sources Attribution & Model Provenance */}
           <div className="apple-card p-4 sm:p-5 flex flex-col gap-3 border-white/15">
             <span className="text-xs font-semibold uppercase tracking-wider text-white/50 pb-2 border-b border-white/[0.08]">
@@ -451,8 +456,6 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
         </div>
       )}
 
-      {/* One mounted advisor preserves its answer across view-mode changes. */}
-      <BedrockAdvisorCard field={field} />
     </div>
   );
 };
