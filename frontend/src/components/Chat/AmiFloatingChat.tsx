@@ -21,10 +21,11 @@ export const AmiFloatingChat: React.FC<{ field: SelectedField | null }> = ({ fie
   const launcherRef = useRef<HTMLButtonElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const nextId = useRef(0);
+  const hasOpened = useRef(false);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-    else launcherRef.current?.focus();
+    if (open) { hasOpened.current = true; inputRef.current?.focus(); }
+    else if (hasOpened.current) launcherRef.current?.focus();
   }, [open]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [messages, loading, open]);
