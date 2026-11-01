@@ -93,6 +93,7 @@ export const DesktopNavBar: React.FC<DesktopNavBarProps> = ({
           return (
             <button
               key={tab.id}
+              data-notification-trigger={tab.id === 'notifications' ? 'true' : undefined}
               onClick={() => onTabChange(tab.id)}
               className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 isActive
