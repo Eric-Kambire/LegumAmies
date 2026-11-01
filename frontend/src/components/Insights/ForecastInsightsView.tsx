@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import {
-  CloudOff,
-  RefreshCw,
-} from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { CloudOff, MessageCircle, RefreshCw, Thermometer } from 'lucide-react';
 import type { LocationWeatherData } from '../../types/weather';
 import type { SelectedField, AgriculturalRiskAlert } from '../../types/agricultural';
 import type { AssessResponse } from '../../types/backend-contract';
 import type { BackendStatus } from '../../hooks/useBackendAssess';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
-import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCatalog';
+import { LEGUME_CROPS_CATALOG } from '../../data/legumeCatalog';
 import {
   getSourcedFloweringHeat,
   SPRAYING_WIND_LIMIT_KMH,
   SPRAYING_SOURCE,
 } from '../../data/sourcedAgronomy';
-import { CropGlyph } from '../Common/LegumeGlyphs';
+import { isDemoField } from '../../services/provenance';
+import { useNow } from '../../hooks/useNow';
+import { computeExposure, hourlyFromBackend, resolveHeatThreshold, selectWindow } from '../../services/heatRisk';
+import { DemoFieldBadge } from '../Common/ProvenanceBadge';
 import { RiskPredictionCard } from '../Scientific/RiskPredictionCard';
 import { HarvestRecommendationsCard } from '../Scientific/HarvestRecommendationsCard';
 import { UncertaintyRainChart } from '../Scientific/UncertaintyRainChart';
 import { SourceCitedAdviceCard } from '../Scientific/SourceCitedAdviceCard';
+import { FloweringHeatRiskChart } from '../Scientific/FloweringHeatRiskChart';
+import { SoilIntelligencePanel } from '../Scientific/SoilIntelligencePanel';
 import { ExplainabilityPanel, type DecisionTrace } from '../Scientific/ExplainabilityPanel';
-import { BedrockAdvisorCard } from '../Scientific/BedrockAdvisorCard';
 
 interface ForecastInsightsViewProps {
   weather: LocationWeatherData | null;
@@ -29,7 +30,21 @@ interface ForecastInsightsViewProps {
   backendStatus?: BackendStatus;
   backendResponse?: AssessResponse | null;
   onOpenFieldConfig: () => void;
+  onAskAmi: (question: string) => void;
 }
+
+type SciTab = 'risk' | 'evolution' | 'scenarios' | 'method';
+const TABS: Array<{ id: SciTab; label: string }> = [
+  { id: 'risk', label: 'Risque' },
+  { id: 'evolution', label: 'Évolution' },
+  { id: 'scenarios', label: 'Scénarios' },
+  { id: 'method', label: 'Méthode' },
+];
+
+const localizeHarvestNote = (note?: string) =>
+  note && /deterministic weather-only decision aid|weather-only,\s*provisional/i.test(note)
+    ? 'Aide à la décision fondée uniquement sur la météo, sans validation agronomique complète. La disponibilité du matériel n’est pas fournie : les jours sont considérés disponibles à titre provisoire. L’humidité du grain et la portance du sol ne sont pas mesurées.'
+    : note;
 
 export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   weather,
@@ -38,9 +53,13 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
   backendStatus = 'disabled',
   backendResponse = null,
   onOpenFieldConfig,
+  onAskAmi,
 }) => {
-  const [viewMode, setViewMode] = useState<'summary' | 'scientific'>('summary');
+  const clock = useNow();
+  const [tab, setTab] = useState<SciTab>('risk');
+  const [evolutionView, setEvolutionView] = useState<'heat' | 'rain'>('heat');
   const [selectedAlertForWhy, setSelectedAlertForWhy] = useState<string | null>(null);
+  const tabRefs = useRef<Record<SciTab, HTMLButtonElement | null>>({ risk: null, evolution: null, scenarios: null, method: null });
 
   const crop = field ? LEGUME_CROPS_CATALOG[field.cropType] : null;
 
@@ -125,8 +144,8 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
           .map(([k, v]) => `${k}=${v}`)
           .join(', ')}`,
         scientificExplanation:
-          backendResponse.harvest.days[0]?.explanation ||
-          backendResponse.harvest.note ||
+          localizeHarvestNote(backendResponse.harvest.days[0]?.explanation) ||
+          localizeHarvestNote(backendResponse.harvest.note) ||
           'Classement basé sur les probabilités de pluie AIFS.',
         parameters: [
           {
@@ -151,7 +170,7 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
         ruleType: 'Aide à la décision inactive avant maturité',
         formula: 'Condition : stade phénologique == prêt à récolter',
         scientificExplanation:
-          backendResponse?.harvest?.note ||
+          localizeHarvestNote(backendResponse?.harvest?.note) ||
           'La parcelle n\'a pas atteint le stade prêt à récolter. L\'algorithme de battage ne s\'active qu\'à maturité pour éviter les récoltes prématurées.',
         parameters: [
           {
@@ -165,287 +184,330 @@ export const ForecastInsightsView: React.FC<ForecastInsightsViewProps> = ({
 
   const decisionTraces: DecisionTrace[] = [heatTrace, sprayTrace, harvestTrace];
 
+  // Compact heat exposure for the summary card, from the same hourly points as the chart.
+  const heatSummary = useMemo(() => {
+    if (!field) return null;
+    const resolution = resolveHeatThreshold(field, backendResponse?.risk?.alerts);
+    if (resolution.kind !== 'threshold') return { resolution, hours: null as number | null, window: 0 };
+    const win = selectWindow(hourlyFromBackend(backendResponse), 48, clock);
+    if (win.length < 2) return { resolution, hours: null as number | null, window: 0 };
+    return { resolution, hours: computeExposure(win, resolution.threshold.value).hoursAbove, window: win.length };
+  }, [field, backendResponse, clock]);
+
+  const blockedSpraying = (backendResponse?.regulatory_windows ?? []).filter((w) => !w.spraying_allowed);
+  const harvest = backendResponse?.harvest;
+
+  const askHeat = field
+    ? `Quel est le risque de chaleur pour mon ${getCropNameFr(field.cropType).toLowerCase()} (${getGrowthStageFr(field.growthStage).toLowerCase()}) dans les 48 prochaines heures ?`
+    : 'Quels sont les seuils de stress thermique sur les protéagineux ?';
+
+  const goToHeat = () => {
+    setEvolutionView('heat');
+    setTab('evolution');
+  };
+
+  const onTabKey = (e: React.KeyboardEvent, index: number) => {
+    const next = e.key === 'ArrowRight' ? index + 1 : e.key === 'ArrowLeft' ? index - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? TABS.length - 1 : null;
+    if (next === null) return;
+    e.preventDefault();
+    const target = TABS[(next + TABS.length) % TABS.length].id;
+    setTab(target);
+    tabRefs.current[target]?.focus();
+  };
+
+  const statusPill =
+    backendStatus === 'ok' ? (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-300">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> API Légume'Ami en direct
+      </span>
+    ) : backendStatus === 'loading' ? (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-[#38bdf8]">
+        <RefreshCw className="w-3 h-3 animate-spin" aria-hidden="true" /> Synchronisation…
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-200">
+        <CloudOff className="w-3 h-3" aria-hidden="true" /> API indisponible : règles locales sourcées
+      </span>
+    );
+
+  const retrieved = backendResponse?.provenance?.retrieved_at_utc
+    ? new Date(backendResponse.provenance.retrieved_at_utc).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+
   return (
-    <div className="flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-28 max-w-6xl mx-auto w-full select-none flex flex-col gap-4 sm:gap-5">
-      {/* Header & Mode Switcher */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            src="/legumeAmi.png"
-            alt="Légume'Ami Logo"
-            className="w-10 h-10 object-contain drop-shadow-md flex-shrink-0"
-          />
+    <div className="app-page-scroll flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 max-w-5xl mx-auto w-full flex flex-col gap-4">
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <img src="/legumeAmi.png" alt="Logo Légume'Ami" className="w-10 h-10 object-contain drop-shadow-md flex-shrink-0" />
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
-                Prévisions & Analyses Scientifiques
-              </h1>
-              {/* Backend connection status pill */}
-              {backendStatus === 'ok' ? (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>API Gateway en direct</span>
-                </span>
-              ) : backendStatus === 'loading' ? (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-[#38bdf8] border border-sky-500/30 flex-shrink-0">
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  <span>Synchronisation...</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/60 border border-white/15 flex-shrink-0">
-                  <CloudOff className="w-3 h-3 text-white/40" />
-                  <span>Règles locales (Terres Inovia)</span>
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-white/50 mt-0.5 truncate">
-              {field?.name || 'Parcelle'} • {field ? getCropNameFr(field.cropType) : 'Culture'} ({field ? getGrowthStageFr(field.growthStage) : 'Stade'})
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">Analyses</h1>
+            {field ? (
+              <>
+                <p className="text-xs text-white/70 leading-snug flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium">{field.name}</span>
+                  {isDemoField(field) && <DemoFieldBadge />}
+                </p>
+                <p className="text-xs text-white/50 leading-snug">
+                  {getCropNameFr(field.cropType)} · {getGrowthStageFr(field.growthStage)}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-white/55">Aucune parcelle sélectionnée</p>
+            )}
+            <p className="mt-1 flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+              {statusPill}
+              {retrieved && <span className="text-[11px] text-white/40">prévision du {retrieved}</span>}
             </p>
           </div>
         </div>
-
-        {/* Apple Segmented Switcher: Summary vs Detailed Scientific */}
-        <nav aria-label="Mode de vue" className="apple-glass p-0.5 rounded-full flex items-center gap-1 shadow-lg self-start sm:self-auto flex-shrink-0">
-          <button
-            onClick={() => setViewMode('summary')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              viewMode === 'summary'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
-          >
-            Synthèse
-          </button>
-          <button
-            onClick={() => setViewMode('scientific')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              viewMode === 'scientific'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
-          >
-            Explications & Traçabilité
-          </button>
-        </nav>
+        <button
+          type="button"
+          onClick={() => onAskAmi(askHeat)}
+          data-testid="insights-ask-ami"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 text-xs font-semibold text-white flex-shrink-0 active:scale-95"
+        >
+          <MessageCircle className="w-3.5 h-3.5 text-[#7cc4ff]" aria-hidden="true" />
+          <span className="hidden sm:inline">Demander à Ami</span>
+          <span className="sm:hidden">Ami</span>
+        </button>
       </header>
 
-      {/* VIEW MODE 1: SUMMARY (SYNTHÈSE CLAIRE) */}
-      {viewMode === 'summary' && (
-        <div className="flex flex-col gap-4 sm:gap-5">
-          {/* Crop Phenological State Banner */}
-          {field && (
-            <div className="apple-card p-3.5 sm:p-4 flex items-center justify-between gap-3 min-w-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center border shadow-xs flex-shrink-0"
-                  style={{
-                    backgroundColor: crop?.accent.bg || 'rgba(255,255,255,0.08)',
-                    color: crop?.accent.text || '#fff',
-                    borderColor: crop?.accent.border || 'rgba(255,255,255,0.15)',
-                  }}
-                >
-                  <CropGlyph crop={field.cropType} size={20} />
-                </div>
+      {/* Compact scientific panel: Risque / Évolution / Scénarios / Méthode */}
+      <div role="tablist" aria-label="Analyses scientifiques" className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-black/30 border border-white/[0.08]">
+        {TABS.map((t, i) => (
+          <button
+            key={t.id}
+            ref={(el) => {
+              tabRefs.current[t.id] = el;
+            }}
+            id={`sci-tab-${t.id}`}
+            role="tab"
+            aria-selected={tab === t.id}
+            aria-controls={`sci-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
+            onClick={() => setTab(t.id)}
+            onKeyDown={(e) => onTabKey(e, i)}
+            data-testid={`tab-${t.id}`}
+            className={`py-2 rounded-xl text-xs font-semibold transition-colors ${tab === t.id ? 'bg-white text-black shadow' : 'text-white/65 hover:text-white'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* RISQUE */}
+      {tab === 'risk' && (
+        <div role="tabpanel" id="sci-panel-risk" aria-labelledby="sci-tab-risk" className="flex flex-col gap-3" data-testid="panel-risk">
+          {field && heatSummary && (
+            <section className="apple-card p-4 flex items-center justify-between gap-3" data-testid="heat-summary-card">
+              <div className="flex items-start gap-3 min-w-0">
+                <span className="w-9 h-9 rounded-2xl bg-orange-500/20 text-orange-300 flex items-center justify-center flex-shrink-0">
+                  <Thermometer className="w-4 h-4" aria-hidden="true" />
+                </span>
                 <div className="min-w-0">
-                  <h2 className="text-xs sm:text-sm font-bold text-white truncate">
-                    {crop?.labelFr} • {getGrowthStageFr(field.growthStage)}
-                  </h2>
-                  <p className="text-[11px] text-white/50 mt-0.5 truncate">
-                    {GROWTH_STAGES_CATALOG[field.growthStage]?.shortDescFr}
-                  </p>
+                  <h2 className="text-sm font-semibold text-white leading-snug">Chaleur en floraison</h2>
+                  {heatSummary.resolution.kind === 'threshold' && heatSummary.hours !== null ? (
+                    <p className="text-xs text-white/65 leading-relaxed">
+                      <span className="font-mono text-white" data-testid="heat-summary-hours">{heatSummary.hours} h</span> au-dessus de{' '}
+                      {heatSummary.resolution.threshold.value} °C sur les {heatSummary.window} prochaines heures.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-white/55 leading-relaxed">
+                      {heatSummary.resolution.kind === 'none' ? heatSummary.resolution.reason : 'Prévision horaire indisponible.'}
+                    </p>
+                  )}
                 </div>
               </div>
               <button
-                onClick={onOpenFieldConfig}
-                className="apple-glass px-3.5 py-1.5 rounded-full text-xs text-white/80 hover:text-white active:scale-95 transition-transform flex-shrink-0"
+                type="button"
+                onClick={goToHeat}
+                data-testid="open-heat-curve"
+                className="px-3.5 py-2 rounded-full bg-white text-black text-xs font-semibold flex-shrink-0 active:scale-95"
               >
-                Changer de stade
+                Voir la courbe
               </button>
-            </div>
+            </section>
           )}
 
-          {/* Section: Sourced Agronomic Risk Predictions */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                Risques Météo-Agronomiques Ciblés
-              </span>
-              <span className="text-[10px] text-white/40 font-mono">
-                {alerts.length} alerte{alerts.length > 1 ? 's' : ''} active{alerts.length > 1 ? 's' : ''}
-              </span>
+          {backendResponse?.risk?.alerts && backendResponse.risk.alerts.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {backendResponse.risk.alerts.map((alert, idx) => (
+                <RiskPredictionCard
+                  key={`${alert.hazard_type}_${idx}`}
+                  alert={alert}
+                  onWhyClick={() => {
+                    setSelectedAlertForWhy('trace_heat');
+                    setTab('method');
+                  }}
+                />
+              ))}
             </div>
-
-            {backendResponse?.risk?.alerts && backendResponse.risk.alerts.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {backendResponse.risk.alerts.map((alert, idx) => (
-                  <RiskPredictionCard
-                    key={`${alert.hazard_type}_${idx}`}
-                    alert={alert}
-                    onWhyClick={() => {
-                      setViewMode('scientific');
-                      setSelectedAlertForWhy('heat');
-                    }}
-                  />
-                ))}
-              </div>
-            ) : alerts.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {alerts.map((alert) => (
-                  <div key={alert.id} className="apple-card p-4 flex flex-col gap-2.5 border-white/15">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-white">{alert.title}</span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                          alert.severity === 'critique'
-                            ? 'bg-rose-500/20 text-rose-300'
-                            : alert.severity === 'alerte'
+          ) : alerts.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {alerts.map((alert) => (
+                <article key={alert.id} className="apple-card p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-sm font-semibold text-white leading-snug">{alert.title}</h2>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${
+                        alert.severity === 'critique'
+                          ? 'bg-rose-500/20 text-rose-300'
+                          : alert.severity === 'alerte'
                             ? 'bg-amber-500/20 text-amber-300'
                             : 'bg-[#22c55e]/20 text-[#34d399]'
-                        }`}
-                      >
-                        {alert.severity.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/70 leading-relaxed">{alert.description}</p>
-                    <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white/85">
-                      <strong className="text-white">Conseil : </strong>
-                      {alert.recommendation}
-                    </div>
+                      }`}
+                    >
+                      {alert.severity.toUpperCase()}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="apple-card p-4 text-xs text-white/60 text-center">
-                Aucun risque thermique ou climatique sourcé déclenché pour ce stade et ces prévisions.
-              </div>
-            )}
-          </div>
-
-          {/* Section: Harvest Window Optimizer & Uncertainty Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {/* Harvest Optimizer */}
-            {backendResponse?.harvest ? (
-              <HarvestRecommendationsCard
-                harvest={backendResponse.harvest}
-                cropName={crop?.labelFr || 'Culture'}
-                stageName={field ? getGrowthStageFr(field.growthStage) : 'Stade'}
-              />
-            ) : (
-              <div className="apple-card p-4 flex flex-col gap-2 border-white/10 text-xs text-white/60">
-                <span className="font-semibold text-white">Optimiseur de Récolte</span>
-                <p>En attente de connexion avec le modèle météo pour calculer les créneaux de battage.</p>
-              </div>
-            )}
-
-            {/* Precipitation Uncertainty (51-member ECMWF AIFS ensemble) */}
-            {backendResponse?.ensemble ? (
-              <UncertaintyRainChart ensemble={backendResponse.ensemble} />
-            ) : (
-              <div className="apple-card p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                    Probabilités de Pluie (7 jours)
-                  </span>
-                  <span className="text-[10px] text-white/40 font-mono">Modèle AROME / AIFS</span>
-                </div>
-                <div className="flex flex-col divide-y divide-white/[0.06]">
-                  {(weather?.daily || []).slice(0, 5).map((d) => (
-                    <div key={d.date} className="py-2 flex items-center justify-between text-xs">
-                      <span className="w-24 font-medium text-white/80 capitalize">
-                        {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
-                      </span>
-                      <div className="flex-1 mx-3 flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#38bdf8] rounded-full"
-                            style={{ width: `${d.precipitationProbabilityMax}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] font-mono text-[#38bdf8] w-8 text-right font-medium">
-                          {d.precipitationProbabilityMax}%
-                        </span>
-                      </div>
-                      <span className="w-16 text-right font-mono text-white/60">
-                        {d.precipitationSum > 0 ? `${d.precipitationSum} mm` : 'Sec'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Section: Sourced Advice & Regulatory Spraying */}
-          {backendResponse?.regulatory_windows ? (
-            <SourceCitedAdviceCard
-              regulatoryWindows={backendResponse.regulatory_windows}
-              cropLabel={crop?.labelFr || 'Légumineuse'}
-            />
+                  <p className="text-xs text-white/70 leading-relaxed">{alert.description}</p>
+                  <p className="text-xs text-white/60 leading-relaxed">{alert.recommendation}</p>
+                </article>
+              ))}
+            </div>
           ) : (
-            <div className="apple-card p-4 flex items-center justify-between text-xs text-white/70">
-              <span>Réglementation pulvérisation : Arrêté du 4 mai 2017 (seuil légal 19 km/h).</span>
-              <span className="font-mono text-white/50">
-                {currentWind !== null ? `Vent prévu : ${Math.round(currentWind)} km/h` : 'Vent non mesuré'}
-              </span>
+            <div className="apple-card p-4 text-xs text-white/65 leading-relaxed" data-testid="no-risk">
+              Aucun seuil publié n'est dépassé dans la prévision actuelle pour ce stade. Les seuils sans source publiée ne sont jamais affichés.
             </div>
           )}
 
-          {/* Section: Agricultural Advisor Agent (Bedrock Converse / Knowledge Base C5WRYFYF1O) */}
-          <BedrockAdvisorCard field={field} />
+          <details className="apple-card group" data-testid="spraying-details">
+            <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-3 text-xs">
+              <span className="font-semibold text-white">Traitement : réglementation du vent</span>
+              <span className={blockedSpraying.length ? 'text-amber-200' : 'text-white/55'}>
+                {backendResponse
+                  ? blockedSpraying.length
+                    ? `vent > ${SPRAYING_WIND_LIMIT_KMH} km/h prévu ${blockedSpraying.length} jour${blockedSpraying.length > 1 ? 's' : ''}`
+                    : 'aucun jour au-dessus de la limite'
+                  : `limite ${SPRAYING_WIND_LIMIT_KMH} km/h`}
+              </span>
+            </summary>
+            <div className="px-3 pb-3">
+              {backendResponse?.regulatory_windows ? (
+                <SourceCitedAdviceCard regulatoryWindows={backendResponse.regulatory_windows} cropLabel={crop?.labelFr || 'Légumineuse'} />
+              ) : (
+                <p className="px-1 text-xs text-white/65 leading-relaxed">
+                  {SPRAYING_SOURCE.label}. La prévision de vent par jour sera affichée dès que l'API répond.
+                </p>
+              )}
+            </div>
+          </details>
+
+          <details className="apple-card" data-testid="harvest-details">
+            <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-3 text-xs">
+              <span className="font-semibold text-white">Récolte : aide météo</span>
+              <span className="text-white/55">
+                {harvest
+                  ? harvest.available
+                    ? harvest.recommended_date_local
+                      ? `créneau ${harvest.recommended_date_local}`
+                      : 'aucun créneau favorable'
+                    : field
+                      ? `non engagée (${getGrowthStageFr(field.growthStage).toLowerCase()})`
+                      : 'non engagée'
+                  : 'en attente de l\u2019API'}
+              </span>
+            </summary>
+            <div className="px-3 pb-3">
+              {harvest ? (
+                <HarvestRecommendationsCard harvest={harvest} cropName={crop?.labelFr || 'Culture'} stageName={field ? getGrowthStageFr(field.growthStage) : 'Stade'} />
+              ) : (
+                <p className="px-1 text-xs text-white/65">Le classement des créneaux nécessite la réponse de l'API.</p>
+              )}
+            </div>
+          </details>
+
+          {field && (
+            <button
+              type="button"
+              onClick={onOpenFieldConfig}
+              className="self-start text-xs text-[#38bdf8] hover:underline"
+            >
+              Le stade ne correspond pas ? Modifier la culture ou le stade
+            </button>
+          )}
         </div>
       )}
 
-      {/* VIEW MODE 2: DETAILED SCIENTIFIC EXPLANATIONS (POURQUOI CETTE PRÉDICTION ?) */}
-      {viewMode === 'scientific' && (
-        <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-          {/* Explainability Panel with decision traces and SHAP disclaimer */}
-          <ExplainabilityPanel
-            traces={decisionTraces}
-            selectedTraceId={selectedAlertForWhy}
-            shapOutputs={null}
-          />
+      {/* ÉVOLUTION */}
+      {tab === 'evolution' && (
+        <div role="tabpanel" id="sci-panel-evolution" aria-labelledby="sci-tab-evolution" className="flex flex-col gap-3" data-testid="panel-evolution">
+          <div role="group" aria-label="Variable à afficher" className="self-start flex p-0.5 rounded-full bg-black/30">
+            {([
+              ['heat', 'Chaleur'],
+              ['rain', 'Pluie'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={evolutionView === id}
+                onClick={() => setEvolutionView(id)}
+                data-testid={`evolution-${id}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium ${evolutionView === id ? 'bg-white text-black' : 'text-white/65 hover:text-white'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          {/* Section: Agricultural Advisor Agent (Bedrock Converse / Knowledge Base C5WRYFYF1O) */}
-          <BedrockAdvisorCard field={field} />
+          {evolutionView === 'heat' && field && (
+            <FloweringHeatRiskChart field={field} backendResponse={backendResponse} fallbackWeather={weather} />
+          )}
 
-          {/* Data Sources Attribution & Model Provenance */}
-          <div className="apple-card p-4 sm:p-5 flex flex-col gap-3 border-white/15">
-            <span className="text-xs font-semibold uppercase tracking-wider text-white/50 pb-2 border-b border-white/[0.08]">
-              Provenance des Données & Modèles Météorologiques
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/70">
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1">
-                <span className="font-bold text-white">Court terme (0 - 48h) :</span>
-                <span className="font-mono text-[11px] text-[#38bdf8]">
-                  {backendResponse?.provenance?.arome_model_id || 'meteofrance_arome_france_hd'}
-                </span>
-                <span className="text-[10px] text-white/50">Modèle haute résolution 1.3 km de Météo-France</span>
+          {evolutionView === 'rain' &&
+            (backendResponse?.ensemble ? (
+              <UncertaintyRainChart ensemble={backendResponse.ensemble} />
+            ) : (
+              <div className="apple-card p-4 text-xs text-white/65 leading-relaxed" data-testid="rain-unavailable">
+                <p className="font-semibold text-white mb-1">Incertitude de pluie indisponible</p>
+                L'ensemble AIFS est fourni par l'API, qui ne répond pas pour le moment. Prévision déterministe des prochains jours (Open-Meteo) :
+                <ul className="mt-2 divide-y divide-white/[0.06]">
+                  {(weather?.daily ?? []).slice(0, 5).map((d) => (
+                    <li key={d.date} className="py-1.5 flex justify-between">
+                      <span className="capitalize">{new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}</span>
+                      <span className="font-mono">{d.precipitationSum > 0 ? `${d.precipitationSum} mm` : 'sec'}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
+            ))}
+        </div>
+      )}
 
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1">
-                <span className="font-bold text-white">Moyen terme & Incertitude :</span>
-                <span className="font-mono text-[11px] text-[#38bdf8]">
-                  {backendResponse?.provenance?.aifs_model_id || 'ecmwf_aifs025_ensemble'}
-                </span>
-                <span className="text-[10px] text-white/50">Ensemble d'intelligence artificielle de l'ECMWF (51 membres)</span>
-              </div>
+      {/* SCÉNARIOS (sol) */}
+      {tab === 'scenarios' && field && (
+        <div role="tabpanel" id="sci-panel-scenarios" aria-labelledby="sci-tab-scenarios" data-testid="panel-scenarios">
+          <SoilIntelligencePanel field={field} />
+        </div>
+      )}
 
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1">
-                <span className="font-bold text-white">Seuils agronomiques :</span>
-                <span className="font-mono text-[11px] text-emerald-300">
-                  Terres Inovia (Corpus National 2024-2026)
-                </span>
-                <span className="text-[10px] text-white/50">Publications agronomiques validées pour la France</span>
+      {/* MÉTHODE */}
+      {tab === 'method' && (
+        <div role="tabpanel" id="sci-panel-method" aria-labelledby="sci-tab-method" className="flex flex-col gap-3" data-testid="panel-method">
+          <ExplainabilityPanel traces={decisionTraces} selectedTraceId={selectedAlertForWhy} shapOutputs={null} />
+          <div className="apple-card p-4 flex flex-col gap-2.5">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/50">Provenance des données</h2>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-white/70">
+              <div className="rounded-xl bg-white/[0.04] p-2.5">
+                <dt className="font-semibold text-white">Court terme (0 à 48 h)</dt>
+                <dd className="font-mono text-[11px] text-[#38bdf8]">{backendResponse?.provenance?.arome_model_id || 'meteofrance_arome_france_hd'}</dd>
+                <dd className="text-[10px] text-white/45">Modèle haute résolution de Météo-France</dd>
               </div>
-
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-1">
-                <span className="font-bold text-white">Dernière récupération UTC :</span>
-                <span className="font-mono text-[11px] text-white/80">
-                  {backendResponse?.provenance?.retrieved_at_utc || 'En attente de synchronisation'}
-                </span>
-                <span className="text-[10px] text-white/50">Statut de fraîcheur garanti</span>
+              <div className="rounded-xl bg-white/[0.04] p-2.5">
+                <dt className="font-semibold text-white">Moyen terme et incertitude</dt>
+                <dd className="font-mono text-[11px] text-[#38bdf8]">{backendResponse?.provenance?.aifs_model_id || 'ecmwf_aifs025_ensemble'}</dd>
+                <dd className="text-[10px] text-white/45">Ensemble de {backendResponse?.ensemble?.ensemble_members_valid ?? 51} membres de l'ECMWF</dd>
               </div>
-            </div>
+              <div className="rounded-xl bg-white/[0.04] p-2.5">
+                <dt className="font-semibold text-white">Seuils agronomiques</dt>
+                <dd className="text-[11px] text-emerald-300">Terres Inovia, seuils publiés</dd>
+                <dd className="text-[10px] text-white/45">Les cultures sans seuil publié n'ont aucune alerte de chaleur.</dd>
+              </div>
+              <div className="rounded-xl bg-white/[0.04] p-2.5">
+                <dt className="font-semibold text-white">Dernière récupération</dt>
+                <dd className="font-mono text-[11px] text-white/80">{backendResponse?.provenance?.retrieved_at_utc || 'En attente de synchronisation'}</dd>
+              </div>
+            </dl>
           </div>
         </div>
       )}

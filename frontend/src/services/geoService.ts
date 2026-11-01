@@ -99,3 +99,13 @@ export async function reverseGeocodeFrance(lat: number, lng: number): Promise<{
     commune: `${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E`,
   };
 }
+
+/** Great-circle distance in kilometres (haversine). */
+export function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(h)));
+}

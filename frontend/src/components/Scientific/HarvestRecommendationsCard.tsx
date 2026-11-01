@@ -8,6 +8,16 @@ interface HarvestRecommendationsCardProps {
   stageName: string;
 }
 
+const localizeHarvestLimitation = (note?: string) => {
+  if (!note) {
+    return "Aide à la décision basée sur les prévisions météo uniquement. L'application ne mesure pas l'humidité réelle du grain ni la portance du sol.";
+  }
+  if (/deterministic weather-only decision aid|weather-only,\s*provisional/i.test(note)) {
+    return "Aide à la décision fondée uniquement sur la météo, sans validation agronomique complète. La disponibilité du matériel n’est pas fournie : les jours sont considérés disponibles à titre provisoire. L’humidité du grain et la portance du sol ne sont pas mesurées.";
+  }
+  return note;
+};
+
 export const HarvestRecommendationsCard: React.FC<HarvestRecommendationsCardProps> = ({
   harvest,
   cropName,
@@ -36,7 +46,7 @@ export const HarvestRecommendationsCard: React.FC<HarvestRecommendationsCardProp
             L'algorithme de classement des créneaux de battage s'activera automatiquement lorsque la parcelle atteindra le stade <em>prêt à récolter</em>.
           </p>
           <p className="text-[10px] text-white/40 mt-1.5">
-            {harvest.note}
+            {localizeHarvestLimitation(harvest.note)}
           </p>
         </div>
       </div>
@@ -152,7 +162,7 @@ export const HarvestRecommendationsCard: React.FC<HarvestRecommendationsCardProp
       <div className="pt-2 border-t border-white/[0.06] flex items-start gap-2 text-[10px] text-white/50 leading-relaxed">
         <Info className="w-3.5 h-3.5 text-white/40 flex-shrink-0 mt-0.5" />
         <span>
-          <strong>Limitation méthodologique :</strong> {harvest.days[0]?.limitations || 'Aide à la décision basée sur les prévisions météo uniquement. L\'application ne mesure pas l\'humidité réelle du grain ni la portance du sol.'}
+          <strong>Limitation méthodologique :</strong> {localizeHarvestLimitation(harvest.days[0]?.limitations)}
         </span>
       </div>
     </div>
