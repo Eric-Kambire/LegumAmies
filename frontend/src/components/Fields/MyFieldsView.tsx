@@ -6,6 +6,8 @@ import { LEGUME_CROPS_CATALOG, GROWTH_STAGES_CATALOG } from '../../data/legumeCa
 import { FRENCH_AGRI_BASINS } from '../../data/frenchAgriBasins';
 import { getCurrentGPSPosition, reverseGeocodeFrance, isWithinMetropolitanFrance } from '../../services/geoService';
 import { CropGlyph } from '../Common/LegumeGlyphs';
+import { ParcelDrawMap, computeParcelAreaHa, hasSelfIntersection } from './ParcelDrawMap';
+import type { ParcelPoint } from './ParcelDrawMap';
 
 const DEMO_FIELD_IDS = new Set(['field_lauragais_1', 'field_beauce_2', 'field_berry_3']);
 const isDemoField = (field: SelectedField) => Boolean(field.isDemo) || DEMO_FIELD_IDS.has(field.id);
@@ -41,6 +43,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   const [areaHectares, setAreaHectares] = useState<number>(14);
   const [soilType, setSoilType] = useState<'calcaire' | 'argilo_calcaire' | 'limon' | 'sableux'>('argilo_calcaire');
   const [isLocating, setIsLocating] = useState(false);
+  const [polygonCoordinates, setPolygonCoordinates] = useState<ParcelPoint[]>([]);
 
   const closeWizard = () => {
     setIsWizardOpen(false);
@@ -50,6 +53,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   const openNewFieldWizard = () => {
     triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingFieldId(null);
+    setPolygonCoordinates([]);
     setName('Nouvelle Parcelle');
     setLatitude(FRENCH_AGRI_BASINS[0].latitude);
     setLongitude(FRENCH_AGRI_BASINS[0].longitude);
@@ -65,6 +69,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
   const openEditField = (field: SelectedField) => {
     triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setEditingFieldId(field.id);
+    setPolygonCoordinates(field.polygonCoordinates || []);
     setName(field.name);
     setLatitude(field.latitude);
     setLongitude(field.longitude);
@@ -85,6 +90,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
       if (isWithinMetropolitanFrance(pos.latitude, pos.longitude)) {
         setLatitude(pos.latitude);
         setLongitude(pos.longitude);
+        setPolygonCoordinates([]);
         const geo = await reverseGeocodeFrance(pos.latitude, pos.longitude);
         setCommune(geo.commune);
         if (geo.department) setDepartmentCode(geo.department);
@@ -101,12 +107,15 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
     if (!basin) return;
     setLatitude(basin.latitude);
     setLongitude(basin.longitude);
+    setPolygonCoordinates([]);
     setCommune(basin.name.split(' ')[0]);
     setDepartmentCode(basin.department.match(/\(([^)]+)\)/)?.[1] || 'FR');
     setCropType(basin.typicalCrops[0] || 'pois_chiche');
   };
 
   const handleSave = () => {
+    if (polygonCoordinates.length > 0 && (polygonCoordinates.length < 3 || hasSelfIntersection(polygonCoordinates) || computeParcelAreaHa(polygonCoordinates) < 0.005)) return;
+    const existingField = fields.find((item) => item.id === editingFieldId);
     const updated: SelectedField = {
       id: editingFieldId || `field_${Date.now()}`,
       name: name.trim() || 'Parcelle Légumineuse',
@@ -118,7 +127,10 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
       growthStage,
       areaHectares,
       soilType,
-      createdAt: new Date().toISOString(),
+      polygonCoordinates: polygonCoordinates.length >= 3 ? polygonCoordinates : undefined,
+      ...(existingField?.isDemo ? { isDemo: existingField.isDemo } : {}),
+      ...(existingField?.sowingDate ? { sowingDate: existingField.sowingDate } : {}),
+      createdAt: existingField?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -128,6 +140,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
 
   const cropKeys = Object.keys(LEGUME_CROPS_CATALOG) as LegumeCropType[];
   const stageKeys = Object.keys(GROWTH_STAGES_CATALOG) as CropGrowthStage[];
+  const polygonInvalid = polygonCoordinates.length > 0 && (polygonCoordinates.length < 3 || hasSelfIntersection(polygonCoordinates) || computeParcelAreaHa(polygonCoordinates) < 0.005);
 
   return (
     <div className="app-page-scroll flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pt-6 max-w-6xl mx-auto w-full flex flex-col gap-5">
@@ -205,7 +218,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                       )}
                     </div>
                     <p className="text-xs text-white/50 mt-0.5">
-                      {f.commune || 'France'} {f.departmentCode ? `(${f.departmentCode})` : ''} • {f.areaHectares ? `${f.areaHectares} ha` : 'Surface non renseignée'}
+                      {f.commune || 'France'} {f.departmentCode ? `(${f.departmentCode})` : ''} • {f.areaHectares ? `${f.areaHectares} ha` : 'Surface non renseignée'} {f.polygonCoordinates?.length ? ' • Contour enregistré' : ''}
                     </p>
                   </div>
                 </div>
@@ -339,6 +352,21 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                   </span>
                 </div>
 
+                <ParcelDrawMap
+                  latitude={latitude}
+                  longitude={longitude}
+                  vertices={polygonCoordinates}
+                  onVerticesChange={(points) => {
+                    setPolygonCoordinates(points);
+                    if (points.length >= 3 && !hasSelfIntersection(points)) {
+                      const measuredArea = computeParcelAreaHa(points);
+                      if (measuredArea >= 0.005) setAreaHectares(Number(measuredArea.toFixed(2)));
+                    }
+                  }}
+                  onPointChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
+                />
+                {polygonInvalid && <p className="text-[11px] text-amber-300">Terminez un contour valide (au moins 3 points) ou effacez-le pour utiliser un point GPS.</p>}
+
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] text-white/50">Ou choisir parmi les bassins de référence :</span>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -459,6 +487,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
               {wizardStep < 4 ? (
                 <button
                   type="button"
+                  disabled={wizardStep === 1 && polygonInvalid}
                   onClick={() => setWizardStep((prev) => (prev + 1) as any)}
                   className="px-5 py-2.5 rounded-full bg-white text-black font-semibold text-xs transition-all active:scale-95 shadow-md flex items-center gap-1"
                 >
@@ -469,6 +498,7 @@ export const MyFieldsView: React.FC<MyFieldsViewProps> = ({
                 <button
                   type="button"
                   onClick={handleSave}
+                  disabled={polygonInvalid}
                   className="px-6 py-2.5 rounded-full bg-white text-black font-semibold text-xs transition-all active:scale-95 shadow-md flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" />
