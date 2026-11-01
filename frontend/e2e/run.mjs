@@ -496,14 +496,31 @@ test('flowering-heat-chart', async () => {
 
 // 6. Soil scenarios --------------------------------------------------------------------
 test('soil-scenarios', async () => {
+  // Castelnaudary documented study area: with the geo API absent, the panel shows the real
+  // archived RUSLE study for the study zone (PR #7 executed results), clearly labelled as an
+  // archived study-area calculation — never an invented per-parcel number.
   const s = await newSession({ w: 1366, h: 768 });
   await gotoTab(s, 'Analyses');
   await s.page.getByTestId('tab-scenarios').click();
-  await s.page.getByTestId(/soil-(unavailable|out_of_coverage|error|ok)/).first().waitFor({ timeout: 30000 }).catch(() => {});
-  const txt = await s.page.getByTestId('panel-scenarios').innerText();
-  record('[soil, deployed API] Honest unavailable state, no invented number', /non disponible|injoignable|hors zone/i.test(txt) && !/t\/ha\/an\s*\n?\s*\d/.test(txt), txt.slice(0, 120).replace(/\n/g, ' '));
-  await shot(s, '11-soil-unavailable');
+  await s.page.getByTestId('soil-panel').waitFor({ timeout: 30000 });
+  const txt = await s.page.getByTestId('soil-panel').innerText();
+  record(
+    '[soil, Castelnaudary archived] Documented study-area values shown with provenance and coverage restriction',
+    /6,68/.test(txt) && /40,5/.test(txt) && (await s.page.getByTestId('soil-scenarios').locator('li').count()) === 3 && /Castelnaudary/.test(txt) && /archiv/i.test(txt) && /zone d'étude/i.test(txt),
+    txt.slice(0, 160).replace(/\n/g, ' ')
+  );
+  await shot(s, '11-soil-castelnaudary-archived');
   await s.ctx.close();
+
+  // A field outside the validated zone must NOT receive an invented number.
+  const sOut = await newSession({ w: 1366, h: 768 }, { fields: [LENTIL_FIELD] });
+  await gotoTab(sOut, 'Analyses');
+  await sOut.page.getByTestId('tab-scenarios').click();
+  await sOut.page.getByTestId(/soil-(unavailable|out_of_coverage|error)/).first().waitFor({ timeout: 30000 }).catch(() => {});
+  const outTxt = await sOut.page.getByTestId('panel-scenarios').innerText();
+  record('[soil, out of zone] Honest unavailable state, no invented number', /non disponible|injoignable|hors zone/i.test(outTxt) && !/t\/ha\/an\s*\n?\s*\d/.test(outTxt), outTxt.slice(0, 120).replace(/\n/g, ' '));
+  await shot(sOut, '11b-soil-out-of-zone');
+  await sOut.ctx.close();
 
   // fixture mirroring the geospatial branch schema (reports/soil-intelligence on feature/geospatial-soil-foundation)
   const fixture = {
