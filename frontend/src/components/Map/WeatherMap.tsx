@@ -50,6 +50,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   const rpgLayerRef = useRef<L.GeoJSON | null>(null);
   const adminLayerRef = useRef<L.GeoJSON | null>(null);
   const weatherPointRef = useRef<L.CircleMarker | null>(null);
+  const fieldPolygonRef = useRef<L.Polygon | null>(null);
 
   // 1. Initialize Map and immediately attach base tile layer
   useEffect(() => {
@@ -220,13 +221,15 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
 
     if (!selectedField) return;
 
+    // Leaflet divIcon interpolates HTML: escape user-supplied field names.
+    const safeFieldName = String(selectedField.name || 'Parcelle').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
     const pinIcon = L.divIcon({
       className: 'custom-apple-pin',
       html: `
         <div class="flex flex-col items-center select-none -translate-x-1/2 -translate-y-full cursor-pointer transition-transform hover:scale-105 active:scale-95">
           <div class="px-3 py-1 rounded-full bg-white text-black text-xs font-semibold tracking-tight shadow-xl flex items-center gap-1.5 border border-black/10">
             <span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
-            <span class="truncate max-w-[120px]">${selectedField.name || 'Parcelle'}</span>
+            <span class="truncate max-w-[120px]">${safeFieldName}</span>
           </div>
           <div class="w-2.5 h-2.5 bg-white rotate-45 -mt-1 shadow-md"></div>
           <div class="w-1.5 h-1.5 rounded-full bg-white/70 ring-2 ring-black/40 mt-0.5"></div>
@@ -280,6 +283,43 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     group.addTo(map);
     basinsLayerRef.current = group;
   }, [onSelectBasin]);
+
+  // The farmer's own drawn polygon is always visible separately from the official RPG.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (fieldPolygonRef.current) {
+      map.removeLayer(fieldPolygonRef.current);
+      fieldPolygonRef.current = null;
+    }
+    const ring = selectedField?.polygonCoordinates;
+    if (!ring || ring.length < 3) return;
+    const valid = ring.every(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+    if (!valid) return;
+    const outline = L.polygon(ring, {
+      color: '#34d399', fillColor: '#10b981', fillOpacity: 0.14,
+      weight: 3, opacity: 0.96, dashArray: '8 4',
+    }).addTo(map);
+    const popup = document.createElement('span');
+    popup.textContent = 'Mon terrain · ' + (selectedField.name || 'Parcelle');
+    outline.bindTooltip(popup, { sticky: true });
+    fieldPolygonRef.current = outline;
+    return () => {
+      map.removeLayer(outline);
+      if (fieldPolygonRef.current === outline) fieldPolygonRef.current = null;
+    };
+  }, [selectedField?.id, selectedField?.polygonCoordinates]);
+
+  // Without a real national weather tile service, anchor local weather values to
+  // their true forecast point and move the map to it when the user changes layer.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isActive || activeLayer === 'radar' || !weather) return;
+    const center: L.LatLngExpression = [weather.latitude, weather.longitude];
+    if (!map.getBounds().contains(center) || map.getZoom() < 10) {
+      map.flyTo(center, Math.max(map.getZoom(), 11), { duration: 0.65 });
+    }
+  }, [activeLayer, isActive, weather?.latitude, weather?.longitude]);
 
   // SoilGrids 0-5 cm clay: actual 250 m WMS raster, independently toggleable.
   useEffect(() => {
