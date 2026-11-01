@@ -491,6 +491,7 @@ export const App: React.FC = () => {
         />
 
         <MapControls
+          weather={weatherData}
           activeLayer={activeLayer}
           overlays={mapOverlays}
           onOverlaysChange={setMapOverlays}
