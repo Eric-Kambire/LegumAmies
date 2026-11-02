@@ -1,0 +1,26 @@
+{
+  "steps": [
+    "after undo: 6.99 ha",
+    "area after re-add+finish: 13.97 ha",
+    "saved: {\"id\":\"field_1793524339938\",\"createdAt\":\"2026-11-01T09:12:19.938Z\",\"poly\":4,\"crop\":\"pois_chiche\",\"stage\":\"floraison\"}",
+    "edit: drawing section shows polygon area: true (13.97 ha)",
+    "after edit-save: {\"id\":\"field_1793524339938\",\"createdAt\":\"2026-11-01T09:12:19.938Z\",\"poly\":4} | id+createdAt preserved: true"
+  ],
+  "after_undo": "6.99 ha",
+  "area": "13.97 ha",
+  "saved": {
+    "id": "field_1793524339938",
+    "createdAt": "2026-11-01T09:12:19.938Z",
+    "poly": 4,
+    "crop": "pois_chiche",
+    "stage": "floraison"
+  },
+  "edit_wizard_opened": true,
+  "edit_polygon_preserved": true,
+  "edit_after": {
+    "id": "field_1793524339938",
+    "createdAt": "2026-11-01T09:12:19.938Z",
+    "poly": 4
+  },
+  "id_preserved": true
+}

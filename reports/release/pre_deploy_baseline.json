@@ -1,0 +1,53 @@
+{
+  "captured_at_utc": "2026-11-01",
+  "purpose": "Rollback baseline before Légume'Ami release redeploy",
+  "deploy_target_sha": "37d2c67da5e31a14c053fdce74fcd28ae0fddfc0",
+  "aws_account": "040416400623",
+  "region": "us-east-1",
+  "amplify": {
+    "appId": "doxhuwpoc3ctn",
+    "name": "legumamies-pwa",
+    "branch": "team-testing",
+    "defaultDomain": "doxhuwpoc3ctn.amplifyapp.com",
+    "frontendUrl": "https://team-testing.doxhuwpoc3ctn.amplifyapp.com",
+    "lastGoodJobId": "3",
+    "lastGoodJobStatus": "SUCCEED",
+    "lastGoodJobEndTime": "2026-10-31T23:24:20Z"
+  },
+  "lambda": {
+    "functionName": "legumamies-climateshield-api",
+    "runtime": "python3.12",
+    "handler": "src.api.main.handler",
+    "memorySize": 1024,
+    "timeout": 30,
+    "reservedConcurrentExecutions": 5,
+    "codeSha256": "vmbU9JuzfB0vDyV/mtyi20bLapEDC3hOXG6tqBWvWIU=",
+    "revisionId": "e3fcca95-c21a-44be-a189-683c7fabb57c",
+    "codeSize": 45692966,
+    "lastModified": "2026-10-31T23:20:58Z",
+    "role": "arn:aws:iam::040416400623:role/legumamies-api-lambda-role",
+    "rolePolicies": ["legumamies-bedrock-kb-access (inline)", "AWSLambdaBasicExecutionRole (attached)"],
+    "env": {
+      "LEGUMAMIES_KB_ID": "C5WRYFYF1O",
+      "LEGUMAMIES_ADVISOR_MODEL": "amazon.nova-lite-v1:0",
+      "LEGUMAMIES_CORS_ORIGINS": "https://team-testing.doxhuwpoc3ctn.amplifyapp.com"
+    }
+  },
+  "apiGateway": {
+    "apiId": "ba8yoci7d8",
+    "endpoint": "https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com",
+    "stage": "$default",
+    "throttle": {"rateLimit": 5, "burstLimit": 10},
+    "cors": {
+      "allowOrigins": ["https://team-testing.doxhuwpoc3ctn.amplifyapp.com", "http://localhost:5173"],
+      "allowMethods": ["GET", "POST", "OPTIONS"],
+      "allowHeaders": ["content-type"]
+    }
+  },
+  "bedrock": {"model": "amazon.nova-lite-v1:0", "knowledgeBaseId": "C5WRYFYF1O"},
+  "pre_deploy_health": {
+    "health": "200 {\"status\":\"ok\",\"service\":\"legumamies-climateshield-api\",\"version\":\"0.1.0\"}",
+    "meta": "200 (3131 bytes, real rule catalogue)",
+    "cloudwatch_errors_last_3h": "none"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "weather": {
+    "Nuages": {
+      "ok": true,
+      "panel": "Couverture nuageuse 100 % Fraction de ciel couvert par les nuages. Météo-France (AROME/ARPEGE) via Open-Meteo · actualisé · point GPS"
+    },
+    "Temp.": {
+      "ok": true,
+      "panel": "Température locale 12 °C Température de l’air à 2 m. Météo-France (AROME/ARPEGE) via Open-Meteo · actualisé · point GPS"
+    },
+    "Vent": {
+      "ok": true,
+      "panel": "Vent au point sélectionné 19 km/h Direction météo 295° · 10 m. Météo-France (AROME/ARPEGE) via Open-Meteo · actualisé · point GPS"
+    },
+    "Pluie": {
+      "ok": true,
+      "panel": ""
+    }
+  },
+  "errors": [
+    "Access to fetch at 'https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com/assess' from origin 'http://localhost:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: It does not have HTTP ok status.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "api": [
+    "POST /assess",
+    "POST /assess"
+  ]
+}

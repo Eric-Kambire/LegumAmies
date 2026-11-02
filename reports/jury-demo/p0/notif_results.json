@@ -1,0 +1,11 @@
+{
+  "opens": true,
+  "unread_header": "Alertes · 4 non lues",
+  "has_exemple_label": true,
+  "toggle_closes": true,
+  "escape_closes": true,
+  "outside_closes_mapclick": true,
+  "outside_closes": true,
+  "after_markall_header": "Alertes · 0 non lue",
+  "history_opens_tab": true
+}

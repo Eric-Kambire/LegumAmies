@@ -1,0 +1,81 @@
+{
+  "viewports": {
+    "375x812": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 708,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "390x844": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 740,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "640x800": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 696,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "767x900": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 796,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "768x1024": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 1000,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "1366x768": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 744,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    },
+    "1920x1080": {
+      "errors": [],
+      "ami_launcher": true,
+      "ami_bottom": 1056,
+      "ami_above_fold": true,
+      "notif_opens": true,
+      "notif_within_viewport": true,
+      "ami_opens": true,
+      "ami_within_viewport": true,
+      "ok": true
+    }
+  }
+}

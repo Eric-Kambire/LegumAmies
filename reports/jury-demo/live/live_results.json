@@ -1,0 +1,40 @@
+{
+  "api": [
+    {
+      "ep": "/assess",
+      "status": 200
+    },
+    {
+      "ep": "/geo/soil-risk",
+      "status": 404
+    },
+    {
+      "ep": "/advisor/ask",
+      "status": 200
+    }
+  ],
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "assess_200": false,
+  "advisor_status": 200,
+  "advisor_answer_present": true,
+  "advisor_has_sources": true,
+  "advisor_call_count": 1,
+  "assess_call_count": 1,
+  "api_summary": [
+    {
+      "ep": "/assess",
+      "status": 200
+    },
+    {
+      "ep": "/geo/soil-risk",
+      "status": 404
+    },
+    {
+      "ep": "/advisor/ask",
+      "status": 200
+    }
+  ]
+}

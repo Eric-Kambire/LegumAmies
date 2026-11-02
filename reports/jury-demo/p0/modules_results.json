@@ -1,0 +1,21 @@
+{
+  "errors": [
+    "Access to fetch at 'https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com/assess' from origin 'http://localhost:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: It does not have HTTP ok status.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "home_has": {
+    "flowering": true,
+    "irrigation": true,
+    "harvest": true,
+    "soil": true
+  },
+  "analyses_has": {
+    "floweringChart": true,
+    "soilCard": false,
+    "rusle": false
+  },
+  "errors_count": 5
+}

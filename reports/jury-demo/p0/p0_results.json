@@ -1,0 +1,75 @@
+{
+  "steps": [
+    "loaded, title=Légume'Ami — Météo Agricole France",
+    "mode Pluie: FAIL locator.click: Timeout 6000ms exceeded.",
+    "mode Nuages: FAIL locator.click: Timeout 6000ms exceeded.",
+    "mode Temp.: FAIL locator.click: Timeout 6000ms exceeded.",
+    "mode Vent: FAIL locator.click: Timeout 6000ms exceeded.",
+    "area: 15.17 ha",
+    "persisted: {\"total\":4,\"drawnName\":\"Parcelle Test Jury\",\"polyLen\":4,\"first\":[43.319635933695395,1.9508457183837893],\"id\":\"field_1793523768878\",\"createdAt\":\"2026-11-01T09:02:48.878Z\"}",
+    "persists after reload: true",
+    "main map leaflet polygon paths: 1",
+    "API calls: [\"POST /assess\",\"POST /assess\",\"POST /assess\",\"POST /assess\",\"POST /assess\",\"POST /assess\"]",
+    "console errors: 9 => [\"Access to fetch at 'https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com/assess' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\",\"Failed to load resource: net::ERR_FAILED\",\"Failed to load resource: net::ERR_FAILED\",\"Failed to load resource: the server responded with a status of 404 ()\"]"
+  ],
+  "errors": [
+    "Access to fetch at 'https://ba8yoci7d8.execute-api.us-east-1.amazonaws.com/assess' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "api": [
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess"
+  ],
+  "weather": {
+    "Pluie": {
+      "ok": false,
+      "err": "locator.click: Timeout 6000ms exceeded."
+    },
+    "Nuages": {
+      "ok": false,
+      "err": "locator.click: Timeout 6000ms exceeded."
+    },
+    "Temp.": {
+      "ok": false,
+      "err": "locator.click: Timeout 6000ms exceeded."
+    },
+    "Vent": {
+      "ok": false,
+      "err": "locator.click: Timeout 6000ms exceeded."
+    }
+  },
+  "draw_area": "15.17 ha",
+  "persisted": {
+    "total": 4,
+    "drawnName": "Parcelle Test Jury",
+    "polyLen": 4,
+    "first": [
+      43.319635933695395,
+      1.9508457183837893
+    ],
+    "id": "field_1793523768878",
+    "createdAt": "2026-11-01T09:02:48.878Z"
+  },
+  "persist_after_reload": true,
+  "main_map_paths": 1,
+  "console_errors": 9,
+  "api_calls": [
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess",
+    "POST /assess"
+  ]
+}

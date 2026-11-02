@@ -1,0 +1,44 @@
+{
+  "nav": {
+    "Accueil": "ok",
+    "Carte Météo France": "ok",
+    "Mes Parcelles": "ok",
+    "Prévisions & Analyses": "ok",
+    "Alertes": "ok"
+  },
+  "network": {
+    "assess": [
+      1793521047394,
+      1793521047695
+    ],
+    "advisor": [
+      1793521069641
+    ]
+  },
+  "console_errors": [],
+  "steps": [
+    "root HTTP: 200",
+    "nav Accueil: ok",
+    "nav Carte Météo France: ok",
+    "nav Mes Parcelles: ok",
+    "nav Prévisions & Analyses: ok",
+    "nav Alertes: ok",
+    "advisor/ask http: 200",
+    "advisor citation text visible: true",
+    "layer Nuages: ok",
+    "layer Temp.: ok",
+    "layer Vent: ok",
+    "layer Pluie: ok",
+    "NETWORK: {\"assess_calls\":2,\"advisor_calls\":1}",
+    "console errors: 0"
+  ],
+  "advisor": {
+    "http": 200,
+    "has_citation_text": true,
+    "has_answer": true
+  },
+  "network_summary": {
+    "assess_calls": 2,
+    "advisor_calls": 1
+  }
+}

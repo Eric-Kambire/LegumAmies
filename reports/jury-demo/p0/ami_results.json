@@ -1,0 +1,16 @@
+{
+  "advisor_calls": [
+    {
+      "method": "POST",
+      "body": "{\"question\":\"Quels sont les risques météo pour cette parcelle ?\",\"field\":{\"latitude\":43.3183,\"longitude\":1.9538,\"crop\":\"pois_chiche\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Parcelle du Moulin (Lauragais)\"}}"
+    }
+  ],
+  "launcher_weather": true,
+  "dialog_open": true,
+  "field_tab_label": "Parcelle du Moulin (Lauragais)",
+  "launcher_on_accueil": true,
+  "message_persisted_across_tab": true,
+  "advisor_call_count": 1,
+  "advisor_body_has_context": true,
+  "advisor_body": "{\"question\":\"Quels sont les risques météo pour cette parcelle ?\",\"field\":{\"latitude\":43.3183,\"longitude\":1.9538,\"crop\":\"pois_chiche\",\"growth_stage\":\"floraison\",\"harvest_ready\":false,\"field_name\":\"Parcelle du Moulin (Lauragais)\"}}"
+}
