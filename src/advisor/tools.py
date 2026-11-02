@@ -46,6 +46,10 @@ _DOC_PROVENANCE = {
     "sources/pois_chiche.md": ("Terres Inovia", "https://www.terresinovia.fr/fr/informations-techniques/pois-chiche"),
     "sources/recolte_legumineuses.md": ("Terres Inovia", "https://www.terresinovia.fr/fr/actualites/lentille-une-recolte-2026-precoce-et-sous-de-fortes-temperatures"),
     "sources/statistiques_fr_legumineuses.md": ("Agreste / Terres Univia / Terres Inovia", "https://agreste.agriculture.gouv.fr"),
+    # Original official guides: exact publisher PDF URLs, not generic culture pages.
+    "guide_culture_pois-chiche_2026_terresinovia.pdf": ("Terres Inovia", "https://www.terresinovia.fr/sites/default/files/2026-04/guide_culture_pois-chiche_2026_terresinovia.pdf"),
+    "guide-de-culture-pois-conventionnel-2025.pdf": ("Terres Inovia", "https://www.terresinovia.fr/sites/default/files/2025-05/guide-de-culture-pois-conventionnel-2025.pdf"),
+    "guide-de-culture-lentille-2023.pdf": ("Terres Inovia", "https://www.terresinovia.fr/sites/default/files/2025-06/guide-de-culture-lentille-2023.pdf"),
 }
 
 
@@ -75,14 +79,30 @@ def search_documents(query: str, max_results: int = KB_MAX_RESULTS,
     for r in resp.get("retrievalResults", []):
         uri = (((r.get("location") or {}).get("s3Location")) or {}).get("uri", "")
         key = uri.split("/", 3)[3] if uri.startswith("s3://") and uri.count("/") >= 3 else uri
-        institution, url = _DOC_PROVENANCE.get(key, (None, None))
+        # Bedrock exposes S3 sidecar attributes in retrievalResult.metadata.
+        # Prefer those trusted source attributes over the legacy fixed mappings.
+        metadata = r.get("metadata") or {}
+        institution, url = _DOC_PROVENANCE.get(key, _DOC_PROVENANCE.get(key.rsplit("/", 1)[-1], (None, None)))
+        institution = metadata.get("publisher") or institution
+        url = metadata.get("original_source_url") or url
+        page_raw = metadata.get("x-amz-bedrock-kb-document-page-number", metadata.get("page"))
+        page = None
+        try:
+            if page_raw is not None:
+                page = int(page_raw)
+        except (ValueError, TypeError):
+            page = None
+        doc_title = metadata.get("source_title") or key
         passages.append({
             "text": " ".join((r.get("content", {}).get("text", "") or "").split())[:700],
             "score": round(float(r.get("score", 0.0)), 4),
             "s3_uri": uri,
-            "document": key,
+            "document": doc_title,
             "institution": institution,
             "source_url": url,
+            "page": page,
+            "crop": metadata.get("crop"),
+            "s3_document": key,
         })
     return {
         "available": True,

@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Send, Trash2, X } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, CloudSun, Flame, Send, Sprout, Trash2, X } from 'lucide-react';
 import { AmiAvatar } from './AmiAvatar';
 import { AmiMessage } from './AmiMessage';
 import { AmiContextSelector } from './AmiContextSelector';
+import { AMI_CAPABILITY_BLURBS, AMI_EXPLORE_ACTIONS, buildQuickActions, type AmiCapabilityKind } from './amiCapabilities';
 import type { AmiChat } from '../../hooks/useAmiChat';
 import type { SelectedField } from '../../types/agricultural';
+import type { AppTab } from '../Navigation/AppleTabBar';
 import { getCropNameFr, getGrowthStageFr } from '../../services/agriRiskService';
 
 interface AmiChatPanelProps {
@@ -13,17 +15,38 @@ interface AmiChatPanelProps {
   activeField: SelectedField | null;
   onSelectField: (field: SelectedField) => void;
   returnFocusRef: React.RefObject<HTMLElement | null>;
+  /** Lets Ami take the farmer to the relevant screen (agentic navigation). */
+  onNavigate?: (tab: AppTab) => void;
 }
 
 const MAX_LEN = 1000;
 const FOCUSABLE = 'button:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], input:not([disabled])';
 
-export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeField, onSelectField, returnFocusRef }) => {
+const CAPABILITY_ICON: Record<AmiCapabilityKind, React.ComponentType<{ className?: string }>> = {
+  risk: Flame,
+  frost: Flame,
+  spray: CloudSun,
+  harvest: Sprout,
+  guide: BookOpen,
+  weather: CloudSun,
+  generic: Sprout,
+};
+
+const EXPLORE_ICON: Record<AppTab, React.ComponentType<{ className?: string }>> = {
+  home: Sprout,
+  weather: CloudSun,
+  fields: Sprout,
+  insights: BarChart3,
+  notifications: BarChart3,
+};
+
+export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeField, onSelectField, returnFocusRef, onNavigate }) => {
   const { isOpen, messages, loading, draft, mode, position } = ami;
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
+  // Full-text suggestions for the empty state (prefill, never auto-send).
   const suggestions = useMemo(() => {
     if (mode === 'position') {
       return ['Quelles sont les conditions météo à ma position ?', 'Y a-t-il de la pluie prévue dans les prochains jours ici ?'];
@@ -36,6 +59,10 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
       'La pluie menace-t-elle ma récolte ?',
     ];
   }, [mode, activeField]);
+
+  // Compact, context-aware capability chips used as follow-ups after an answer.
+  const quickActions = useMemo(() => buildQuickActions(mode, activeField), [mode, activeField]);
+  const positionBlocked = mode === 'position' && !position;
 
   // Focus management: move focus in on open, restore it to the launcher on close.
   useEffect(() => {
@@ -72,7 +99,7 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
 
   if (!isOpen) return null;
 
-  const canSend = !loading && draft.trim().length > 0 && !(mode === 'position' && !position);
+  const canSend = !loading && draft.trim().length > 0 && !positionBlocked;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
@@ -101,6 +128,22 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
     if (canSend) void ami.ask(draft);
   };
 
+  // A quick action is agentic: one tap runs the full grounded tool pipeline.
+  const runQuick = (question: string) => {
+    if (loading || positionBlocked) return;
+    void ami.ask(question);
+  };
+
+  const goTo = (tab: AppTab) => {
+    onNavigate?.(tab);
+  };
+
+  // Representative question for a capability blurb (so the showcase is actionable).
+  const questionForKind = (kind: AmiCapabilityKind): string => {
+    const match = quickActions.find((q) => q.kind === kind);
+    return match?.question ?? suggestions[0];
+  };
+
   return (
     <div
       ref={panelRef}
@@ -109,16 +152,19 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
       aria-label="Assistant agricole Ami"
       onKeyDown={handleKeyDown}
       data-testid="ami-panel"
-      className="ami-panel fixed z-[850] flex flex-col apple-glass text-white overflow-hidden max-md:inset-0 max-md:rounded-none md:w-[400px] md:rounded-[28px] animate-in fade-in zoom-in-95 duration-200"
+      className="ami-panel fixed z-[850] flex flex-col apple-glass text-white overflow-hidden max-md:inset-0 max-md:rounded-none md:w-[420px] md:rounded-[28px] animate-in fade-in zoom-in-95 duration-200"
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-[max(env(safe-area-inset-top),0.75rem)] md:pt-3 pb-3">
-        <AmiAvatar size={36} />
+      <div className="flex items-center gap-3 px-4 pt-[max(env(safe-area-inset-top),0.75rem)] md:pt-3 pb-3 bg-gradient-to-b from-white/[0.06] to-transparent">
+        <span className="relative flex-shrink-0">
+          <AmiAvatar size={36} />
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#0b0f19]" aria-hidden="true" />
+        </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold leading-tight" data-testid="ami-title">
             {ami.contextLabel}
           </h2>
-          <p className="text-[11px] text-white/50">Assistant agricole · réponses sourcées</p>
+          <p className="text-[11px] text-white/50">Conseiller agricole IA · réponses sourcées</p>
         </div>
         {messages.length > 0 && (
           <button
@@ -146,18 +192,47 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
       {/* Conversation */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3" aria-live="polite" data-testid="ami-thread">
         {messages.length === 0 ? (
-          <div className="flex flex-col gap-3 my-auto text-center items-center py-4">
-            <p className="text-sm text-white/80 max-w-[18rem] leading-relaxed">
-              {mode === 'position'
-                ? 'Posez une question sur la météo à votre position.'
-                : 'Posez une question sur votre parcelle : chaleur, traitement, récolte.'}
-            </p>
-            <div className="flex flex-col gap-1.5 w-full">
+          <div className="flex flex-col gap-4 py-2">
+            <div className="text-center flex flex-col items-center gap-1.5 pt-1">
+              <AmiAvatar size={48} />
+              <p className="text-sm font-semibold text-white">Bonjour, je suis Ami</p>
+              <p className="text-xs text-white/60 max-w-[18rem] leading-relaxed">
+                {mode === 'position'
+                  ? 'Posez une question sur la météo à votre position, ou choisissez une action ci-dessous.'
+                  : 'Votre conseiller pour les légumineuses. Je combine la météo, les règles de risque et les guides Terres Inovia.'}
+              </p>
+            </div>
+
+            {/* What Ami can do — capability showcase (actionable) */}
+            <div className="grid grid-cols-2 gap-2" data-testid="ami-capabilities">
+              {AMI_CAPABILITY_BLURBS.map((c) => {
+                const Icon = CAPABILITY_ICON[c.kind];
+                return (
+                  <button
+                    key={c.kind}
+                    type="button"
+                    disabled={positionBlocked}
+                    onClick={() => runQuick(questionForKind(c.kind))}
+                    className="text-left rounded-2xl bg-white/[0.05] border border-white/10 p-2.5 hover:bg-white/[0.1] hover:border-[#38bdf8]/30 disabled:opacity-40 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white">
+                      <Icon className="w-3.5 h-3.5 text-[#38bdf8]" />
+                      {c.title}
+                    </span>
+                    <span className="block mt-0.5 text-[10.5px] text-white/55 leading-snug">{c.detail}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Starter questions (prefill, editable) */}
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[10px] uppercase tracking-wider text-white/40 font-semibold px-0.5">Questions rapides</p>
               {suggestions.map((s) => (
                 <button
                   key={s}
                   type="button"
-                  disabled={mode === 'position' && !position}
+                  disabled={positionBlocked}
                   onClick={() => ami.setDraft(s)}
                   className="text-left text-xs px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white/80 hover:bg-white/10 disabled:opacity-40"
                 >
@@ -165,6 +240,30 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
                 </button>
               ))}
             </div>
+
+            {/* Explore — Ami can take you to the right screen */}
+            {onNavigate && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-white/40 font-semibold px-0.5">Explorer</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {AMI_EXPLORE_ACTIONS.map((a) => {
+                    const Icon = EXPLORE_ICON[a.tab];
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => goTo(a.tab)}
+                        className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-white/75 hover:bg-white/10"
+                      >
+                        <Icon className="w-3 h-3 text-white/55" />
+                        {a.label}
+                        <ArrowRight className="w-3 h-3 text-white/40" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           messages.map((m, i) => {
@@ -175,6 +274,39 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
         <div ref={endRef} />
       </div>
 
+      {/* Agentic follow-up row: one-tap grounded actions + navigation, shown once a conversation exists. */}
+      {messages.length > 0 && !positionBlocked && (
+        <div className="px-3 pt-2 flex gap-1.5 overflow-x-auto scrollbar-none" data-testid="ami-quick-actions">
+          {quickActions.map((q) => {
+            const Icon = CAPABILITY_ICON[q.kind];
+            return (
+              <button
+                key={q.id}
+                type="button"
+                disabled={loading}
+                onClick={() => runQuick(q.question)}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] px-2.5 py-1.5 rounded-full bg-white/[0.07] border border-white/10 text-white/80 hover:bg-white/12 disabled:opacity-40 flex-shrink-0"
+              >
+                <Icon className="w-3 h-3 text-[#38bdf8]" />
+                {q.label}
+              </button>
+            );
+          })}
+          {onNavigate &&
+            AMI_EXPLORE_ACTIONS.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => goTo(a.tab)}
+                className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] px-2.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/60 hover:bg-white/10 flex-shrink-0"
+              >
+                {a.label}
+                <ArrowRight className="w-3 h-3 text-white/40" />
+              </button>
+            ))}
+        </div>
+      )}
+
       {/* Composer */}
       <form
         onSubmit={(e) => {
@@ -183,7 +315,7 @@ export const AmiChatPanel: React.FC<AmiChatPanelProps> = ({ ami, fields, activeF
         }}
         className="px-3 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] border-t border-white/[0.08]"
       >
-        {mode === 'position' && !position && (
+        {positionBlocked && (
           <p className="text-[11px] text-amber-200 px-1 pb-1.5">Choisissez d'abord une position pour poser une question près de vous.</p>
         )}
         <div className="flex items-end gap-2">

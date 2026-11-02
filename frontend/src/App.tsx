@@ -802,6 +802,7 @@ export const App: React.FC = () => {
         activeField={activeField}
         onSelectField={handleSelectActiveField}
         returnFocusRef={amiLauncherRef}
+        onNavigate={setActiveTab}
       />
 
       <NotificationCenter

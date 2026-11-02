@@ -181,6 +181,8 @@ export interface AdvisorCitation {
   source_url?: string;
   score?: number;
   snippet?: string;
+  page?: number | null;
+  crop?: string | null;
   hazard?: string;
   validation_status?: string;
 }
