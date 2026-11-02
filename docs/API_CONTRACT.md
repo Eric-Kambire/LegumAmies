@@ -304,3 +304,39 @@ risk/harvest; unsupported crop → stated explicitly).
 `LEGUMAMIES_ADVISOR_MODEL` (default `amazon.nova-lite-v1:0`),
 `LEGUMAMIES_KB_ID` (default `C5WRYFYF1O`), `AWS_REGION` (default `us-east-1`).
 Requires server-side AWS credentials with Bedrock `converse` + `bedrock-agent-runtime:Retrieve`.
+
+
+---
+
+## 10. Geospatial & soil-risk contracts (PROPOSED — not yet mounted)
+
+Defined in `src/geo/schemas.py`. **Additive and backward-compatible**: these do
+not change existing endpoints and are **not** exposed on the production
+Lambda/API in the `feature/geospatial-soil-foundation` branch. They require the
+same throttling/validation/access-control as the live API before any exposure.
+
+Scientific separation (enforced by `DataKind`): `measured_soil_observation` (a),
+`modelled_soil_property` / `mapped_soil_unit` (b), `environmental_exposure` (c),
+`future_weather_scenario` (d), `user_declared`.
+
+- `GET /geo/soil?lat&lon&depths` → `SoilPropertiesResponse`
+  ```json
+  { "location": {"field_id":"…","latitude":43.31,"longitude":1.95},
+    "modelled": [ { "depth_cm":"0-5", "clay_pct":21.8,
+      "provenance": {"source":"ISRIC SoilGrids 2.0","data_kind":"modelled_soil_property",
+        "vintage":"2020","crs":"EPSG:4326","resolution":"250 m","licence":"CC-BY 4.0",
+        "uncertainty":"250 m modelled; confirm with a soil test"} } ],
+    "map_unit": null,
+    "note": "Modelled/mapped estimates with uncertainty; not field measurements." }
+  ```
+- `GET /geo/layers` → `AvailableLayersResponse` — each layer carries `service`
+  (WMS/WCS/XYZ/WFS/STAC), `url_template`, `crs`, `legend_url`, `provenance` and a
+  `live` boolean (reachable as a live map service).
+- `POST /geo/soil-risk` (`SoilRiskInputs` → `SoilRiskOutput`) — returns the
+  **exploratory_erosion_vulnerability_index** (0–100 + band), the RUSLE factor
+  availability table, `is_quantitative_erosion_estimate: false`, and a
+  `limitations` list. Never a measured/validated soil-loss rate.
+- `POST /geo/observations` (`SoilObservation`) and `POST /geo/management`
+  (`ManagementEvent`) — dated measured results / declared management facts.
+  Crop-protection events are stored as declared facts only; no impact is
+  inferred from event counts.

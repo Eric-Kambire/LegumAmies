@@ -1,0 +1,182 @@
+{
+  "generated_at_utc": "2026-11-01T05:52:57.354114+00:00",
+  "aoi": {
+    "name": "Castelnaudary / Lauragais (Aude, FR)",
+    "lon_min": 1.93,
+    "lat_min": 43.29,
+    "lon_max": 1.97,
+    "lat_max": 43.33,
+    "field_lat": 43.31,
+    "field_lon": 1.95
+  },
+  "summary": {
+    "downloaded": [
+      "IGN RPG 2024 (declared agricultural parcels)",
+      "IGN ADMIN EXPRESS (communes, LATEST)",
+      "GIS Sol RRP dominant soil units (Gironde sample)",
+      "ISRIC SoilGrids 2.0 — WMS (clay 0-5cm)",
+      "ISRIC SoilGrids 2.0 — WCS (clay 0-5cm numeric)",
+      "Copernicus DEM GLO-30 (terrain / slope)",
+      "ERA5 reanalysis history (precip/temp exposure)"
+    ],
+    "live_service": [
+      "Sentinel-2 L2A (vegetation cover / NDVI history)"
+    ],
+    "not_obtained": [
+      "ESDAC / JRC RUSLE2015 (R, K, C, LS, soil loss)",
+      "Météo-France AROME spatial layers (WMS)"
+    ]
+  },
+  "sources": [
+    {
+      "name": "IGN RPG 2024 (declared agricultural parcels)",
+      "url": "https://data.geopf.fr/wfs/ows",
+      "crs": "EPSG:4326",
+      "resolution": "vector polygons",
+      "vintage": "2024",
+      "units": "declared crop code (code_cultu), category (cat_cult_p)",
+      "licence": "Licence Ouverte / Etalab (IGN)",
+      "attribution": "IGN / RPG / ASP",
+      "note": "DECLARED parcels & crops for CAP subsidies — NOT property ownership (cadastre = CADASTRALPARCELS, separate). RPG 2025 crop parcels not yet published; latest categorized = 2024.",
+      "access": "downloaded",
+      "file": "data/geo/samples/rpg2024_castelnaudary.geojson",
+      "size_bytes": 140175,
+      "sha256": "5dcc08a37d009f991099418c4271b7c3679fc37aaa123dbc103cb62cdfb13a04",
+      "missing_values": "see validation (0 for retrieved samples)"
+    },
+    {
+      "name": "IGN ADMIN EXPRESS (communes, LATEST)",
+      "url": "https://data.geopf.fr/wfs/ows",
+      "crs": "EPSG:4326",
+      "resolution": "vector polygons",
+      "vintage": "LATEST (COG)",
+      "units": "administrative boundary",
+      "licence": "Licence Ouverte / Etalab (IGN)",
+      "attribution": "IGN ADMIN EXPRESS",
+      "note": "Administrative boundaries (not parcels).",
+      "access": "downloaded",
+      "file": "data/geo/samples/adminexpress_commune_castelnaudary.geojson",
+      "size_bytes": 61281,
+      "sha256": "c035d0cb0342387822a69378d7191472d64558ff92269292e893e5083d71da3f",
+      "missing_values": "see validation (0 for retrieved samples)"
+    },
+    {
+      "name": "GIS Sol RRP dominant soil units (Gironde sample)",
+      "url": "https://data.geopf.fr/wfs/ows",
+      "crs": "EPSG:4326",
+      "resolution": "cartographic units (UCS)",
+      "vintage": "RRP (per-dept)",
+      "units": "dominant soil name & %",
+      "licence": "Licence Ouverte (per publication)",
+      "attribution": "GIS Sol / INRAE RRP",
+      "note": "PEDOLOGICAL soil map (NOT BRGM geology). Open WFS covers only some departments (Gironde/Landes/Loiret); AUDE (AOI) is NOT available — would need DoneSol/GIS Sol registration. Gironde used only to validate the path.",
+      "access": "downloaded (different dept — AOI not covered)",
+      "file": "data/geo/samples/gissol_rrp_gironde_sample.geojson",
+      "size_bytes": 32227,
+      "sha256": "a5392a568305f3f8b206030cfb2b5318addb3b468d499b09b9d3553edca3f1f3",
+      "missing_values": "see validation (0 for retrieved samples)"
+    },
+    {
+      "name": "ISRIC SoilGrids 2.0 — WMS (clay 0-5cm)",
+      "url": "https://maps.isric.org/mapserv?map=/map/clay.map (WMS 1.3.0 GetMap)",
+      "crs": "EPSG:4326 (native Interrupted Goode Homolosine)",
+      "resolution": "250 m",
+      "vintage": "SoilGrids 2.0 (2020)",
+      "units": "styled raster (PNG)",
+      "licence": "CC-BY 4.0",
+      "attribution": "ISRIC — World Soil Information",
+      "note": "REST API (rest.isric.org) reported SUSPENDED; WMS GetMap works.",
+      "access": "downloaded",
+      "file": "data/geo/samples/soilgrids_clay_0-5cm_castelnaudary.png",
+      "size_bytes": 2213,
+      "sha256": "5a27a31eccd9bdf87e4951960d2661b97257c52e5f54181f76d2a10b27912250"
+    },
+    {
+      "name": "ISRIC SoilGrids 2.0 — WCS (clay 0-5cm numeric)",
+      "url": "https://maps.isric.org/mapserv?map=/map/clay.map (WCS 2.0.1 GetCoverage)",
+      "crs": "EPSG:4326 (requested)",
+      "resolution": "250 m",
+      "vintage": "SoilGrids 2.0 (2020)",
+      "units": "clay mean stored g/kg (×0.1 = %)",
+      "licence": "CC-BY 4.0",
+      "attribution": "ISRIC — World Soil Information",
+      "note": "MODELLED pedology (not geology, not field measurement). WCS numeric extract works.",
+      "access": "downloaded",
+      "file": "data/geo/samples/soilgrids_clay_0-5cm_castelnaudary.tif",
+      "size_bytes": 1018,
+      "sha256": "9dcee952f559854035c0e183aed1b8e0677c4f428cffdf0526eedf0baff366e6"
+    },
+    {
+      "name": "Copernicus DEM GLO-30 (terrain / slope)",
+      "url": "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N43_00_E001_00_DEM/...tif (/vsicurl window)",
+      "crs": "EPSG:4326",
+      "resolution": "~30 m (1 arc-second)",
+      "vintage": "GLO-30 (2021)",
+      "units": "elevation metres (float32)",
+      "licence": "Copernicus/ESA free & open",
+      "attribution": "© ESA / Copernicus DEM",
+      "note": "Windowed read only (no full-tile download). Slope derived for LS proxy.",
+      "access": "downloaded (windowed)",
+      "file": "data/geo/samples/copernicus_dem_castelnaudary.tif",
+      "size_bytes": 74410,
+      "sha256": "26e2f412ecf20dc96ffa58d2b62ed7de756daa38e2b2ca853391d98d2e3708a2"
+    },
+    {
+      "name": "Sentinel-2 L2A (vegetation cover / NDVI history)",
+      "url": "https://earth-search.aws.element84.com/v1/search (STAC) + AWS Open Data COGs",
+      "crs": "EPSG:326xx (UTM per tile)",
+      "resolution": "10 m (B04/B08)",
+      "vintage": "rolling (tested May 2025)",
+      "units": "reflectance (COG), NDVI derivable",
+      "licence": "Copernicus Sentinel data free & open",
+      "attribution": "© Copernicus Sentinel-2 / ESA",
+      "note": "STAC search returns low-cloud items with B04/B08 assets; NDVI feasible via windowed COG reads. Not bulk-downloaded (bands are large).",
+      "access": "live_service"
+    },
+    {
+      "name": "ERA5 reanalysis history (precip/temp exposure)",
+      "url": "https://archive-api.open-meteo.com/v1/archive?models=era5",
+      "crs": "point (lat/lon)",
+      "resolution": "~9–31 km (ERA5)",
+      "vintage": "2015–2024",
+      "units": "°C, mm",
+      "licence": "ERA5 (Copernicus) via Open-Meteo (CC-BY 4.0)",
+      "attribution": "Copernicus ERA5 / Open-Meteo",
+      "note": "Environmental EXPOSURE (heavy-rain history) — NOT erosion. Point series.",
+      "access": "downloaded",
+      "file": "data/geo/samples/era5_history_castelnaudary_2015_2024.csv",
+      "size_bytes": 90389,
+      "sha256": "0a3bdf697681c30201ac62309d704ebd89374447163cb176cd0f36ab5707f149"
+    },
+    {
+      "name": "ESDAC / JRC RUSLE2015 (R, K, C, LS, soil loss)",
+      "url": "https://esdac.jrc.ec.europa.eu/content/european-soil-database-derived-data",
+      "crs": "ETRS89-LAEA (EPSG:3035)",
+      "resolution": "100 m / 500 m",
+      "vintage": "RUSLE2015",
+      "units": "R (MJ mm ha⁻¹ h⁻¹ yr⁻¹), K, C, LS, A (t ha⁻¹ yr⁻¹)",
+      "licence": "ESDAC data policy (free for non-commercial, attribution)",
+      "attribution": "European Commission JRC / ESDAC",
+      "note": "Download requires a (free) ESDAC account + accepting terms. NOT bypassed. Reference erosion product for future calibration once access is granted.",
+      "access": "not_obtained_auth_required"
+    },
+    {
+      "name": "Météo-France AROME spatial layers (WMS)",
+      "url": "https://portail-api.meteofrance.fr (AROME packages / WMS)",
+      "crs": "EPSG:3857 / 4326",
+      "resolution": "AROME 1.3/2.5 km",
+      "vintage": "rolling",
+      "units": "t2m °C, wind m/s, precip mm, cloud %",
+      "licence": "Météo-France open data (registration)",
+      "attribution": "Météo-France",
+      "note": "Requires Météo-France API portal key. Documented for temp/wind/cloud overlays.",
+      "access": "not_obtained_auth_required"
+    }
+  ],
+  "notes": [
+    "Only small subsets around one example field were retrieved.",
+    "RPG = declared agricultural parcels/crops, NOT property ownership (cadastre).",
+    "SoilGrids / GIS Sol = pedological soil, NOT BRGM geology.",
+    "Erosion-related outputs are exploratory exposure indicators, not measured soil loss."
+  ]
+}

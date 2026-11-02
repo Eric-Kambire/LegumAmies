@@ -1,0 +1,122 @@
+{
+  "sand_0-5cm_mean": {
+    "file": "data/geo/samples/soilgrids_sand_0-5cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 26.26,
+    "unit": "%",
+    "sha256": "2a44cebb1a7a43644aca96ea7e91eb9b5c2e2556594e745cc3a3c436fa85fa50",
+    "size_bytes": 956
+  },
+  "sand_5-15cm_mean": {
+    "file": "data/geo/samples/soilgrids_sand_5-15cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 26.08,
+    "unit": "%",
+    "sha256": "49c852c351759174fa4357651c7c86597d5cbac8767d59eefc27669b04ec691f",
+    "size_bytes": 955
+  },
+  "silt_0-5cm_mean": {
+    "file": "data/geo/samples/soilgrids_silt_0-5cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 42.61,
+    "unit": "%",
+    "sha256": "ad0a31fb7562601abf9674d02218bdafee5c654038dfa636174d99c97d154b25",
+    "size_bytes": 1033
+  },
+  "silt_5-15cm_mean": {
+    "file": "data/geo/samples/soilgrids_silt_5-15cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 42.82,
+    "unit": "%",
+    "sha256": "7c5b3eee8da10cc3dcb1ca8b6b9e1d6a77d3367a427b00b814564e0b4351edba",
+    "size_bytes": 1030
+  },
+  "soc_0-5cm_mean": {
+    "file": "data/geo/samples/soilgrids_soc_0-5cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 40.89,
+    "unit": "g/kg",
+    "sha256": "16babc3c9fd9c055462ea3aa397cbc3603cadfe443fdbf0d0921d578335d1bbd",
+    "size_bytes": 1080
+  },
+  "soc_5-15cm_mean": {
+    "file": "data/geo/samples/soilgrids_soc_5-15cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 13.67,
+    "unit": "g/kg",
+    "sha256": "5846e803af59efbfdd9a564a48b1ad1b4dfcf3780255c2a298a2e7286f53d242",
+    "size_bytes": 978
+  },
+  "phh2o_0-5cm_mean": {
+    "file": "data/geo/samples/soilgrids_phh2o_0-5cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 7.43,
+    "unit": "pH",
+    "sha256": "04a2ca0dff0d7ef0c778615e21c9fe5988ff017ee20c32888e41b80b74e00a0a",
+    "size_bytes": 820
+  },
+  "phh2o_5-15cm_mean": {
+    "file": "data/geo/samples/soilgrids_phh2o_5-15cm_castelnaudary.tif",
+    "shape": [
+      17,
+      18
+    ],
+    "crs": "EPSG:4326",
+    "nodata": null,
+    "n_valid": 214,
+    "n_total": 306,
+    "mean_physical": 7.57,
+    "unit": "pH",
+    "sha256": "800864bfbfb5067713ee9d31ebd89a2d7d7a434553d366d1db3012493a2fdd4a",
+    "size_bytes": 812
+  }
+}

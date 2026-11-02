@@ -1,0 +1,124 @@
+{
+  "study_area": {
+    "name": "Castelnaudary / Lauragais (Aude, FR)",
+    "field": "Parcelle du Moulin (Lauragais) \u2014 demo field",
+    "lat": 43.31,
+    "lon": 1.95,
+    "bbox_4326": [
+      1.93,
+      43.29,
+      1.97,
+      43.33
+    ],
+    "coverage": "single_study_area"
+  },
+  "inputs": {
+    "slope": {
+      "mean_deg": 2.72,
+      "p90_deg": 6.06,
+      "max_deg": 23.41
+    },
+    "soil": {
+      "clay_pct": 31.1,
+      "sand_pct": 26.3,
+      "silt_pct": 42.6,
+      "sand_n": 26.3,
+      "silt_n": 42.6,
+      "clay_n": 31.1,
+      "oc_0_5_pct": 4.09,
+      "oc_5_15_pct": 1.37,
+      "oc_plough_pct": 2.27,
+      "ph_h2o": 7.43,
+      "texture_sum_pct": 100.0
+    },
+    "ndvi": {
+      "item_id": "S2B_31TDJ_20250903_0_L2A",
+      "datetime": "2025-09-03T10:48:57.512000Z",
+      "cloud_cover_pct": 0.000304,
+      "crs": "EPSG:32631",
+      "boa_offset_applied": true,
+      "ndvi_shape": [
+        448,
+        330
+      ],
+      "valid_fraction_after_cloud_mask": 0.983,
+      "ndvi_mean": 0.733,
+      "ndvi_p10": 0.257,
+      "ndvi_p90": 1.0,
+      "vegetation_cover_fraction_mean": 0.728,
+      "scaling": "reflectance=(DN-1000)/10000; NDVI=(NIR-RED)/(NIR+RED)",
+      "cloud_mask": "SCL in {3,8,9,10,11} masked",
+      "source": "Copernicus Sentinel-2 L2A via Earth Search STAC + sentinel-cogs (AWS Open Data)",
+      "licence": "Copernicus Sentinel data (free & open)",
+      "file": "data/geo/samples/sentinel2_ndvi_castelnaudary.tif",
+      "size_bytes": 36054,
+      "sha256": "fa6c237495fc2fffb2fbe5401cd9b823589c4eae8ee4e7a8493206432856f1b3"
+    },
+    "rainfall": {
+      "years": 10,
+      "annual_precip_mm_mean": 909.0,
+      "heavy_rain_days_gt20mm_per_year": 5.6,
+      "max_daily_precip_mm": 60.9
+    },
+    "assumptions": [
+      "Plough-layer OC = depth-weighted 0-15 cm (0-5 & 5-15 cm SoilGrids).",
+      "Slope length not measured; 100 m assumed (varied 50-150 m).",
+      "R-factor literature-derived (Panagos 2015); scenario range used."
+    ]
+  },
+  "vulnerability_index": {
+    "score_0_100": 40.5,
+    "band": "mod\u00e9r\u00e9",
+    "components": {
+      "slope_proxy": 0.181,
+      "erosivity_proxy": 0.585,
+      "erodibility_proxy": 0.703,
+      "cover_deficit_proxy": 0.272,
+      "weights": {
+        "slope": 0.35,
+        "erosivity": 0.25,
+        "erodibility": 0.2,
+        "cover": 0.2
+      }
+    },
+    "is_quantitative_erosion_estimate": false,
+    "limitations": [
+      "Exploratory EXPOSURE index (0\u2013100), not a RUSLE soil-loss rate (t/ha/yr).",
+      "Rainfall erosivity uses an ERA5 heavy-rain proxy, not the ESDAC R-factor.",
+      "Soil erodibility uses modelled SoilGrids texture/SOC; structure & permeability absent.",
+      "LS approximated by slope only (no flow-accumulation / slope length).",
+      "Cover/crop factors are proxies (NDVI / declared crop), not calibrated C-factors.",
+      "Support-practice (P) information is typically unknown; not included.",
+      "Not validated against field erosion measurements; do not use for compliance or loss claims."
+    ]
+  },
+  "rusle_baseline": {
+    "model_version": "rusle-1.0.0",
+    "equation": "A = R * K * LS * C * P  [t/ha/yr]",
+    "parameters": {
+      "R": 1000.0,
+      "K": 0.0341,
+      "LS": 0.9797,
+      "C": 0.2,
+      "P": 1.0
+    },
+    "soil_loss_t_ha_yr": 6.68,
+    "units": "t ha-1 yr-1",
+    "plausibility_ok": true,
+    "factor_contributions": {
+      "R": 1000.0,
+      "K": 0.0341,
+      "LS": 0.9797,
+      "C": 0.2,
+      "P": 1.0
+    }
+  },
+  "uncertainty_range": {
+    "A_min_t_ha_yr": 1.06,
+    "A_max_t_ha_yr": 106.67
+  },
+  "model_version": "rusle-1.0.0",
+  "equation": "A = R * K * LS * C * P  [t/ha/yr]",
+  "generated_at_utc": "2026-11-01T06:20:11.701111+00:00",
+  "disclaimer": "Model-estimated erosion potential under stated assumptions; not a field measurement. Coverage: single study area (Castelnaudary), not nationwide."
+}

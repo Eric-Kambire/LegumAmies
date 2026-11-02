@@ -1,0 +1,6 @@
+factor,baseline,range,unit,source,assumption,method,range_driver,slope_length_m_baseline,slope_length_range_m,improved,improved_range
+R,1000.0,"[700.0, 1800.0]",MJ mm ha-1 h-1 yr-1,"Panagos et al. 2015, Rainfall erosivity in Europe (STOTEN 511:801-814)",Literature-derived estimate for SW France / Aude; ESDAC R raster requires login (not accessed). Scenario range stated explicitly. NOT derived from raw ERA5 rainfall totals.,,,,,,
+K,,,t ha h ha-1 MJ-1 mm-1,,Texture normalised to 100%; plough-layer OC depth-weighted (0-15 cm). Structure/permeability not required by the Williams estimator.,Williams (1995) EPIC from SoilGrids sand/silt/clay/OC x0.1317 -> SI,organic carbon 1.37-4.09 % (SoilGrids 0-5 / 5-15 cm),,,,
+LS,,,,Copernicus DEM GLO-30 slope,Representative slope length 100 m (field-scale); varied 50-150 m.,McCool 1987 (S) + RUSLE L with slope-dependent m,,100.0,"[50.0, 150.0]",,
+C,0.2,"[0.1, 0.45]",,"Panagos et al. 2015, C-factor at European scale (Land Use Policy 48:38-50)",Conventional arable legume/cereal baseline; improved = cover crops + reduced tillage.,,,,,0.07,"[0.03, 0.12]"
+P,1.0,"[0.6, 1.0]",,,P=1 when no support practice declared; contour/strip practices lower P.,,,,,,
