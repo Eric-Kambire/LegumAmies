@@ -100,6 +100,20 @@ async function newSession(vp, opts = {}) {
     const assessEntry = { at: Date.now(), body: body ? JSON.parse(body || 'null') : null };
     if (url.pathname === '/assess') apiLog.assess.push(assessEntry);
 
+    if (url.pathname.startsWith('/geo/') && process.env.GEO_API_URL && !opts.soilFixture) {
+      // Real geospatial backend (feature/geospatial-soil-foundation) running locally.
+      apiLog.soil.push({ path: url.pathname });
+      try {
+        const r = await fetch(process.env.GEO_API_URL + url.pathname + url.search, {
+          method: req.method(),
+          headers: { 'content-type': 'application/json' },
+          body: req.method() === 'POST' ? body : undefined,
+        });
+        return route.fulfill({ status: r.status, headers: { ...cors, 'content-type': 'application/json' }, body: await r.text() });
+      } catch {
+        return route.abort();
+      }
+    }
     if (url.pathname.startsWith('/geo/') && opts.soilFixture) {
       apiLog.soil.push({ path: url.pathname });
       if (url.pathname === '/geo/soil-risk') return route.fulfill({ status: 200, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(opts.soilFixture.risk) });
@@ -547,14 +561,16 @@ test('flowering-heat-chart', async () => {
 
 // 6. Soil scenarios --------------------------------------------------------------------
 test('soil-scenarios', async () => {
-  const s = await newSession({ w: 1366, h: 768 });
-  await gotoTab(s, 'Analyses');
-  await s.page.getByTestId('tab-scenarios').click();
-  await s.page.getByTestId(/soil-(unavailable|out_of_coverage|error|ok)/).first().waitFor({ timeout: 30000 }).catch(() => {});
-  const txt = await s.page.getByTestId('panel-scenarios').innerText();
-  record('[soil, deployed API] Honest unavailable state, no invented number', /non disponible|injoignable|hors zone/i.test(txt) && !/t\/ha\/an\s*\n?\s*\d/.test(txt), txt.slice(0, 120).replace(/\n/g, ' '));
-  await shot(s, '11-soil-unavailable');
-  await s.ctx.close();
+  if (!process.env.GEO_API_URL) {
+    const s = await newSession({ w: 1366, h: 768 });
+    await gotoTab(s, 'Analyses');
+    await s.page.getByTestId('tab-scenarios').click();
+    await s.page.getByTestId(/soil-(unavailable|out_of_coverage|error|ok)/).first().waitFor({ timeout: 30000 }).catch(() => {});
+    const txt = await s.page.getByTestId('panel-scenarios').innerText();
+    record('[soil, deployed API] Honest unavailable state, no invented number', /non disponible|injoignable|hors zone/i.test(txt) && !/t\/ha\/an\s*\n?\s*\d/.test(txt), txt.slice(0, 120).replace(/\n/g, ' '));
+    await shot(s, '11-soil-unavailable');
+    await s.ctx.close();
+  }
 
   // fixture mirroring the geospatial branch schema (reports/soil-intelligence on feature/geospatial-soil-foundation)
   const fixture = {
@@ -586,6 +602,31 @@ test('soil-scenarios', async () => {
   record('[soil, fixture] Index, RUSLE baseline, 3 scenarios, sensitivity and texture rendered', /40,5/.test(panel) && /6,68/.test(panel) && (await s2.page.getByTestId('soil-scenarios').locator('li').count()) === 3 && /LS/.test(panel) && /Argile/.test(panel) && /zone d'étude/i.test(panel));
   await shot(s2, '12-soil-fixture');
   await s2.ctx.close();
+});
+
+// 6b. Soil panel against the REAL geospatial backend (only when GEO_API_URL is set) ----------------
+test('soil-real-backend', async () => {
+  if (!process.env.GEO_API_URL) {
+    console.log('skipped: set GEO_API_URL to a running geospatial backend (e.g. http://127.0.0.1:8765)');
+    return;
+  }
+  const s = await newSession({ w: 1366, h: 768 });
+  await gotoTab(s, 'Analyses');
+  await s.page.getByTestId('tab-scenarios').click();
+  await s.page.getByTestId('soil-panel').waitFor({ timeout: 30000 });
+  const txt = await s.page.getByTestId('panel-scenarios').innerText();
+  record('[soil, real backend] Backend prose is shown in French (no English disclaimer)', !/Model-estimated|not a field measurement/.test(txt));
+  record('[soil, real backend] Castelnaudary: index 40,5 modéré, RUSLE 6,68 t/ha/an, 3 scenarios, texture', /40,5/.test(txt) && /modéré/.test(txt) && /6,68/.test(txt) && (await s.page.getByTestId('soil-scenarios').locator('li').count()) === 3 && /Argile/.test(txt) && /31,1/.test(txt));
+  await shot(s, '11b-soil-real-backend');
+  // a field outside the validated study area must not get a number
+  await s.page.locator(navSel(s.vp)).getByRole('button', { name: 'Accueil' }).click();
+  await s.page.getByRole('button', { name: /Champ des Vignes/ }).first().click();
+  await gotoTab(s, 'Analyses');
+  await s.page.getByTestId('tab-scenarios').click();
+  await s.page.getByTestId('soil-out_of_coverage').waitFor({ timeout: 30000 });
+  record('[soil, real backend] Field outside Castelnaudary: explicit "hors zone validée", no number', /Hors zone validée/.test(await s.page.getByTestId('panel-scenarios').innerText()) && (await s.page.getByTestId('soil-index').count()) === 0);
+  await shot(s, '11c-soil-out-of-coverage');
+  await s.ctx.close();
 });
 
 // 7. Ami: context, geolocation, requests, persistence --------------------------------
