@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Info, Loader2, Mountain } from 'lucide-react';
 import type { SelectedField } from '../../types/agricultural';
 import { fetchSoilIntelligence, type SoilFetchResult, type SoilScenarioRow } from '../../services/soilApi';
+import { frenchSoilText } from '../../services/soilText';
 
 interface SoilIntelligencePanelProps {
   field: SelectedField;
@@ -94,7 +95,7 @@ export const SoilIntelligencePanel: React.FC<SoilIntelligencePanelProps> = ({ fi
   return (
     <div className="flex flex-col gap-3" data-testid="soil-panel">
       <p className="text-[11px] text-amber-200 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2 leading-relaxed">
-        Zone d'étude : {risk.study_area?.name ?? 'Castelnaudary'}. {risk.disclaimer}
+        Zone d'étude : {risk.study_area?.name ?? 'Castelnaudary'}. {risk.disclaimer ? frenchSoilText(risk.disclaimer) : ''}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -209,14 +210,14 @@ export const SoilIntelligencePanel: React.FC<SoilIntelligencePanelProps> = ({ fi
         {risk.assumptions && (
           <ul className="list-disc pl-4 mt-2">
             {risk.assumptions.map((a, i) => (
-              <li key={i}>{a}</li>
+              <li key={i}>{frenchSoilText(a)}</li>
             ))}
           </ul>
         )}
         {vi?.limitations && (
           <ul className="list-disc pl-4 mt-2 text-white/50">
             {vi.limitations.map((l, i) => (
-              <li key={i}>{l}</li>
+              <li key={i}>{frenchSoilText(l)}</li>
             ))}
           </ul>
         )}
